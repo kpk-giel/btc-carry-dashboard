@@ -1344,8 +1344,11 @@ def risk_section():
           f"HF below {RC['hf_exit_below']:.2f}: full unwind by the exit agent",
           f"borrowing costs more than the vaults earn for {RC['spread_exit']}: full unwind"]),
         ("Collateral and accounting", "ethereum", "Watched on the BTC leg and in the fund's own contracts", [
-            "BTC price from Chainlink", "stale or irregular prices flag the NAV reading", "divergence from independent monitor feeds",
-            "settlement price more than 30% off the last one is rejected onchain"], []),
+            "BTC price from Chainlink", "every price in the NAV against independent monitor feeds", "stablecoin pegs", "the age of each NAV read"],
+         ["a stale or irregular price anywhere in the book: subscriptions and redemptions pause until it clears",
+          "a NAV that disagrees with an independent cross-check: settlement pauses",
+          "a settlement price more than 30% off the last one: rejected onchain",
+          f"a redemption that would take HF below {RC['redemption_min_hf']:.2f}: the settler withdraws no collateral"]),
         ("The KPK USDC vaults", "morpho", "Watched in the vaults themselves and in every market they lend into", [
             "oracle liveness, staleness and sudden drops", "bad debt", "vault liquidity, at two severities", "pegs and reserves",
             "Morpho governance events", "manual allocator activity"],
@@ -1358,14 +1361,14 @@ def risk_section():
         f'<div class="card watch"><div class="watch-head">{icon(ic, 24)}<div><div class="stat-label">{esc(title)}</div><div class="stat-sub">{esc(sub)}</div></div></div>'
         + (f'<div class="wakes-t" style="margin-top:12px">{"Reviewed by the risk team" if title == "The KPK USDC vaults" else "Checked"}</div>' if wakes and title == "The KPK USDC vaults" else "")
         + f'<div class="chips">{chips(items)}</div>'
-        + (f'<div class="wakes"><div class="wakes-t">Alerts that act on their own</div>{"".join(f"<div class=wake>{esc(w)}</div>" for w in wakes)}</div>' if wakes else "")
+        + (f'<div class="wakes"><div class="wakes-t">Triggers an automated action, no human approval needed</div>{"".join(f"<div class=wake>{esc(w)}</div>" for w in wakes)}</div>' if wakes else "")
         + '</div>' for title, ic, sub, items, wakes in watch)
     respond = f"""
   <div class="grid g2">
     <div class="card layer">
       <div class="layer-tag auto">Layer 1 · automated</div>
       <div class="layer-t">Onchain within one or two blocks</div>
-      <p class="agent-b">Signals that leave no room for doubt act on their own, typically in under 30 seconds and scoped to the affected market or position, so everything else keeps earning. Exits are graded: a <b>soft shutdown</b> drains a market and can be undone after review; a <b>hard shutdown</b> also sets its caps to zero.</p>
+      <p class="agent-b">Signals that leave no room for doubt trigger an automated action with no human approval needed, typically executed in under 30 seconds and scoped to the affected market or position, so everything else keeps earning. Exits are graded: a <b>soft shutdown</b> drains a market and can be undone after review; a <b>hard shutdown</b> also sets its caps to zero.</p>
       <div class="example"><b>On record:</b> when Cap paused its cUSD stablecoin on 9 June 2026, the exit agent on KPK USDC Yield started draining the affected markets about <a href="{esc(DOCS['cap_example_tx'])}" target="_blank" rel="noopener">15 seconds after the alert ↗</a>. Cap confirmed a false positive minutes later, and the markets were re-enabled after review.</div>
     </div>
     <div class="card layer">

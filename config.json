@@ -173,7 +173,8 @@
     "check_minutes": 5,
     "hf_exit_below": 1.13,
     "spread_exit": "two 6-hour windows in a row",
-    "as_of": "10 Oct 2026"
+    "as_of": "10 Oct 2026",
+    "redemption_min_hf": 1.14
   },
   "charts_from": "2026-10-01T00:00:00Z",
   "docs": {
