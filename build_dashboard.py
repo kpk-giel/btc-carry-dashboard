@@ -458,7 +458,7 @@ def hf_chart():
     # Name the planned hold so a high HF after the seed borrow does not read as a fault.
     if seed and first_relever and seed.get("hf_after"):
         xm = (f.x(seed["t"]) + f.x(first_relever["t"])) / 2
-        body.append(f'<text class="lab" x="{xm:.1f}" y="{f.y(seed["hf_after"]) + 18:.1f}" text-anchor="middle">hold: seed borrow, re-lever off by design</text>')
+        body.append(f'<text class="lab" x="{xm:.1f}" y="{f.y(seed["hf_after"]) + 18:.1f}" text-anchor="middle">hold: seed borrow, re-lever off on purpose</text>')
         body.append(f'<text class="lab" x="{f.x(first_relever["t"]) + 8:.1f}" y="{f.y(first_relever["hf_after"] or 1.21) - 22:.1f}">re-lever on: levered to target</text>')
     if synced_at and any(p["t"] > synced_at for p in pts):
         xs = f.x(synced_at)
