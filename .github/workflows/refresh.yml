@@ -4,10 +4,11 @@ name: Refresh board
 # every source (a public Ethereum RPC, the Morpho API, the Merkl API) is keyless.
 on:
   schedule:
-    # Every 4 hours at :20 (00:20, 04:20, ... UTC). GitHub may delay scheduled
-    # runs under load, and disables them after 60 days without repo activity;
-    # the commits this workflow makes count as activity.
-    - cron: '20 */4 * * *'
+    # Every hour at :20 UTC. GitHub delays or drops many scheduled runs under
+    # load, so an hourly schedule keeps the page fresh when some are skipped. It
+    # disables schedules after 60 days without repo activity; the commits this
+    # workflow makes count as activity.
+    - cron: '20 * * * *'
   workflow_dispatch: {}
 
 # Only the commit needs write access; nothing here reads repo secrets.

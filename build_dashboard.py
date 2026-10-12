@@ -532,13 +532,46 @@ def price_chart():
     body.append(y_ticks(f, [v * step for v in range(math.ceil(lo / step), math.floor(hi / step) + 1)], lambda v: f"{v / 1000:,.0f}k"))
     body.append(time_ticks(f))
     # The no-action corridor: liquidation price x [repay trigger, borrow trigger], with the band in force.
-    upper = [(p["t"], p["liq"] * band_at(p["t"])["borrow_trigger"]) for p in with_liq]
-    lower = [(p["t"], p["liq"] * band_at(p["t"])["repay_trigger"]) for p in with_liq]
-    if upper:
+    # While re-lever is off the agent only repays, so the corridor has no upper edge. Each run of readings
+    # with the same re-lever setting is drawn on its own, and a reading without a loan breaks the corridor.
+    # A retune between two readings is drawn as a step at the moment it took effect, not a slope.
+    shown = {id(p) for p in with_liq}
+    rows = []
+    for p in pts:
+        ok = id(p) in shown
+        if rows and rows[-1]["ok"] and ok:
+            for nb in band_hist:
+                if rows[-1]["t"] < nb["t"] <= p["t"]:
+                    rows += [{**rows[-1], "t": nb["t"]}, {**rows[-1], "t": nb["t"], "band": nb}]
+        rows.append({"t": p["t"], "liq": p.get("liq"), "band": band_at(p["t"]), "ok": ok})
+    runs, cur, key = [], [], None
+    for r in rows:
+        if not r["ok"]:
+            if cur:
+                runs.append((key, cur))
+            cur, key = [], None
+            continue
+        k = r["band"]["relever"]
+        if cur and k != key:
+            runs.append((key, cur + [r]))
+            cur = []
+        if not cur:
+            key = k
+        cur.append(r)
+    if cur:
+        runs.append((key, cur))
+    for relever, run in runs:
+        if len(run) < 2:
+            continue
+        lower = [(r["t"], r["liq"] * r["band"]["repay_trigger"]) for r in run]
+        upper = [(r["t"], r["liq"] * r["band"]["borrow_trigger"] if relever else hi) for r in run]
         poly = " ".join(f"{f.x(t):.1f},{f.y(v):.1f}" for t, v in upper) + " " + " ".join(f"{f.x(t):.1f},{f.y(v):.1f}" for t, v in reversed(lower))
-        body.append(f'<polygon class="band" points="{poly}"/>')
-        body.append(f'<path class="band-edge" d="{path(f, upper, None)}"/><path class="band-edge" d="{path(f, lower, None)}"/>')
-    body.append(f'<path class="liq" d="{path(f, with_liq, "liq")}"/>')
+        body.append(f'<polygon class="band{"" if relever else " open"}" points="{poly}"/>')
+        body.append((f'<path class="band-edge" d="{path(f, upper, None)}"/>' if relever else "") + f'<path class="band-edge" d="{path(f, lower, None)}"/>')
+        if not relever and run[-1]["t"] - run[0]["t"] >= 6 * 3600:
+            x, y = f.x(run[0]["t"]) + 12, f.y(lower[0][1]) - 6
+            body.append(f'<text class="lab band-lab" transform="rotate(-90 {x:.1f} {y:.1f})" x="{x:.1f}" y="{y:.1f}">re-lever off: repays only</text>')
+    body.append(f'<path class="liq" d="{path(f, [{"t": p["t"], "liq": p["liq"] if id(p) in shown else None} for p in pts], "liq")}"/>')
     body.append(f'<path class="line" d="{path(f, pts, "px")}"/>')
     last = pts[-1]
     body.append(f'<text class="lab" x="{PAD_L + f.pw + 6}" y="{f.y(last["px"]) + 4:.1f}">BTC {last["px"] / 1000:,.1f}k</text>')
@@ -557,7 +590,9 @@ def price_chart():
     for p in pts:
         bb = band_at(p["t"])
         rows = [stamp(p["t"]), f"BTC oracle price ${p['px']:,.0f}"]
-        if p.get("liq"):
+        if p.get("liq") and not bb["relever"]:
+            rows += [f"re-lever off: the agent only repays, below ${p['liq'] * bb['repay_trigger']:,.0f}", f"liquidation price ${p['liq']:,.0f}"]
+        elif p.get("liq"):
             rows += [f"no-action corridor ${p['liq'] * bb['repay_trigger']:,.0f} to ${p['liq'] * bb['borrow_trigger']:,.0f}", f"liquidation price ${p['liq']:,.0f}"]
         else:
             rows += ["no debt yet"]
@@ -1046,6 +1081,7 @@ details.agent[open] > summary::after { content: "Show less"; }
 .chart .liq { fill: none; stroke: var(--c-liq); stroke-width: 1.5; stroke-dasharray: 6 4; }
 .chart .liq-lab { fill: var(--c-liq); }
 .chart .band { fill: var(--c-band-fill); stroke: none; }
+.chart .band.open { opacity: 0.5; }
 .chart .band-edge { fill: none; stroke: var(--c-band); stroke-width: 1; stroke-dasharray: 3 3; }
 .chart .band-target { stroke: var(--c-band); stroke-width: 1.5; }
 .chart .band-lab { fill: var(--c-band); }
@@ -1622,7 +1658,7 @@ page = f"""<!doctype html>
     </div>
     <div class="legend"><span><i></i>BTC oracle price (Aave V4)</span><span><i class="band"></i>no-action corridor</span><span><i class="liq"></i>liquidation price</span></div>
     {price_chart()}
-    <div class="stat-sub">The corridor is the liquidation price × [repay trigger, borrow trigger], using the band in force at each moment. Inside it the agent does nothing; it moves whenever the agent borrows or repays, or the band is retuned.</div>
+    <div class="stat-sub">The corridor is the liquidation price × [repay trigger, borrow trigger], using the band in force at each moment. Inside it the agent does nothing; it moves whenever the agent borrows or repays, or the band is retuned. While re-lever is off the agent only repays, so the corridor has no upper edge.</div>
   </div>
   <div class="card">
     <details class="fold">
@@ -1691,7 +1727,7 @@ page = f"""<!doctype html>
   <p><b>Data.</b> Live figures are read from Ethereum mainnet at block {chain['block']:,} ({esc(as_of)}) through a public RPC: the Aave V4 Bluechip spoke and Core hub, the fund's NAV calculator and shares contract, and the two KPK USDC vaults. Vault APYs come from the Morpho API as 24-hour averages, blended by the live allocation. The borrow rebate and unclaimed rewards come from the Merkl API. The BTC price is the Aave V4 oracle price, read as collateral value ÷ collateral amount.</p>
   <p><b>Agent activity.</b> From KPK's agent run records and the fund's onchain transactions, {esc(snap_label)}. Shown from the first subscription on {esc(utc(window_t0).strftime('%-d %b %Y'))}; earlier setup and small test transactions are on Etherscan. HF before and after a transaction is read onchain one block before and at its block; hourly readings fill the charts in between.</p>
   <p><b>Reading the numbers.</b> ≈ marks a derived or rounded figure: USD values at the oracle price, WBTC equivalents of USD amounts. Carry figures use live rates read at each build, not a backtest, and are not promises; the loop table is a projection. Carry = LTV × (vault yield − net borrow cost) × (1 − 10% performance fee), on the BTC held.</p>
-  <p><b>Updates.</b> Live figures every 4 hours; agent activity at each sync. Contracts: <a href="{ETHERSCAN}/address/{L.SHARES}" target="_blank" rel="noopener">shares</a> · <a href="{ETHERSCAN}/address/{L.SAFE}" target="_blank" rel="noopener">portfolio Safe</a> · <a href="{ETHERSCAN}/address/0x5d48084481660C97DecDEFE65482fD091d7FDe81" target="_blank" rel="noopener">Manager Safe</a> · <a href="{ETHERSCAN}/address/{L.NAV_CALC}" target="_blank" rel="noopener">NAV calculator</a>.</p>
+  <p><b>Updates.</b> Live figures every hour; agent activity at each sync. Contracts: <a href="{ETHERSCAN}/address/{L.SHARES}" target="_blank" rel="noopener">shares</a> · <a href="{ETHERSCAN}/address/{L.SAFE}" target="_blank" rel="noopener">portfolio Safe</a> · <a href="{ETHERSCAN}/address/0x5d48084481660C97DecDEFE65482fD091d7FDe81" target="_blank" rel="noopener">Manager Safe</a> · <a href="{ETHERSCAN}/address/{L.NAV_CALC}" target="_blank" rel="noopener">NAV calculator</a>.</p>
 </footer>
 
 </div>
