@@ -39,7 +39,7 @@
     ]
   },
   "scaling": {
-    "intro": "The aim is to grow the fund safely and profitably. Each stage adds a borrowing source or a sleeve only once the depth behind it is there, and backup lenders mean no single venue caps the fund's size.",
+    "intro": "The aim is to grow the fund safely and profitably. Each stage adds a borrowing source or a sleeve only once the depth behind it is there, and backup borrow venues mean no single venue caps the fund's size.",
     "stages": [
       {
         "stage": "Today, ~$0.4M",
@@ -84,7 +84,7 @@
       }
     ],
     "backup": {
-      "label": "Backup lenders",
+      "label": "Backup borrow venues",
       "text": "Aave V3 Core, Spark (strong for cbBTC) and Morpho. Their permissions are part of the next governance batch, so the fund can move or spread its borrowing when one venue runs short of depth or turns expensive.",
       "icons": [
         "aave",
