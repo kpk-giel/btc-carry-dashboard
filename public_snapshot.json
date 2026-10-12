@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "synced_at": "2026-10-12T10:11:48Z",
- "synced_block": 26175710,
+ "synced_at": "2026-10-12T10:17:33Z",
+ "synced_block": 26175739,
  "window_start": {
   "t": 1791563351,
   "block": 26156054,
@@ -40,8 +40,8 @@
   "by_agent": [
    {
     "agent": "Health-factor manager",
-    "runs": 787,
-    "completed": 787,
+    "runs": 788,
+    "completed": 788,
     "failed": 0,
     "executed": 1
    },
@@ -660,11 +660,11 @@
    },
    {
     "t": 1791799200,
-    "n": 2,
-    "ok": 2,
+    "n": 3,
+    "ok": 3,
     "fail": 0,
     "states": {
-     "inside the band, no action": 2
+     "inside the band, no action": 3
     }
    }
   ],
@@ -1867,6 +1867,15 @@
     "share_price_usd": 83461.6,
     "share_price_wbtc": 1.00028111,
     "btc_usd": 83438.14
+   },
+   {
+    "t": 1791800243,
+    "b": 26175739,
+    "nav_usd": 398834.18,
+    "nav_wbtc": 4.7799984,
+    "share_price_usd": 83461.61,
+    "share_price_wbtc": 1.00028122,
+    "btc_usd": 83438.14
    }
   ]
  },
@@ -2014,22 +2023,28 @@
    "b": 26175710,
    "borrow_apy": 4.977,
    "lend_apy": 6.184
+  },
+  {
+   "t": 1791800243,
+   "b": 26175739,
+   "borrow_apy": 4.978,
+   "lend_apy": 6.185
   }
  ],
  "capacity": {
-  "t": 1791799908,
-  "block": 26175710,
-  "core_usdc_room_to_kink": 861480,
-  "core_usdc_liquidity": 3480957,
-  "core_usdc_borrow_apy": 4.977,
+  "t": 1791800253,
+  "block": 26175739,
+  "core_usdc_room_to_kink": 856479,
+  "core_usdc_liquidity": 3475957,
+  "core_usdc_borrow_apy": 4.978,
   "core_usdc_rebate_apr": 2,
-  "core_usdc_net_borrow_apy": 2.977,
-  "core_usdc_after_1m_apy": 6.245,
-  "bluechip_usdc_room_under_cap": 776523.6209859997,
+  "core_usdc_net_borrow_apy": 2.978,
+  "core_usdc_after_1m_apy": 6.285,
+  "bluechip_usdc_room_under_cap": 776520.8211709997,
   "core_usdg_liquidity": 8774955,
   "core_usdg_borrow_apy": 4.018,
   "core_usdg_after_1m_apy": 4.078,
   "core_usdg_after_3_5m_apy": 10.879,
-  "bluechip_usdg_room_under_cap": 2265211.486132
+  "bluechip_usdg_room_under_cap": 2265210.297405
  }
 }
