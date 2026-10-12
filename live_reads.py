@@ -271,7 +271,7 @@ def _read_chain_once():
 
 def read_vault_apys():
     """24-hour and 7-day average net APYs (percent) for both vaults. A vault that reports nothing is None."""
-    fields = "name netApy a1: avgNetApy(lookback: ONE_DAY) a7: avgNetApy(lookback: SEVEN_DAYS) a30: avgNetApy(lookback: THIRTY_DAYS)"
+    fields = "name netApy a1: avgNetApy(lookback: ONE_DAY) a7: avgNetApy(lookback: SEVEN_DAYS) a30: avgNetApy(lookback: THIRTY_DAYS) x1: avgNetApyExcludingRewards(lookback: ONE_DAY)"
     q = "query { " + " ".join(f'v{i}: vaultV2ByAddress(address: "{a}", chainId: 1) {{ {fields} }}' for i, (_, a) in enumerate(VAULTS)) + " }"
     data = _post(MORPHO, {"query": q})
     if data.get("errors"):
@@ -280,7 +280,7 @@ def read_vault_apys():
     for i, (name, addr) in enumerate(VAULTS):
         v = (data.get("data") or {}).get(f"v{i}") or {}
         pct = lambda x: None if x is None else x * 100
-        out.append({"name": name, "address": addr, "apy_24h": pct(v.get("a1")), "apy_7d": pct(v.get("a7")), "apy_30d": pct(v.get("a30")), "apy_now": pct(v.get("netApy"))})
+        out.append({"name": name, "address": addr, "apy_24h": pct(v.get("a1")), "apy_7d": pct(v.get("a7")), "apy_30d": pct(v.get("a30")), "apy_24h_ex_rewards": pct(v.get("x1")), "apy_now": pct(v.get("netApy"))})
     return out
 
 

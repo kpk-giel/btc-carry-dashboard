@@ -43,7 +43,7 @@ jobs:
             echo "index.html only ${bytes}B (expected >100KB)" >&2
             exit 1
           fi
-          for id in overview numbers structure simulator automation scaling terms method hfSlider; do
+          for id in overview numbers structure risk simulator automation scaling terms method hfSlider; do
             grep -q "id=\"$id\"" index.html || { echo "section #$id missing" >&2; exit 1; }
           done
           # Public copy rules: none of these may appear on the page.

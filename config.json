@@ -27,7 +27,7 @@
   "minimum_hf": 1.12,
   "liquid_floor_pct": 25,
   "loop_sleeve": {
-    "what": "a syrupUSDG loop at about 8x on the Aave V4 Maple spoke",
+    "what": "a future syrupUSDG loop at about 8x on the Aave V4 Maple spoke",
     "share": "about 25% of the borrowed stablecoins at first, rising towards 50% as Aave capacity allows",
     "limits": "Leverage capped at 8x. When borrow costs rise above the loop's yield, the loop is partly unwound. The loop sleeve is never relied on to deleverage the BTC leg.",
     "spoke": "0x774b9655413c34809c1f1b16b654465A89EBE989",
@@ -39,33 +39,61 @@
     ]
   },
   "scaling": {
-    "intro": "The strategy grows in stages, sized by fund size rather than by date. Each stage adds a borrowing source or a sleeve once the capacity behind it is there.",
+    "intro": "The aim is to grow the fund safely and profitably. Each stage adds a borrowing source or a sleeve only once the depth behind it is there, and backup lenders mean no single venue caps the fund's size.",
     "stages": [
       {
         "stage": "Today, ~$0.4M",
         "adds": "WBTC on Aave V4, USDC borrowed on the Core hub with Merkl's rebate, liquid sleeve in two KPK USDC vaults",
         "needs": "Nothing further: running now",
-        "status": "live"
+        "status": "live",
+        "icons": [
+          "aave",
+          "morpho",
+          "merkl"
+        ]
       },
       {
         "stage": "~$5M",
         "adds": "Borrow USDG on the Core hub and swap it to USDC, a deeper source than USDC; cbBTC as a second deposit asset; borrow sizing that reads rates and hub depth before drawing; a first loop sleeve (syrupUSDG at ~8x on the Aave V4 Maple spoke, ~25% of borrowed stables)",
         "needs": "Permissions through governance and a 3-day timelock; Maple lender onboarding; NAV coverage and monitoring for the loop",
-        "status": "in progress"
+        "status": "in progress",
+        "icons": [
+          "aave",
+          "maple"
+        ]
       },
       {
         "stage": "~$50M",
         "adds": "Larger Aave lines (USDC depth on the Core hub, the Bluechip USDG cap, Maple spoke lines); loop share rising towards 50%; cirBTC as a deposit asset once Aave lists it",
         "needs": "Aave capacity; a cirBTC price feed for NAV",
-        "status": "planned"
+        "status": "planned",
+        "icons": [
+          "aave",
+          "maple"
+        ]
       },
       {
         "stage": "~$150M",
         "adds": "Several venues in parallel: Aave V3 Core and Morpho (syrup loops) next to Aave V4",
         "needs": "Venue integrations in the execution layer",
-        "status": "planned"
+        "status": "planned",
+        "icons": [
+          "aave",
+          "morpho"
+        ]
       }
-    ]
+    ],
+    "backup": {
+      "label": "Backup lenders",
+      "text": "Aave V3 Core, Spark (strong for cbBTC), Morpho and Compound. Their permissions are part of the next governance batch, so the fund can move or spread its borrowing when one venue runs short of depth or turns expensive.",
+      "icons": [
+        "aave",
+        "spark",
+        "morpho",
+        "compound"
+      ],
+      "status": "in progress"
+    }
   },
   "milestones": {
     "_readme": "Shown on the share-price chart. Times are UTC. The deposit, seed borrow and re-lever come from the data; these are the events the data cannot name.",
@@ -78,15 +106,18 @@
     "events": [
       {
         "t": "2026-09-22T21:04:00Z",
-        "label": "test deposits and a test redemption"
+        "label": "test deposits and a test redemption",
+        "short": "test deposits, redemption"
       },
       {
         "t": "2026-10-08T14:51:00Z",
-        "label": "test deposit minted at the last settled price"
+        "label": "test deposit minted at the last settled price",
+        "short": "test deposit"
       },
       {
         "t": "2026-10-09T16:18:00Z",
-        "label": "test debt repaid, debt moved to the Core hub"
+        "label": "test debt repaid, debt moved to the Core hub",
+        "short": "debt to Core hub"
       }
     ]
   },
@@ -97,39 +128,52 @@
         "label": "Chain",
         "value": "Ethereum mainnet only",
         "detail": "All positions and contracts are on Ethereum; nothing runs on other chains.",
-        "status": "live"
+        "status": "live",
+        "icon": "ethereum"
       },
       {
         "label": "Collateral and borrow",
         "value": "Aave V4",
         "detail": "WBTC as collateral on the Bluechip spoke; USDC borrowed from the Core hub.",
-        "status": "live"
+        "status": "live",
+        "icon": "aave"
       },
       {
         "label": "Liquid sleeve",
         "value": "Morpho",
         "detail": "KPK USDC Yield and KPK USDC Yield RWA, both curated by KPK.",
-        "status": "live"
+        "status": "live",
+        "icon": "morpho"
       },
       {
         "label": "Rewards",
         "value": "Merkl",
         "detail": "Pays the Aave borrow rebate and the vault rewards.",
-        "status": "live"
+        "status": "live",
+        "icon": "merkl"
       },
       {
         "label": "Fund contracts",
         "value": "KPK onchain fund",
         "detail": "Shares token, onchain NAV calculator, and a Safe that acts only through Zodiac Roles permissions.",
-        "status": "live"
+        "status": "live",
+        "icon": "kpk"
       },
       {
         "label": "Loop sleeve",
         "value": "Maple",
         "detail": "syrupUSDG, looped on the Aave V4 Maple spoke.",
         "status": "planned",
-        "live_if": "maple"
+        "live_if": "maple",
+        "icon": "maple"
       }
     ]
+  },
+  "risk_controls": {
+    "_readme": "Thresholds that live in the monitoring setup, which the board cannot read itself. Update the numbers and as_of when they change.",
+    "check_minutes": 5,
+    "hf_exit_below": 1.13,
+    "spread_exit": "two 6-hour windows in a row",
+    "as_of": "10 Oct 2026"
   }
 }

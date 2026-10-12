@@ -1,21 +1,41 @@
 {
  "schema": 1,
- "synced_at": "2026-10-12T12:05:48Z",
- "synced_block": 26176280,
+ "synced_at": "2026-10-12T12:45:41Z",
+ "synced_block": 26176479,
  "window_start": {
   "t": 1791563351,
   "block": 26156054,
   "hash": "0xf027ad8893f015e52fbb824796520d66c21ed0393bb6ba5f66527db2717e7ff5"
  },
+ "history_start": {
+  "t": 1790035055,
+  "block": 26029303
+ },
  "position_at_sync": {
-  "t": 1791805223,
-  "block": 26176154,
+  "t": 1791807011,
+  "block": 26176303,
   "collateral_wbtc": 4.77644089,
-  "debt_usdc": 275788.09,
+  "debt_usdc": 275788.85,
   "hf": 1.21826
  },
  "band": {
   "history": [
+   {
+    "t": 1789678745,
+    "repay_trigger": 1.16,
+    "repay_target": 1.21,
+    "borrow_trigger": 1.25,
+    "borrow_target": 1.21,
+    "relever": true
+   },
+   {
+    "t": 1790192594,
+    "repay_trigger": 1.22,
+    "repay_target": 1.28,
+    "borrow_trigger": 1.31,
+    "borrow_target": 1.28,
+    "relever": true
+   },
    {
     "t": 1791555513,
     "repay_trigger": 1.15,
@@ -40,8 +60,8 @@
   "by_agent": [
    {
     "agent": "Health-factor manager",
-    "runs": 810,
-    "completed": 810,
+    "runs": 818,
+    "completed": 818,
     "failed": 0,
     "executed": 1
    },
@@ -60,14 +80,189 @@
     "executed": 1
    }
   ],
+  "by_agent_testing": [
+   {
+    "agent": "Health-factor manager",
+    "runs": 40,
+    "completed": 40,
+    "failed": 0,
+    "executed": 6
+   },
+   {
+    "agent": "Exit agent (emergency unwind)",
+    "runs": 11,
+    "completed": 11,
+    "failed": 0,
+    "executed": 7
+   },
+   {
+    "agent": "Subscription and redemption settler",
+    "runs": 8,
+    "completed": 8,
+    "failed": 0,
+    "executed": 5
+   },
+   {
+    "agent": "Subscription and redemption approver",
+    "runs": 7,
+    "completed": 5,
+    "failed": 2,
+    "executed": 4
+   }
+  ],
   "hourly": [
    {
-    "t": 1791561600,
-    "n": 6,
-    "ok": 6,
+    "t": 1790154000,
+    "n": 1,
+    "ok": 1,
     "fail": 0,
     "states": {
-     "no debt to manage yet, no action": 6
+     "below the repay trigger: repaid": 1
+    }
+   },
+   {
+    "t": 1790157600,
+    "n": 1,
+    "ok": 1,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 1
+    }
+   },
+   {
+    "t": 1790190000,
+    "n": 1,
+    "ok": 1,
+    "fail": 0,
+    "states": {
+     "below the repay trigger: repaid": 1
+    }
+   },
+   {
+    "t": 1790193600,
+    "n": 1,
+    "ok": 1,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 1
+    }
+   },
+   {
+    "t": 1790395200,
+    "n": 1,
+    "ok": 1,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger: borrowed": 1
+    }
+   },
+   {
+    "t": 1790398800,
+    "n": 1,
+    "ok": 1,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 1
+    }
+   },
+   {
+    "t": 1790622000,
+    "n": 1,
+    "ok": 1,
+    "fail": 0,
+    "states": {
+     "no debt to manage yet, no action": 1
+    }
+   },
+   {
+    "t": 1790629200,
+    "n": 1,
+    "ok": 1,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 1
+    }
+   },
+   {
+    "t": 1790913600,
+    "n": 1,
+    "ok": 1,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger: borrowed": 1
+    }
+   },
+   {
+    "t": 1790917200,
+    "n": 1,
+    "ok": 1,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 1
+    }
+   },
+   {
+    "t": 1791432000,
+    "n": 1,
+    "ok": 1,
+    "fail": 0,
+    "states": {
+     "below the repay trigger: repaid": 1
+    }
+   },
+   {
+    "t": 1791435600,
+    "n": 1,
+    "ok": 1,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 1
+    }
+   },
+   {
+    "t": 1791468000,
+    "n": 1,
+    "ok": 1,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger: borrowed": 1
+    }
+   },
+   {
+    "t": 1791471600,
+    "n": 1,
+    "ok": 1,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 1
+    }
+   },
+   {
+    "t": 1791554400,
+    "n": 8,
+    "ok": 8,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 8
+    }
+   },
+   {
+    "t": 1791558000,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791561600,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 4,
+     "no debt to manage yet, no action": 8
     }
    },
    {
@@ -678,35 +873,214 @@
    },
    {
     "t": 1791806400,
-    "n": 1,
-    "ok": 1,
+    "n": 9,
+    "ok": 9,
     "fail": 0,
     "states": {
-     "inside the band, no action": 1
+     "inside the band, no action": 9
     }
    }
   ],
   "executed": [
    {
+    "t": 1790049610,
+    "agent": "Subscription and redemption approver",
+    "label": "approved and settled requests",
+    "hash": "0xd0412905c597c3dc064f4394ca4933ce5461a9d618cc90497ff090cd44db4324",
+    "hf_read": null,
+    "secs": 20.6
+   },
+   {
+    "t": 1790083118,
+    "agent": "Subscription and redemption approver",
+    "label": "approved and settled requests",
+    "hash": "0xf54f1d3a04859de43783c3470de8557d27213d62502375c26a4c2c9301a0a57e",
+    "hf_read": null,
+    "secs": 9.9
+   },
+   {
+    "t": 1790083152,
+    "agent": "Subscription and redemption settler",
+    "label": "supplied new deposits as collateral",
+    "hash": "0x91aa460463e9dcdc7458327989657a8974fa8b3d5fc6064484a4adc967e9b32f",
+    "hf_read": null,
+    "secs": 13.9
+   },
+   {
+    "t": 1790083544,
+    "agent": "Subscription and redemption settler",
+    "label": "supplied new deposits as collateral",
+    "hash": "0xf1bd3ace94ed92d7862b5654a0afd902aa989c9bf6d8ef203eaf795fb48f15b9",
+    "hf_read": null,
+    "secs": 10.3
+   },
+   {
+    "t": 1790083576,
+    "agent": "Subscription and redemption settler",
+    "label": "supplied new deposits as collateral",
+    "hash": "0xc2834677bf1560348a5f08ee40e84d33c92fff6a795cbd4b5b53fd681bdaee01",
+    "hf_read": null,
+    "secs": 10.3
+   },
+   {
+    "t": 1790110087,
+    "agent": "Subscription and redemption settler",
+    "label": "acted",
+    "hash": "0xf05b1e02770e0ced0900c43d13e497f3b97c637cbe198c32303c795da29fb613",
+    "hf_read": null,
+    "secs": 29.8
+   },
+   {
+    "t": 1790111066,
+    "agent": "Subscription and redemption approver",
+    "label": "approved and settled requests",
+    "hash": "0x707de9c1d0f05df5a31bb91f6d79d143d917de5fa7c170afeb694d6b5ddb9a67",
+    "hf_read": null,
+    "secs": 10.6
+   },
+   {
+    "t": 1790155194,
+    "agent": "Health-factor manager",
+    "label": "below the repay trigger: repaid",
+    "hash": "0x8fe96ede9b2947039e36656bb7d7483dff4f471c61ac05216014807bbd592964",
+    "hf_read": 1.20958,
+    "secs": null
+   },
+   {
+    "t": 1790192666,
+    "agent": "Health-factor manager",
+    "label": "below the repay trigger: repaid",
+    "hash": "0x8b3c3f238f29db1bfae35122127e95801feeb2a958857d05f3c46b99ee7b0c3c",
+    "hf_read": 1.20958,
+    "secs": null
+   },
+   {
+    "t": 1790369821,
+    "agent": "Exit agent (emergency unwind)",
+    "label": "full unwind",
+    "hash": "0xeee4bcf5f6cb742c9b141cbd626855423f1e64bd41a753ad1d4132c2f3455787",
+    "hf_read": null,
+    "secs": 40.1
+   },
+   {
+    "t": 1790369939,
+    "agent": "Exit agent (emergency unwind)",
+    "label": "partial unwind",
+    "hash": "0x1f4a9bc39e5a732c7cfeff7515cca347ce6df2d86dc3acf254359adfa6db6982",
+    "hf_read": null,
+    "secs": null
+   },
+   {
+    "t": 1790371027,
+    "agent": "Exit agent (emergency unwind)",
+    "label": "full unwind",
+    "hash": "0x3f915be5cdab21264215d5460e1f20bdb9047413f8443001f09b6d4b1ceaa84b",
+    "hf_read": null,
+    "secs": 8.7
+   },
+   {
+    "t": 1790371089,
+    "agent": "Exit agent (emergency unwind)",
+    "label": "full unwind",
+    "hash": "0x22feab3ffcb79f61259945a8c89e6df47208956e84846840403b5c1cf0793334",
+    "hf_read": null,
+    "secs": 40.1
+   },
+   {
+    "t": 1790395595,
+    "agent": "Exit agent (emergency unwind)",
+    "label": "acted",
+    "hash": "0xad6387949f788600d4c35e47772526dbcce2ac531eab3b7f1decce9287c75195",
+    "hf_read": null,
+    "secs": 36.1
+   },
+   {
+    "t": 1790395622,
+    "agent": "Health-factor manager",
+    "label": "above the borrow trigger: borrowed",
+    "hash": "0xecbdbcf8c4198f06887c5695011c74bbe909f800b6d2daa2e129957ee8d0cb78",
+    "hf_read": 1.20958,
+    "secs": null
+   },
+   {
+    "t": 1790625301,
+    "agent": "Exit agent (emergency unwind)",
+    "label": "full unwind",
+    "hash": "0x561eb15ba879a6aa8316f2f322f830b27a6e265611ed1f5175b5c43c3b7b9bae",
+    "hf_read": null,
+    "secs": 36.1
+   },
+   {
+    "t": 1790915169,
+    "agent": "Health-factor manager",
+    "label": "above the borrow trigger: borrowed",
+    "hash": "0x57517a2629ef63044866893427f3049f7328d7e74daf3fdf0f49e03b7399b759",
+    "hf_read": 1.20958,
+    "secs": null
+   },
+   {
+    "t": 1791433290,
+    "agent": "Health-factor manager",
+    "label": "below the repay trigger: repaid",
+    "hash": "0x138727d4004e85815907120a102273c8763307215df5a9ee22f044d7a093d7e0",
+    "hf_read": 1.20958,
+    "secs": null
+   },
+   {
+    "t": 1791471065,
+    "agent": "Subscription and redemption approver",
+    "label": "approved and settled requests",
+    "hash": "0x67f74ecc849a11682d6b1f7363705fc7ade13d22c58a8bbd3d77c70482661ec4",
+    "hf_read": null,
+    "secs": 7.4
+   },
+   {
+    "t": 1791471089,
+    "agent": "Subscription and redemption settler",
+    "label": "supplied new deposits as collateral",
+    "hash": "0x2d3c806cf5519522cee4df1e6b6ce3154ce0dbdbe61b4fe01da39cfee8d53871",
+    "hf_read": null,
+    "secs": 7.3
+   },
+   {
+    "t": 1791471100,
+    "agent": "Health-factor manager",
+    "label": "above the borrow trigger: borrowed",
+    "hash": "0x0d21787139678e3da4587b43214d7996e2956bc13e0fa445c8c7a944946cc510",
+    "hf_read": 1.20958,
+    "secs": null
+   },
+   {
+    "t": 1791562587,
+    "agent": "Exit agent (emergency unwind)",
+    "label": "full unwind",
+    "hash": "0x60a964cc1a916325551a20bb1b9b9bc3e20b917c9c203fc0745c74c39e8e4edf",
+    "hf_read": null,
+    "secs": 8.9
+   },
+   {
     "t": 1791563344,
     "agent": "Subscription and redemption approver",
     "label": "approved and settled requests",
     "hash": "0xf027ad8893f015e52fbb824796520d66c21ed0393bb6ba5f66527db2717e7ff5",
-    "hf_read": null
+    "hf_read": null,
+    "secs": 10.1
    },
    {
     "t": 1791563378,
     "agent": "Subscription and redemption settler",
     "label": "supplied new deposits as collateral",
     "hash": "0x4f855547cba7e0a292f7a95d67704669726574d7a5ed625b263a498311b88eb6",
-    "hf_read": null
+    "hf_read": null,
+    "secs": 12.1
    },
    {
     "t": 1791640494,
     "agent": "Health-factor manager",
     "label": "above the borrow trigger: borrowed",
     "hash": "0xcdc9f30a8236b5f10c8a14fd0b30dd4cf08824f9faae11df2d7fc77ea1d97e03",
-    "hf_read": 2.22372
+    "hf_read": 2.22372,
+    "secs": 6.8
    }
   ]
  },
@@ -766,9 +1140,6525 @@
    "hf_after": null,
    "target": null,
    "px": null
+  },
+  {
+   "t": 1791562595,
+   "block": 26155991,
+   "hash": "0x60a964cc1a916325551a20bb1b9b9bc3e20b917c9c203fc0745c74c39e8e4edf",
+   "status": "ok",
+   "actor": "Exit agent (emergency unwind)",
+   "kind": "unwind",
+   "action": "Unwind: withdrew 95.83 from KPK USDC Yield and 95.84 from KPK USDC Yield RWA, repaid 191.65 USDC on the Prime hub, withdrew 0.00351567 WBTC of collateral.",
+   "amount": "191.65 USDC",
+   "hf_before": 1.28249,
+   "hf_after": null,
+   "target": null,
+   "px": 82727.38
+  },
+  {
+   "t": 1791560279,
+   "block": 26155799,
+   "hash": "0xc09733f04d5954ad397cf04ddb60b68597cac2f462e63bd51f640595bf498ba6",
+   "status": "ok",
+   "actor": "Manager Safe",
+   "kind": "governance",
+   "action": "Changed a Manager Safe signer setting.",
+   "amount": null,
+   "hf_before": 1.28249,
+   "hf_after": 1.28249,
+   "target": null,
+   "px": 82727.38
+  },
+  {
+   "t": 1791471107,
+   "block": 26148396,
+   "hash": "0x0d21787139678e3da4587b43214d7996e2956bc13e0fa445c8c7a944946cc510",
+   "status": "ok",
+   "actor": "Health-factor manager",
+   "kind": "relever",
+   "action": "Re-lever: borrowed 166.39 USDC on the Prime hub, deposited 83.20 into KPK USDC Yield and 83.20 into KPK USDC Yield RWA.",
+   "amount": "166.39 USDC",
+   "hf_before": 9.72066,
+   "hf_after": 1.28,
+   "target": 1.28,
+   "px": 82551.29
+  },
+  {
+   "t": 1791471095,
+   "block": 26148395,
+   "hash": "0x2d3c806cf5519522cee4df1e6b6ce3154ce0dbdbe61b4fe01da39cfee8d53871",
+   "status": "ok",
+   "actor": "Subscription and redemption settler",
+   "kind": "collateral",
+   "action": "Supplied 0.00305096 WBTC as collateral on the Aave V4 Bluechip spoke.",
+   "amount": "0.00305096 WBTC",
+   "hf_before": 1.2849,
+   "hf_after": 9.72066,
+   "target": null,
+   "px": 82551.29
+  },
+  {
+   "t": 1791471071,
+   "block": 26148393,
+   "hash": "0x67f74ecc849a11682d6b1f7363705fc7ade13d22c58a8bbd3d77c70482661ec4",
+   "status": "ok",
+   "actor": "Subscription and redemption approver",
+   "kind": "subscription",
+   "action": "Received 0.00305096 WBTC from subscriptions, minted 0.0031 shares.",
+   "amount": "0.00305096 WBTC",
+   "hf_before": 1.2849,
+   "hf_after": 1.2849,
+   "target": null,
+   "px": 82551.29
+  },
+  {
+   "t": 1791462299,
+   "block": 26147665,
+   "hash": "0x2dddf5db0ff767555358ea7ab8041f44067d207bbee652cbabb22d569cb3989a",
+   "status": "ok",
+   "actor": "Manager Safe",
+   "kind": "governance",
+   "action": "Changed a Manager Safe signer setting.",
+   "amount": null,
+   "hf_before": 1.28303,
+   "hf_after": 1.28303,
+   "target": null,
+   "px": 82431.66
+  },
+  {
+   "t": 1791433307,
+   "block": 26145256,
+   "hash": "0x138727d4004e85815907120a102273c8763307215df5a9ee22f044d7a093d7e0",
+   "status": "ok",
+   "actor": "Health-factor manager",
+   "kind": "derisk",
+   "action": "De-risk: withdrew 0.65 from KPK USDC Yield and 0.65 from KPK USDC Yield RWA, repaid 1.30 USDC on the Prime hub.",
+   "amount": "1.30 USDC",
+   "hf_before": 1.21741,
+   "hf_after": 1.28,
+   "target": 1.28,
+   "px": 82233.48
+  },
+  {
+   "t": 1790915183,
+   "block": 26102241,
+   "hash": "0x57517a2629ef63044866893427f3049f7328d7e74daf3fdf0f49e03b7399b759",
+   "status": "ok",
+   "actor": "Health-factor manager",
+   "kind": "relever",
+   "action": "Re-lever: borrowed 0.71 USDC on the Prime hub, deposited 0.35 into KPK USDC Yield and 0.35 into KPK USDC Yield RWA.",
+   "amount": "0.71 USDC",
+   "hf_before": 1.31499,
+   "hf_after": 1.28,
+   "target": 1.28,
+   "px": 86404.39
+  },
+  {
+   "t": 1790627795,
+   "block": 26078384,
+   "hash": "0x9b53bb3a3fc1221bc46bb3a0fcaf5724cbb4429a14c9f16ef495091870e2fd05",
+   "status": "ok",
+   "actor": "Manager Safe",
+   "kind": "governance",
+   "action": "Changed a Manager Safe signer setting.",
+   "amount": null,
+   "hf_before": 1.26696,
+   "hf_after": 1.26696,
+   "target": null,
+   "px": 83199.62
+  },
+  {
+   "t": 1790626883,
+   "block": 26078309,
+   "hash": "0x2360dcfa40587e665cb1d832e7c1b97d275fafea654bb5a2a7acf81065bd9d37",
+   "status": "ok",
+   "actor": "Manager Safe",
+   "kind": "collateral",
+   "action": "Borrowed 25.79 USDC on the Prime hub, deposited 12.89 into KPK USDC Yield and 12.89 into KPK USDC Yield RWA, supplied 0.00046471 WBTC as collateral on the Aave V4 Bluechip spoke.",
+   "amount": "0.00046471 WBTC",
+   "hf_before": null,
+   "hf_after": 1.26696,
+   "target": null,
+   "px": 83199.62
+  },
+  {
+   "t": 1790625335,
+   "block": 26078180,
+   "hash": "0x561eb15ba879a6aa8316f2f322f830b27a6e265611ed1f5175b5c43c3b7b9bae",
+   "status": "ok",
+   "actor": "Exit agent (emergency unwind)",
+   "kind": "unwind",
+   "action": "Unwind: withdrew 12.89 from KPK USDC Yield and 12.89 from KPK USDC Yield RWA, repaid 25.79 USDC on the Prime hub, withdrew 0.00046471 WBTC of collateral.",
+   "amount": "25.79 USDC",
+   "hf_before": 1.26696,
+   "hf_after": null,
+   "target": null,
+   "px": 83199.62
+  },
+  {
+   "t": 1790395631,
+   "block": 26059133,
+   "hash": "0xecbdbcf8c4198f06887c5695011c74bbe909f800b6d2daa2e129957ee8d0cb78",
+   "status": "ok",
+   "actor": "Health-factor manager",
+   "kind": "relever",
+   "action": "Re-lever: borrowed 25.78 USDC on the Prime hub, deposited 12.89 into KPK USDC Yield and 12.89 into KPK USDC Yield RWA.",
+   "amount": "25.78 USDC",
+   "hf_before": 68884.25907,
+   "hf_after": 1.27929,
+   "target": 1.28,
+   "px": 83970.34
+  },
+  {
+   "t": 1790395607,
+   "block": 26059131,
+   "hash": "0xad6387949f788600d4c35e47772526dbcce2ac531eab3b7f1decce9287c75195",
+   "status": "ok",
+   "actor": "Exit agent (emergency unwind)",
+   "kind": "unwind",
+   "action": "Unwind: withdrew 12.92 from KPK USDC Yield and 12.91 from KPK USDC Yield RWA, repaid 25.83 USDC on the Prime hub.",
+   "amount": "25.83 USDC",
+   "hf_before": 1.27669,
+   "hf_after": 68884.26037,
+   "target": null,
+   "px": 83970.34
+  },
+  {
+   "t": 1790371247,
+   "block": 26057112,
+   "hash": "0xaf836c87784dd0101d676704fd0366fb4043241b3ed5861c93afd7628c1d2d81",
+   "status": "ok",
+   "actor": "Manager Safe",
+   "kind": "other",
+   "action": "Deposited 12.91 into KPK USDC Yield and 12.91 into KPK USDC Yield RWA.",
+   "amount": null,
+   "hf_before": 1.27377,
+   "hf_after": 1.27377,
+   "target": null,
+   "px": 83775.05
+  },
+  {
+   "t": 1790371127,
+   "block": 26057102,
+   "hash": "0x22feab3ffcb79f61259945a8c89e6df47208956e84846840403b5c1cf0793334",
+   "status": "ok",
+   "actor": "Exit agent (emergency unwind)",
+   "kind": "unwind",
+   "action": "Unwind: withdrew 12.92 from KPK USDC Yield RWA.",
+   "amount": null,
+   "hf_before": 1.27377,
+   "hf_after": 1.27377,
+   "target": null,
+   "px": 83775.05
+  },
+  {
+   "t": 1790371031,
+   "block": 26057094,
+   "hash": "0x3f915be5cdab21264215d5460e1f20bdb9047413f8443001f09b6d4b1ceaa84b",
+   "status": "ok",
+   "actor": "Exit agent (emergency unwind)",
+   "kind": "unwind",
+   "action": "Unwind: withdrew 12.91 from KPK USDC Yield.",
+   "amount": null,
+   "hf_before": 1.27377,
+   "hf_after": 1.27377,
+   "target": null,
+   "px": 83775.05
+  },
+  {
+   "t": 1790370719,
+   "block": 26057068,
+   "hash": "0xd125e5828f88c4b1f8917fb1499172fec1b161980b991cd72ee2fb14dc78b13b",
+   "status": "ok",
+   "actor": "Manager Safe",
+   "kind": "other",
+   "action": "Deposited 12.92 into KPK USDC Yield RWA.",
+   "amount": null,
+   "hf_before": 1.27421,
+   "hf_after": 1.27421,
+   "target": null,
+   "px": 83804.38
+  },
+  {
+   "t": 1790369951,
+   "block": 26057005,
+   "hash": "0x1f4a9bc39e5a732c7cfeff7515cca347ce6df2d86dc3acf254359adfa6db6982",
+   "status": "ok",
+   "actor": "Exit agent (emergency unwind)",
+   "kind": "unwind",
+   "action": "Unwind: withdrew 0.00 from KPK USDC Yield.",
+   "amount": null,
+   "hf_before": 1.27696,
+   "hf_after": 1.27696,
+   "target": null,
+   "px": 83984.69
+  },
+  {
+   "t": 1790369843,
+   "block": 26056996,
+   "hash": "0xeee4bcf5f6cb742c9b141cbd626855423f1e64bd41a753ad1d4132c2f3455787",
+   "status": "ok",
+   "actor": "Exit agent (emergency unwind)",
+   "kind": "unwind",
+   "action": "Unwind: withdrew 12.91 from KPK USDC Yield RWA.",
+   "amount": null,
+   "hf_before": 1.27696,
+   "hf_after": 1.27696,
+   "target": null,
+   "px": 83984.69
+  },
+  {
+   "t": 1790304143,
+   "block": 26051553,
+   "hash": "0xe45f1a792a52d0886b3f56f0d530cb6fdd61375873324d269cbd907c3a7ca519",
+   "status": "ok",
+   "actor": "Manager Safe",
+   "kind": "permissions",
+   "action": "Updated the agents' permissions.",
+   "amount": null,
+   "hf_before": 1.28965,
+   "hf_after": 1.28965,
+   "target": null,
+   "px": 84809.97
+  },
+  {
+   "t": 1790192675,
+   "block": 26042341,
+   "hash": "0x8b3c3f238f29db1bfae35122127e95801feeb2a958857d05f3c46b99ee7b0c3c",
+   "status": "ok",
+   "actor": "Health-factor manager",
+   "kind": "derisk",
+   "action": "De-risk: withdrew 1.00 from KPK USDC Yield and 1.00 from KPK USDC Yield RWA, repaid 2.00 USDC on the Prime hub.",
+   "amount": "2.00 USDC",
+   "hf_before": 1.18797,
+   "hf_after": 1.28,
+   "target": 1.28,
+   "px": 84155.6
+  },
+  {
+   "t": 1790155199,
+   "block": 26039245,
+   "hash": "0x8fe96ede9b2947039e36656bb7d7483dff4f471c61ac05216014807bbd592964",
+   "status": "ok",
+   "actor": "Health-factor manager",
+   "kind": "derisk",
+   "action": "De-risk: withdrew 1.21 from KPK USDC Yield and 1.21 from KPK USDC Yield RWA, repaid 2.42 USDC on the Prime hub.",
+   "amount": "2.42 USDC",
+   "hf_before": 1.11317,
+   "hf_after": 1.21,
+   "target": 1.21,
+   "px": 85715.22
+  },
+  {
+   "t": 1790111075,
+   "block": 26035594,
+   "hash": "0x707de9c1d0f05df5a31bb91f6d79d143d917de5fa7c170afeb694d6b5ddb9a67",
+   "status": "ok",
+   "actor": "Subscription and redemption approver",
+   "kind": "redemption",
+   "action": "Paid out 0.00003525 WBTC to redemptions, burned 0.0000 shares.",
+   "amount": "0.00003525 WBTC",
+   "hf_before": 1.11994,
+   "hf_after": 1.11994,
+   "target": null,
+   "px": 86226.42
+  },
+  {
+   "t": 1790110115,
+   "block": 26035514,
+   "hash": "0xf05b1e02770e0ced0900c43d13e497f3b97c637cbe198c32303c795da29fb613",
+   "status": "ok",
+   "actor": "Subscription and redemption settler",
+   "kind": "collateral_out",
+   "action": "Withdrew 0.00003529 WBTC of collateral.",
+   "amount": "0.00003529 WBTC",
+   "hf_before": 1.20499,
+   "hf_after": 1.11995,
+   "target": null,
+   "px": 86226.42
+  },
+  {
+   "t": 1790105123,
+   "block": 26035098,
+   "hash": "0xcd2e3dd8493e475d3aae31126c9b4660b317c6f9cebb255f42c54c47dbf9a8e4",
+   "status": "ok",
+   "actor": "Manager Safe",
+   "kind": "requests",
+   "action": "Approved the pending subscription and redemption requests.",
+   "amount": null,
+   "hf_before": 1.2081,
+   "hf_after": 1.2081,
+   "target": null,
+   "px": 86446.73
+  },
+  {
+   "t": 1790097731,
+   "block": 26034486,
+   "hash": "0x81be755ae8ec3e296d7bbf8023133d58d92b139ba8441ed72e7c9333548e6fde",
+   "status": "ok",
+   "actor": "Manager Safe",
+   "kind": "requests",
+   "action": "Approved the pending subscription and redemption requests.",
+   "amount": null,
+   "hf_before": 1.20819,
+   "hf_after": 1.20819,
+   "target": null,
+   "px": 86450.81
+  },
+  {
+   "t": 1790085683,
+   "block": 26033493,
+   "hash": "0x98986b819066959336873beec6743b353a938eb8e22eb38e9ec294e591ef5ea2",
+   "status": "ok",
+   "actor": "Manager Safe",
+   "kind": "seed_borrow",
+   "action": "Seed borrow: borrowed 30.23 USDC on the Prime hub, deposited 15.12 into KPK USDC Yield and 15.12 into KPK USDC Yield RWA.",
+   "amount": "30.23 USDC",
+   "hf_before": null,
+   "hf_after": 1.20008,
+   "target": null,
+   "px": 85873.05
+  },
+  {
+   "t": 1790083583,
+   "block": 26033318,
+   "hash": "0xc2834677bf1560348a5f08ee40e84d33c92fff6a795cbd4b5b53fd681bdaee01",
+   "status": "ok",
+   "actor": "Subscription and redemption settler",
+   "kind": "collateral",
+   "action": "Supplied 0.00020000 WBTC as collateral on the Aave V4 Bluechip spoke.",
+   "amount": "0.00020000 WBTC",
+   "hf_before": null,
+   "hf_after": null,
+   "target": null,
+   "px": 85958.24
+  },
+  {
+   "t": 1790083547,
+   "block": 26033315,
+   "hash": "0xf1bd3ace94ed92d7862b5654a0afd902aa989c9bf6d8ef203eaf795fb48f15b9",
+   "status": "ok",
+   "actor": "Subscription and redemption settler",
+   "kind": "collateral",
+   "action": "Supplied 0.00020000 WBTC as collateral on the Aave V4 Bluechip spoke.",
+   "amount": "0.00020000 WBTC",
+   "hf_before": null,
+   "hf_after": null,
+   "target": null,
+   "px": 85958.24
+  },
+  {
+   "t": 1790083163,
+   "block": 26033283,
+   "hash": "0x91aa460463e9dcdc7458327989657a8974fa8b3d5fc6064484a4adc967e9b32f",
+   "status": "ok",
+   "actor": "Subscription and redemption settler",
+   "kind": "collateral",
+   "action": "Supplied 0.00010000 WBTC as collateral on the Aave V4 Bluechip spoke.",
+   "amount": "0.00010000 WBTC",
+   "hf_before": null,
+   "hf_after": null,
+   "target": null,
+   "px": 85958.24
+  },
+  {
+   "t": 1790083127,
+   "block": 26033280,
+   "hash": "0xf54f1d3a04859de43783c3470de8557d27213d62502375c26a4c2c9301a0a57e",
+   "status": "ok",
+   "actor": "Subscription and redemption approver",
+   "kind": "subscription",
+   "action": "Received 0.00010000 WBTC from subscriptions, minted 0.0001 shares.",
+   "amount": "0.00010000 WBTC",
+   "hf_before": null,
+   "hf_after": null,
+   "target": null,
+   "px": null
+  },
+  {
+   "t": 1790049635,
+   "block": 26030509,
+   "hash": "0xd0412905c597c3dc064f4394ca4933ce5461a9d618cc90497ff090cd44db4324",
+   "status": "ok",
+   "actor": "Subscription and redemption approver",
+   "kind": "subscription",
+   "action": "Received 0.00020000 WBTC from subscriptions, minted 0.0002 shares.",
+   "amount": "0.00020000 WBTC",
+   "hf_before": null,
+   "hf_after": null,
+   "target": null,
+   "px": null
+  },
+  {
+   "t": 1790049395,
+   "block": 26030489,
+   "hash": "0x70bafae648bc8af832b4d418ec8e7d6c42d7e42465d12ec7b87039f569c91b9c",
+   "status": "ok",
+   "actor": "Manager Safe",
+   "kind": "subscription",
+   "action": "Received 0.00020000 WBTC from subscriptions, minted 0.0002 shares.",
+   "amount": "0.00020000 WBTC",
+   "hf_before": null,
+   "hf_after": null,
+   "target": null,
+   "px": null
+  },
+  {
+   "t": 1790035199,
+   "block": 26029315,
+   "hash": "0x3a5aeb4042d1cff25b120cc6071b014d0695562814fa52f0b867d55aee9faa7f",
+   "status": "ok",
+   "actor": "Manager Safe",
+   "kind": "permissions",
+   "action": "Updated the agents' permissions.",
+   "amount": null,
+   "hf_before": null,
+   "hf_after": null,
+   "target": null,
+   "px": null
+  },
+  {
+   "t": 1790035139,
+   "block": 26029310,
+   "hash": "0x62f1ebd72c6ecf703f16869c5a45349a759ee36978b9e565d67fdbdb4fa07339",
+   "status": "ok",
+   "actor": "Manager Safe",
+   "kind": "permissions",
+   "action": "Updated the agents' permissions.",
+   "amount": null,
+   "hf_before": null,
+   "hf_after": null,
+   "target": null,
+   "px": null
+  },
+  {
+   "t": 1790035055,
+   "block": 26029303,
+   "hash": "0xa8fc1ae2f4c504ce8ea445b80cc8a3dc91d0e6d834391715633f4f736d279c73",
+   "status": "ok",
+   "actor": "Manager Safe",
+   "kind": "permissions",
+   "action": "Updated the agents' permissions.",
+   "amount": null,
+   "hf_before": null,
+   "hf_after": null,
+   "target": null,
+   "px": null
   }
  ],
  "samples": [
+  {
+   "t": 1790035043,
+   "b": 26029302,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0,
+   "sup": 0,
+   "tag": "before"
+  },
+  {
+   "t": 1790035055,
+   "b": 26029303,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0,
+   "sup": 0
+  },
+  {
+   "t": 1790035055,
+   "b": 26029303,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0,
+   "sup": 0,
+   "tag": "after"
+  },
+  {
+   "t": 1790035127,
+   "b": 26029309,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0,
+   "sup": 0,
+   "tag": "before"
+  },
+  {
+   "t": 1790035139,
+   "b": 26029310,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0,
+   "sup": 0,
+   "tag": "after"
+  },
+  {
+   "t": 1790035187,
+   "b": 26029314,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0,
+   "sup": 0,
+   "tag": "before"
+  },
+  {
+   "t": 1790035199,
+   "b": 26029315,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0,
+   "sup": 0,
+   "tag": "after"
+  },
+  {
+   "t": 1790038691,
+   "b": 26029603,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0,
+   "sup": 0
+  },
+  {
+   "t": 1790042303,
+   "b": 26029903,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0,
+   "sup": 0
+  },
+  {
+   "t": 1790045927,
+   "b": 26030203,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0,
+   "sup": 0
+  },
+  {
+   "t": 1790049383,
+   "b": 26030488,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0,
+   "sup": 0,
+   "tag": "before"
+  },
+  {
+   "t": 1790049395,
+   "b": 26030489,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00019999,
+   "sup": 0.0002,
+   "tag": "after"
+  },
+  {
+   "t": 1790049563,
+   "b": 26030503,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00019999,
+   "sup": 0.0002
+  },
+  {
+   "t": 1790049623,
+   "b": 26030508,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00019999,
+   "sup": 0.0002,
+   "tag": "before"
+  },
+  {
+   "t": 1790049635,
+   "b": 26030509,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00039999,
+   "sup": 0.00040001,
+   "tag": "after"
+  },
+  {
+   "t": 1790053199,
+   "b": 26030803,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.0004,
+   "sup": 0.00040001
+  },
+  {
+   "t": 1790056823,
+   "b": 26031103,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00039999,
+   "sup": 0.00040001
+  },
+  {
+   "t": 1790060471,
+   "b": 26031403,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.0004,
+   "sup": 0.00040001
+  },
+  {
+   "t": 1790064083,
+   "b": 26031703,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.0004,
+   "sup": 0.00040001
+  },
+  {
+   "t": 1790067719,
+   "b": 26032003,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00039999,
+   "sup": 0.00040001
+  },
+  {
+   "t": 1790071379,
+   "b": 26032303,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00039999,
+   "sup": 0.00040001
+  },
+  {
+   "t": 1790074979,
+   "b": 26032603,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00039999,
+   "sup": 0.00040001
+  },
+  {
+   "t": 1790078603,
+   "b": 26032903,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00039999,
+   "sup": 0.00040001
+  },
+  {
+   "t": 1790082203,
+   "b": 26033203,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00039999,
+   "sup": 0.00040001
+  },
+  {
+   "t": 1790083115,
+   "b": 26033279,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00039999,
+   "sup": 0.00040001,
+   "tag": "before"
+  },
+  {
+   "t": 1790083127,
+   "b": 26033280,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00049999,
+   "sup": 0.00050002,
+   "tag": "after"
+  },
+  {
+   "t": 1790083151,
+   "b": 26033282,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00049999,
+   "sup": 0.00050002,
+   "tag": "before"
+  },
+  {
+   "t": 1790083163,
+   "b": 26033283,
+   "hf": null,
+   "px": 85958.24,
+   "liq": null,
+   "coll": 0.0001,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049998,
+   "sup": 0.00050002,
+   "tag": "after"
+  },
+  {
+   "t": 1790083535,
+   "b": 26033314,
+   "hf": null,
+   "px": 85958.24,
+   "liq": null,
+   "coll": 0.0001,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049998,
+   "sup": 0.00050002,
+   "tag": "before"
+  },
+  {
+   "t": 1790083547,
+   "b": 26033315,
+   "hf": null,
+   "px": 85958.24,
+   "liq": null,
+   "coll": 0.0003,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049998,
+   "sup": 0.00050002,
+   "tag": "after"
+  },
+  {
+   "t": 1790083571,
+   "b": 26033317,
+   "hf": null,
+   "px": 85958.24,
+   "liq": null,
+   "coll": 0.0003,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049998,
+   "sup": 0.00050002,
+   "tag": "before"
+  },
+  {
+   "t": 1790083583,
+   "b": 26033318,
+   "hf": null,
+   "px": 85958.24,
+   "liq": null,
+   "coll": 0.0005,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049999,
+   "sup": 0.00050002,
+   "tag": "after"
+  },
+  {
+   "t": 1790085671,
+   "b": 26033492,
+   "hf": null,
+   "px": 85873.05,
+   "liq": null,
+   "coll": 0.0005,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0005,
+   "sup": 0.00050002,
+   "tag": "before"
+  },
+  {
+   "t": 1790085683,
+   "b": 26033493,
+   "hf": 1.20008,
+   "px": 85873.05,
+   "liq": 71556.19,
+   "coll": 0.0005,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049999,
+   "sup": 0.00050002,
+   "tag": "after"
+  },
+  {
+   "t": 1790085803,
+   "b": 26033503,
+   "hf": 1.20008,
+   "px": 85873.05,
+   "liq": 71556.23,
+   "coll": 0.0005,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049999,
+   "sup": 0.00050002
+  },
+  {
+   "t": 1790089439,
+   "b": 26033803,
+   "hf": 1.19944,
+   "px": 85828.99,
+   "liq": 71557.58,
+   "coll": 0.0005,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049998,
+   "sup": 0.00050002
+  },
+  {
+   "t": 1790093075,
+   "b": 26034103,
+   "hf": 1.20541,
+   "px": 86262.03,
+   "liq": 71562.48,
+   "coll": 0.0005,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049997,
+   "sup": 0.00050002
+  },
+  {
+   "t": 1790096711,
+   "b": 26034403,
+   "hf": 1.20675,
+   "px": 86347.49,
+   "liq": 71553.75,
+   "coll": 0.0005,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049998,
+   "sup": 0.00050002
+  },
+  {
+   "t": 1790097719,
+   "b": 26034485,
+   "hf": 1.20819,
+   "px": 86450.81,
+   "liq": 71554.03,
+   "coll": 0.0005,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049998,
+   "sup": 0.00050002,
+   "tag": "before"
+  },
+  {
+   "t": 1790097731,
+   "b": 26034486,
+   "hf": 1.20819,
+   "px": 86450.81,
+   "liq": 71554.04,
+   "coll": 0.0005,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049998,
+   "sup": 0.00050002,
+   "tag": "after"
+  },
+  {
+   "t": 1790100371,
+   "b": 26034703,
+   "hf": 1.20818,
+   "px": 86450.81,
+   "liq": 71554.78,
+   "coll": 0.0005,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049998,
+   "sup": 0.00050002
+  },
+  {
+   "t": 1790103983,
+   "b": 26035003,
+   "hf": 1.20863,
+   "px": 86484.24,
+   "liq": 71555.79,
+   "coll": 0.0005,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049997,
+   "sup": 0.00050002
+  },
+  {
+   "t": 1790105111,
+   "b": 26035097,
+   "hf": 1.2081,
+   "px": 86446.73,
+   "liq": 71556.11,
+   "coll": 0.0005,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049997,
+   "sup": 0.00050002,
+   "tag": "before"
+  },
+  {
+   "t": 1790105123,
+   "b": 26035098,
+   "hf": 1.2081,
+   "px": 86446.73,
+   "liq": 71556.11,
+   "coll": 0.0005,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049997,
+   "sup": 0.00050002,
+   "tag": "after"
+  },
+  {
+   "t": 1790107583,
+   "b": 26035303,
+   "hf": 1.20809,
+   "px": 86446.73,
+   "liq": 71556.81,
+   "coll": 0.0005,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049997,
+   "sup": 0.00050002
+  },
+  {
+   "t": 1790110103,
+   "b": 26035513,
+   "hf": 1.20499,
+   "px": 86226.42,
+   "liq": 71557.51,
+   "coll": 0.0005,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049996,
+   "sup": 0.00050002,
+   "tag": "before"
+  },
+  {
+   "t": 1790110115,
+   "b": 26035514,
+   "hf": 1.11995,
+   "px": 86226.42,
+   "liq": 76991.58,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049995,
+   "sup": 0.00050002,
+   "tag": "after"
+  },
+  {
+   "t": 1790111063,
+   "b": 26035593,
+   "hf": 1.11994,
+   "px": 86226.42,
+   "liq": 76991.87,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00049995,
+   "sup": 0.00050002,
+   "tag": "before"
+  },
+  {
+   "t": 1790111075,
+   "b": 26035594,
+   "hf": 1.11994,
+   "px": 86226.42,
+   "liq": 76991.87,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790111183,
+   "b": 26035603,
+   "hf": 1.11994,
+   "px": 86226.42,
+   "liq": 76991.91,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790114831,
+   "b": 26035903,
+   "hf": 1.11943,
+   "px": 86188.55,
+   "liq": 76993,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790118443,
+   "b": 26036203,
+   "hf": 1.11746,
+   "px": 86037.68,
+   "liq": 76994.06,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790122079,
+   "b": 26036503,
+   "hf": 1.12245,
+   "px": 86422.79,
+   "liq": 76995.02,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790125679,
+   "b": 26036803,
+   "hf": 1.12503,
+   "px": 86622.46,
+   "liq": 76995.97,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790129315,
+   "b": 26037103,
+   "hf": 1.11923,
+   "px": 86177.15,
+   "liq": 76996.93,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790132939,
+   "b": 26037403,
+   "hf": 1.12281,
+   "px": 86453.93,
+   "liq": 76997.51,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790136575,
+   "b": 26037703,
+   "hf": 1.12617,
+   "px": 86713.19,
+   "liq": 76997.98,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790140175,
+   "b": 26038003,
+   "hf": 1.13203,
+   "px": 87164.94,
+   "liq": 76998.46,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790143799,
+   "b": 26038303,
+   "hf": 1.12633,
+   "px": 86726.11,
+   "liq": 76999.06,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790147435,
+   "b": 26038603,
+   "hf": 1.12275,
+   "px": 86451.55,
+   "liq": 76999.67,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790151047,
+   "b": 26038903,
+   "hf": 1.12137,
+   "px": 86346.06,
+   "liq": 77000.27,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790154695,
+   "b": 26039203,
+   "hf": 1.11317,
+   "px": 85715.22,
+   "liq": 77000.86,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790155187,
+   "b": 26039244,
+   "hf": 1.11317,
+   "px": 85715.22,
+   "liq": 77000.94,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1790155199,
+   "b": 26039245,
+   "hf": 1.21,
+   "px": 85715.22,
+   "liq": 70839.02,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790158307,
+   "b": 26039503,
+   "hf": 1.2108,
+   "px": 85772.65,
+   "liq": 70839.43,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790161931,
+   "b": 26039803,
+   "hf": 1.21101,
+   "px": 85787.93,
+   "liq": 70839.83,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790165579,
+   "b": 26040103,
+   "hf": 1.20796,
+   "px": 85572.1,
+   "liq": 70840.23,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790169215,
+   "b": 26040403,
+   "hf": 1.20463,
+   "px": 85336.61,
+   "liq": 70840.64,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790172839,
+   "b": 26040703,
+   "hf": 1.19786,
+   "px": 84857.69,
+   "liq": 70841.04,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790176451,
+   "b": 26041003,
+   "hf": 1.1899,
+   "px": 84290.53,
+   "liq": 70838.3,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790180099,
+   "b": 26041303,
+   "hf": 1.18756,
+   "px": 84125.25,
+   "liq": 70838.71,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790183771,
+   "b": 26041603,
+   "hf": 1.18337,
+   "px": 83828.55,
+   "liq": 70839.12,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790187407,
+   "b": 26041903,
+   "hf": 1.18937,
+   "px": 84254.47,
+   "liq": 70839.52,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790191019,
+   "b": 26042203,
+   "hf": 1.18797,
+   "px": 84155.6,
+   "liq": 70839.93,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790192663,
+   "b": 26042340,
+   "hf": 1.18797,
+   "px": 84155.6,
+   "liq": 70840.12,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1790192675,
+   "b": 26042341,
+   "hf": 1.28,
+   "px": 84155.6,
+   "liq": 65746.57,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790194631,
+   "b": 26042503,
+   "hf": 1.28424,
+   "px": 84434.89,
+   "liq": 65746.8,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790198255,
+   "b": 26042803,
+   "hf": 1.28251,
+   "px": 84321.66,
+   "liq": 65747.19,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790201879,
+   "b": 26043103,
+   "hf": 1.28437,
+   "px": 84444.05,
+   "liq": 65747.58,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790205503,
+   "b": 26043403,
+   "hf": 1.28608,
+   "px": 84557,
+   "liq": 65747.97,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790209115,
+   "b": 26043703,
+   "hf": 1.28359,
+   "px": 84393.81,
+   "liq": 65748.36,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790212727,
+   "b": 26044003,
+   "hf": 1.28198,
+   "px": 84288.76,
+   "liq": 65748.75,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790216387,
+   "b": 26044303,
+   "hf": 1.27884,
+   "px": 84082.62,
+   "liq": 65749.14,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790219999,
+   "b": 26044603,
+   "hf": 1.28245,
+   "px": 84320.43,
+   "liq": 65749.53,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790223611,
+   "b": 26044903,
+   "hf": 1.27559,
+   "px": 83869.77,
+   "liq": 65749.92,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790227235,
+   "b": 26045203,
+   "hf": 1.28148,
+   "px": 84257.94,
+   "liq": 65750.32,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790230871,
+   "b": 26045503,
+   "hf": 1.27697,
+   "px": 83961.62,
+   "liq": 65750.73,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790234531,
+   "b": 26045803,
+   "hf": 1.27719,
+   "px": 83976.77,
+   "liq": 65751.14,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790238167,
+   "b": 26046103,
+   "hf": 1.28377,
+   "px": 84409.55,
+   "liq": 65751.55,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790241803,
+   "b": 26046403,
+   "hf": 1.27028,
+   "px": 83523.41,
+   "liq": 65751.95,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790245475,
+   "b": 26046703,
+   "hf": 1.26376,
+   "px": 83095.58,
+   "liq": 65752.41,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790249123,
+   "b": 26047003,
+   "hf": 1.2651,
+   "px": 83183.83,
+   "liq": 65752.78,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790252747,
+   "b": 26047303,
+   "hf": 1.26905,
+   "px": 83443.8,
+   "liq": 65753.15,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790256383,
+   "b": 26047603,
+   "hf": 1.27409,
+   "px": 83775.68,
+   "liq": 65753.52,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790260019,
+   "b": 26047903,
+   "hf": 1.28069,
+   "px": 84210.35,
+   "liq": 65753.88,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790263643,
+   "b": 26048203,
+   "hf": 1.27504,
+   "px": 83843.85,
+   "liq": 65757.93,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046469,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790267279,
+   "b": 26048503,
+   "hf": 1.28834,
+   "px": 84718.81,
+   "liq": 65758.29,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790270903,
+   "b": 26048803,
+   "hf": 1.28343,
+   "px": 84396.94,
+   "liq": 65758.66,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790274527,
+   "b": 26049103,
+   "hf": 1.28373,
+   "px": 84416.89,
+   "liq": 65759.03,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790278127,
+   "b": 26049403,
+   "hf": 1.28663,
+   "px": 84607.69,
+   "liq": 65759.39,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790281751,
+   "b": 26049703,
+   "hf": 1.28016,
+   "px": 84182.9,
+   "liq": 65759.75,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790285375,
+   "b": 26050003,
+   "hf": 1.28341,
+   "px": 84397.27,
+   "liq": 65760.11,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790289023,
+   "b": 26050303,
+   "hf": 1.27688,
+   "px": 83968.23,
+   "liq": 65760.48,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790292647,
+   "b": 26050603,
+   "hf": 1.28228,
+   "px": 84323.78,
+   "liq": 65760.84,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790296295,
+   "b": 26050903,
+   "hf": 1.28572,
+   "px": 84550.56,
+   "liq": 65761.2,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004647,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790299907,
+   "b": 26051203,
+   "hf": 1.28725,
+   "px": 84651.83,
+   "liq": 65761.57,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790303543,
+   "b": 26051503,
+   "hf": 1.28965,
+   "px": 84809.97,
+   "liq": 65761.94,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790304131,
+   "b": 26051552,
+   "hf": 1.28965,
+   "px": 84809.97,
+   "liq": 65761.99,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1790304143,
+   "b": 26051553,
+   "hf": 1.28965,
+   "px": 84809.97,
+   "liq": 65762,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790307155,
+   "b": 26051803,
+   "hf": 1.28246,
+   "px": 84337.22,
+   "liq": 65762.3,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790310791,
+   "b": 26052103,
+   "hf": 1.27947,
+   "px": 84141.44,
+   "liq": 65762.66,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790314415,
+   "b": 26052403,
+   "hf": 1.28133,
+   "px": 84263.91,
+   "liq": 65763.03,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790318051,
+   "b": 26052703,
+   "hf": 1.28127,
+   "px": 84260.45,
+   "liq": 65763.4,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790321651,
+   "b": 26053003,
+   "hf": 1.27749,
+   "px": 84012.26,
+   "liq": 65763.76,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790325287,
+   "b": 26053303,
+   "hf": 1.28336,
+   "px": 84399.35,
+   "liq": 65764.13,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790328887,
+   "b": 26053603,
+   "hf": 1.28811,
+   "px": 84712.13,
+   "liq": 65764.5,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790332511,
+   "b": 26053903,
+   "hf": 1.28793,
+   "px": 84700.38,
+   "liq": 65764.87,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790336111,
+   "b": 26054203,
+   "hf": 1.29473,
+   "px": 85148.22,
+   "liq": 65765.24,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790339735,
+   "b": 26054503,
+   "hf": 1.28084,
+   "px": 84235.25,
+   "liq": 65765.61,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790343335,
+   "b": 26054803,
+   "hf": 1.27719,
+   "px": 83995.42,
+   "liq": 65765.97,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790346971,
+   "b": 26055103,
+   "hf": 1.27043,
+   "px": 83552.25,
+   "liq": 65767.11,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790350619,
+   "b": 26055403,
+   "hf": 1.27706,
+   "px": 83989.2,
+   "liq": 65767.48,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790354267,
+   "b": 26055703,
+   "hf": 1.2769,
+   "px": 83978.73,
+   "liq": 65767.86,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790357879,
+   "b": 26056003,
+   "hf": 1.27542,
+   "px": 83882.44,
+   "liq": 65768.23,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790361491,
+   "b": 26056303,
+   "hf": 1.27409,
+   "px": 83795.34,
+   "liq": 65768.6,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790365103,
+   "b": 26056603,
+   "hf": 1.27599,
+   "px": 83920.25,
+   "liq": 65768.97,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790368727,
+   "b": 26056903,
+   "hf": 1.27696,
+   "px": 83984.69,
+   "liq": 65769.34,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790369831,
+   "b": 26056995,
+   "hf": 1.27696,
+   "px": 83984.69,
+   "liq": 65769.46,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1790369843,
+   "b": 26056996,
+   "hf": 1.27696,
+   "px": 83984.69,
+   "liq": 65769.46,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790369939,
+   "b": 26057004,
+   "hf": 1.27696,
+   "px": 83984.69,
+   "liq": 65769.47,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1790369951,
+   "b": 26057005,
+   "hf": 1.27696,
+   "px": 83984.69,
+   "liq": 65769.47,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790370707,
+   "b": 26057067,
+   "hf": 1.27421,
+   "px": 83804.38,
+   "liq": 65769.55,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1790370719,
+   "b": 26057068,
+   "hf": 1.27421,
+   "px": 83804.38,
+   "liq": 65769.55,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790371019,
+   "b": 26057093,
+   "hf": 1.27377,
+   "px": 83775.05,
+   "liq": 65769.58,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1790371031,
+   "b": 26057094,
+   "hf": 1.27377,
+   "px": 83775.05,
+   "liq": 65769.58,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790371115,
+   "b": 26057101,
+   "hf": 1.27377,
+   "px": 83775.05,
+   "liq": 65769.59,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1790371127,
+   "b": 26057102,
+   "hf": 1.27377,
+   "px": 83775.05,
+   "liq": 65769.59,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790371235,
+   "b": 26057111,
+   "hf": 1.27377,
+   "px": 83775.05,
+   "liq": 65769.6,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1790371247,
+   "b": 26057112,
+   "hf": 1.27377,
+   "px": 83775.05,
+   "liq": 65769.6,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790372339,
+   "b": 26057203,
+   "hf": 1.27376,
+   "px": 83775.05,
+   "liq": 65769.71,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790375939,
+   "b": 26057503,
+   "hf": 1.27459,
+   "px": 83829.75,
+   "liq": 65770.08,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790379575,
+   "b": 26057803,
+   "hf": 1.27791,
+   "px": 84048.54,
+   "liq": 65770.46,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790383199,
+   "b": 26058103,
+   "hf": 1.27748,
+   "px": 84020.98,
+   "liq": 65770.83,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790386835,
+   "b": 26058403,
+   "hf": 1.27579,
+   "px": 83909.99,
+   "liq": 65771.21,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790390447,
+   "b": 26058703,
+   "hf": 1.27685,
+   "px": 83980.39,
+   "liq": 65771.58,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790394059,
+   "b": 26059003,
+   "hf": 1.27669,
+   "px": 83970.34,
+   "liq": 65771.95,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790395595,
+   "b": 26059130,
+   "hf": 1.27669,
+   "px": 83970.34,
+   "liq": 65772.11,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1790395607,
+   "b": 26059131,
+   "hf": 68884.26037,
+   "px": 83970.34,
+   "liq": 1.22,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": null,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790395619,
+   "b": 26059132,
+   "hf": 68884.25907,
+   "px": 83970.34,
+   "liq": 1.22,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": null,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1790395631,
+   "b": 26059133,
+   "hf": 1.27929,
+   "px": 83970.34,
+   "liq": 65638.43,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790397671,
+   "b": 26059303,
+   "hf": 1.27916,
+   "px": 83962.17,
+   "liq": 65638.64,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790401283,
+   "b": 26059603,
+   "hf": 1.27908,
+   "px": 83957.7,
+   "liq": 65639.02,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790404895,
+   "b": 26059903,
+   "hf": 1.27769,
+   "px": 83866.77,
+   "liq": 65639.39,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046471,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790408531,
+   "b": 26060203,
+   "hf": 1.27921,
+   "px": 83967.34,
+   "liq": 65639.76,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790412143,
+   "b": 26060503,
+   "hf": 1.28016,
+   "px": 84029.67,
+   "liq": 65640.13,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790415779,
+   "b": 26060803,
+   "hf": 1.28176,
+   "px": 84135.06,
+   "liq": 65640.51,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790419403,
+   "b": 26061103,
+   "hf": 1.28072,
+   "px": 84067.32,
+   "liq": 65640.88,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790423015,
+   "b": 26061403,
+   "hf": 1.2812,
+   "px": 84099.82,
+   "liq": 65641.25,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790426627,
+   "b": 26061703,
+   "hf": 1.28113,
+   "px": 84095.73,
+   "liq": 65641.62,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790430251,
+   "b": 26062003,
+   "hf": 1.27985,
+   "px": 84011.69,
+   "liq": 65641.99,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790433875,
+   "b": 26062303,
+   "hf": 1.27815,
+   "px": 83901.55,
+   "liq": 65643.06,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790437487,
+   "b": 26062603,
+   "hf": 1.27939,
+   "px": 83983.46,
+   "liq": 65643.43,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790441111,
+   "b": 26062903,
+   "hf": 1.28094,
+   "px": 84086.07,
+   "liq": 65643.81,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790444723,
+   "b": 26063203,
+   "hf": 1.28007,
+   "px": 84028.84,
+   "liq": 65644.18,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790448323,
+   "b": 26063503,
+   "hf": 1.28057,
+   "px": 84062.46,
+   "liq": 65644.55,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790451923,
+   "b": 26063803,
+   "hf": 1.27923,
+   "px": 83974.97,
+   "liq": 65644.93,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790455559,
+   "b": 26064103,
+   "hf": 1.27919,
+   "px": 83973,
+   "liq": 65645.3,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790459171,
+   "b": 26064403,
+   "hf": 1.28059,
+   "px": 84065.43,
+   "liq": 65645.67,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790462795,
+   "b": 26064703,
+   "hf": 1.28419,
+   "px": 84302.27,
+   "liq": 65646.05,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790466407,
+   "b": 26065003,
+   "hf": 1.28417,
+   "px": 84301.21,
+   "liq": 65646.42,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790470019,
+   "b": 26065303,
+   "hf": 1.28378,
+   "px": 84276.08,
+   "liq": 65646.79,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790473631,
+   "b": 26065603,
+   "hf": 1.28481,
+   "px": 84343.86,
+   "liq": 65647.17,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790477255,
+   "b": 26065903,
+   "hf": 1.2863,
+   "px": 84442.59,
+   "liq": 65647.54,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790480879,
+   "b": 26066203,
+   "hf": 1.286,
+   "px": 84423.11,
+   "liq": 65647.91,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790484503,
+   "b": 26066503,
+   "hf": 1.28607,
+   "px": 84428.34,
+   "liq": 65648.29,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790488103,
+   "b": 26066803,
+   "hf": 1.2847,
+   "px": 84339.08,
+   "liq": 65648.66,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790491715,
+   "b": 26067103,
+   "hf": 1.28719,
+   "px": 84502.93,
+   "liq": 65649.04,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790495327,
+   "b": 26067403,
+   "hf": 1.28702,
+   "px": 84491.99,
+   "liq": 65649.41,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790498951,
+   "b": 26067703,
+   "hf": 1.29163,
+   "px": 84794.95,
+   "liq": 65649.79,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790502575,
+   "b": 26068003,
+   "hf": 1.28914,
+   "px": 84632.16,
+   "liq": 65650.16,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790506187,
+   "b": 26068303,
+   "hf": 1.29412,
+   "px": 84959.63,
+   "liq": 65650.54,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046472,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790509811,
+   "b": 26068603,
+   "hf": 1.29176,
+   "px": 84805.31,
+   "liq": 65650.92,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790513423,
+   "b": 26068903,
+   "hf": 1.29397,
+   "px": 84950.81,
+   "liq": 65651.29,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790517035,
+   "b": 26069203,
+   "hf": 1.29038,
+   "px": 84715.43,
+   "liq": 65651.67,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046475,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790520671,
+   "b": 26069503,
+   "hf": 1.2859,
+   "px": 84421.3,
+   "liq": 65651.32,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790524307,
+   "b": 26069803,
+   "hf": 1.28624,
+   "px": 84444.09,
+   "liq": 65651.72,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790527931,
+   "b": 26070103,
+   "hf": 1.28489,
+   "px": 84355.93,
+   "liq": 65652.12,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790531579,
+   "b": 26070403,
+   "hf": 1.28705,
+   "px": 84498.3,
+   "liq": 65652.51,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790535215,
+   "b": 26070703,
+   "hf": 1.29014,
+   "px": 84701.19,
+   "liq": 65652.91,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790538827,
+   "b": 26071003,
+   "hf": 1.29079,
+   "px": 84744.74,
+   "liq": 65653.31,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790542487,
+   "b": 26071303,
+   "hf": 1.28753,
+   "px": 84530.9,
+   "liq": 65653.71,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790546159,
+   "b": 26071603,
+   "hf": 1.28865,
+   "px": 84605.4,
+   "liq": 65654.11,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790549759,
+   "b": 26071903,
+   "hf": 1.28149,
+   "px": 84135.78,
+   "liq": 65654.5,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790553371,
+   "b": 26072203,
+   "hf": 1.28442,
+   "px": 84328.2,
+   "liq": 65654.9,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790557007,
+   "b": 26072503,
+   "hf": 1.28507,
+   "px": 84371.71,
+   "liq": 65655.3,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790560607,
+   "b": 26072803,
+   "hf": 1.2786,
+   "px": 83947.58,
+   "liq": 65655.71,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790564219,
+   "b": 26073103,
+   "hf": 1.27168,
+   "px": 83493.28,
+   "liq": 65656.13,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790567819,
+   "b": 26073403,
+   "hf": 1.27086,
+   "px": 83440.01,
+   "liq": 65656.54,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046475,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790571443,
+   "b": 26073703,
+   "hf": 1.26701,
+   "px": 83187.88,
+   "liq": 65656.95,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790575043,
+   "b": 26074003,
+   "hf": 1.26298,
+   "px": 82923.68,
+   "liq": 65657.37,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790578643,
+   "b": 26074303,
+   "hf": 1.26474,
+   "px": 83040.01,
+   "liq": 65657.82,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790582255,
+   "b": 26074603,
+   "hf": 1.26226,
+   "px": 82878.04,
+   "liq": 65658.27,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790585855,
+   "b": 26074903,
+   "hf": 1.26171,
+   "px": 82841.98,
+   "liq": 65658.73,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046475,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790589455,
+   "b": 26075203,
+   "hf": 1.25847,
+   "px": 82630.41,
+   "liq": 65659.18,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046473,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790593091,
+   "b": 26075503,
+   "hf": 1.26065,
+   "px": 82773.88,
+   "liq": 65659.65,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790596691,
+   "b": 26075803,
+   "hf": 1.26342,
+   "px": 82956.39,
+   "liq": 65660.11,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790600291,
+   "b": 26076103,
+   "hf": 1.27011,
+   "px": 83396.35,
+   "liq": 65660.58,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790603915,
+   "b": 26076403,
+   "hf": 1.27481,
+   "px": 83705.49,
+   "liq": 65661.05,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790607527,
+   "b": 26076703,
+   "hf": 1.26093,
+   "px": 82800.98,
+   "liq": 65666.57,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790611151,
+   "b": 26077003,
+   "hf": 1.26743,
+   "px": 83228.65,
+   "liq": 65667.04,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790614775,
+   "b": 26077303,
+   "hf": 1.27423,
+   "px": 83675.51,
+   "liq": 65667.51,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790618399,
+   "b": 26077603,
+   "hf": 1.28164,
+   "px": 84162.4,
+   "liq": 65667.97,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790621999,
+   "b": 26077903,
+   "hf": 1.27743,
+   "px": 83886.58,
+   "liq": 65668.4,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790625323,
+   "b": 26078179,
+   "hf": 1.26696,
+   "px": 83199.62,
+   "liq": 65668.8,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1790625335,
+   "b": 26078180,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00046475,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790625611,
+   "b": 26078203,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00046475,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790626871,
+   "b": 26078308,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.00046475,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1790626883,
+   "b": 26078309,
+   "hf": 1.26696,
+   "px": 83199.62,
+   "liq": 65668.8,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790627783,
+   "b": 26078383,
+   "hf": 1.26696,
+   "px": 83199.62,
+   "liq": 65668.91,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1790627795,
+   "b": 26078384,
+   "hf": 1.26696,
+   "px": 83199.62,
+   "liq": 65668.91,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790629259,
+   "b": 26078503,
+   "hf": 1.27059,
+   "px": 83438.5,
+   "liq": 65669.09,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790632871,
+   "b": 26078803,
+   "hf": 1.26927,
+   "px": 83352.16,
+   "liq": 65669.52,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790636471,
+   "b": 26079103,
+   "hf": 1.2698,
+   "px": 83387.57,
+   "liq": 65669.95,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790640083,
+   "b": 26079403,
+   "hf": 1.272,
+   "px": 83532.67,
+   "liq": 65670.39,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046474,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790643695,
+   "b": 26079703,
+   "hf": 1.27071,
+   "px": 83448.3,
+   "liq": 65670.82,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046475,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790647319,
+   "b": 26080003,
+   "hf": 1.26413,
+   "px": 83017.29,
+   "liq": 65671.32,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046475,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790650931,
+   "b": 26080303,
+   "hf": 1.26359,
+   "px": 82982.63,
+   "liq": 65671.88,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790654555,
+   "b": 26080603,
+   "hf": 1.2618,
+   "px": 82865.81,
+   "liq": 65672.44,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046475,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790658155,
+   "b": 26080903,
+   "hf": 1.26328,
+   "px": 82963.33,
+   "liq": 65673,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046475,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790661767,
+   "b": 26081203,
+   "hf": 1.26559,
+   "px": 83115.51,
+   "liq": 65673.57,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790665379,
+   "b": 26081503,
+   "hf": 1.27261,
+   "px": 83577.9,
+   "liq": 65674.15,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046475,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790669015,
+   "b": 26081803,
+   "hf": 1.27796,
+   "px": 83929.68,
+   "liq": 65674.75,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046475,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790672615,
+   "b": 26082103,
+   "hf": 1.27803,
+   "px": 83935.24,
+   "liq": 65675.34,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790676239,
+   "b": 26082403,
+   "hf": 1.28167,
+   "px": 84174.92,
+   "liq": 65675.92,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790679863,
+   "b": 26082703,
+   "hf": 1.27845,
+   "px": 83964.29,
+   "liq": 65676.51,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790683463,
+   "b": 26083003,
+   "hf": 1.28513,
+   "px": 84403.55,
+   "liq": 65677.11,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790687075,
+   "b": 26083303,
+   "hf": 1.28231,
+   "px": 84219.39,
+   "liq": 65677.7,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790690675,
+   "b": 26083603,
+   "hf": 1.28137,
+   "px": 84158.38,
+   "liq": 65678.28,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046475,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790694275,
+   "b": 26083903,
+   "hf": 1.27476,
+   "px": 83724.12,
+   "liq": 65678.19,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790697887,
+   "b": 26084203,
+   "hf": 1.26727,
+   "px": 83232.85,
+   "liq": 65678.78,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790701523,
+   "b": 26084503,
+   "hf": 1.26431,
+   "px": 83038.77,
+   "liq": 65679.37,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790705147,
+   "b": 26084803,
+   "hf": 1.26507,
+   "px": 83089.57,
+   "liq": 65679.92,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790708759,
+   "b": 26085103,
+   "hf": 1.26933,
+   "px": 83370.22,
+   "liq": 65680.35,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790712371,
+   "b": 26085403,
+   "hf": 1.2721,
+   "px": 83552.81,
+   "liq": 65680.77,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790715971,
+   "b": 26085703,
+   "hf": 1.27226,
+   "px": 83563.52,
+   "liq": 65681.19,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046475,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790719595,
+   "b": 26086003,
+   "hf": 1.26984,
+   "px": 83404.92,
+   "liq": 65681.61,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790723207,
+   "b": 26086303,
+   "hf": 1.27199,
+   "px": 83547.17,
+   "liq": 65682.04,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790726807,
+   "b": 26086603,
+   "hf": 1.27398,
+   "px": 83678.16,
+   "liq": 65682.46,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790730431,
+   "b": 26086903,
+   "hf": 1.26951,
+   "px": 83385.29,
+   "liq": 65682.88,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790734043,
+   "b": 26087203,
+   "hf": 1.26903,
+   "px": 83353.78,
+   "liq": 65683.3,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790737667,
+   "b": 26087503,
+   "hf": 1.27034,
+   "px": 83440.72,
+   "liq": 65683.72,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790741267,
+   "b": 26087803,
+   "hf": 1.26683,
+   "px": 83210.98,
+   "liq": 65684.2,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790744891,
+   "b": 26088103,
+   "hf": 1.26843,
+   "px": 83316.61,
+   "liq": 65684.83,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790748515,
+   "b": 26088403,
+   "hf": 1.26791,
+   "px": 83283.61,
+   "liq": 65685.52,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046478,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790752115,
+   "b": 26088703,
+   "hf": 1.26397,
+   "px": 83025.49,
+   "liq": 65686.21,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790755727,
+   "b": 26089003,
+   "hf": 1.26808,
+   "px": 83296.25,
+   "liq": 65686.86,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790759351,
+   "b": 26089303,
+   "hf": 1.26497,
+   "px": 83092.96,
+   "liq": 65687.48,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046478,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790762975,
+   "b": 26089603,
+   "hf": 1.26857,
+   "px": 83329.97,
+   "liq": 65688.09,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790766587,
+   "b": 26089903,
+   "hf": 1.27496,
+   "px": 83750.18,
+   "liq": 65688.68,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790770187,
+   "b": 26090203,
+   "hf": 1.27371,
+   "px": 83668.79,
+   "liq": 65689.27,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046478,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790773787,
+   "b": 26090503,
+   "hf": 1.2993,
+   "px": 85350.54,
+   "liq": 65689.81,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790777399,
+   "b": 26090803,
+   "hf": 1.28416,
+   "px": 84356.63,
+   "liq": 65690.32,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046476,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790781023,
+   "b": 26091103,
+   "hf": 1.27533,
+   "px": 83779.02,
+   "liq": 65691.83,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046478,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790784659,
+   "b": 26091403,
+   "hf": 1.28175,
+   "px": 84201.46,
+   "liq": 65692.34,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790788259,
+   "b": 26091703,
+   "hf": 1.28298,
+   "px": 84282.49,
+   "liq": 65692.82,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790791871,
+   "b": 26092003,
+   "hf": 1.27901,
+   "px": 84022.64,
+   "liq": 65693.31,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790795483,
+   "b": 26092303,
+   "hf": 1.27523,
+   "px": 83774.84,
+   "liq": 65693.75,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790799119,
+   "b": 26092603,
+   "hf": 1.27297,
+   "px": 83626.58,
+   "liq": 65694.15,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046478,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790802719,
+   "b": 26092903,
+   "hf": 1.27246,
+   "px": 83593.47,
+   "liq": 65694.52,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790806343,
+   "b": 26093203,
+   "hf": 1.27311,
+   "px": 83637.01,
+   "liq": 65694.9,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046478,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790809991,
+   "b": 26093503,
+   "hf": 1.27287,
+   "px": 83621.82,
+   "liq": 65695.27,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046478,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790813591,
+   "b": 26093803,
+   "hf": 1.27089,
+   "px": 83491.68,
+   "liq": 65695.65,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046478,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790817203,
+   "b": 26094103,
+   "hf": 1.26989,
+   "px": 83426.79,
+   "liq": 65696.02,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046478,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790820803,
+   "b": 26094403,
+   "hf": 1.26966,
+   "px": 83411.77,
+   "liq": 65696.4,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046477,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790824403,
+   "b": 26094703,
+   "hf": 1.2694,
+   "px": 83395.46,
+   "liq": 65696.77,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046478,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790828015,
+   "b": 26095003,
+   "hf": 1.273,
+   "px": 83632.39,
+   "liq": 65697.14,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790831627,
+   "b": 26095303,
+   "hf": 1.27964,
+   "px": 84069.47,
+   "liq": 65697.51,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046478,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790835239,
+   "b": 26095603,
+   "hf": 1.28204,
+   "px": 84227.17,
+   "liq": 65697.89,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790838839,
+   "b": 26095903,
+   "hf": 1.27985,
+   "px": 84083.97,
+   "liq": 65698.26,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046478,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790842451,
+   "b": 26096203,
+   "hf": 1.27284,
+   "px": 83623.71,
+   "liq": 65698.63,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790846087,
+   "b": 26096503,
+   "hf": 1.268,
+   "px": 83306.34,
+   "liq": 65699,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790849687,
+   "b": 26096803,
+   "hf": 1.27394,
+   "px": 83697.26,
+   "liq": 65699.37,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046478,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790853311,
+   "b": 26097103,
+   "hf": 1.27279,
+   "px": 83621.78,
+   "liq": 65699.74,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046478,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790856911,
+   "b": 26097403,
+   "hf": 1.27489,
+   "px": 83760.36,
+   "liq": 65700.11,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046478,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790860535,
+   "b": 26097703,
+   "hf": 1.27634,
+   "px": 83856.1,
+   "liq": 65700.49,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790864159,
+   "b": 26098003,
+   "hf": 1.2763,
+   "px": 83854.06,
+   "liq": 65700.86,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790867795,
+   "b": 26098303,
+   "hf": 1.28052,
+   "px": 84133.55,
+   "liq": 65702.57,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790871407,
+   "b": 26098603,
+   "hf": 1.28095,
+   "px": 84162.41,
+   "liq": 65702.94,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790875019,
+   "b": 26098903,
+   "hf": 1.28401,
+   "px": 84363.97,
+   "liq": 65703.31,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790878619,
+   "b": 26099203,
+   "hf": 1.29127,
+   "px": 84841.37,
+   "liq": 65703.68,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790882231,
+   "b": 26099503,
+   "hf": 1.28901,
+   "px": 84693.19,
+   "liq": 65704.05,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790885855,
+   "b": 26099803,
+   "hf": 1.28615,
+   "px": 84505.74,
+   "liq": 65704.43,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790889455,
+   "b": 26100103,
+   "hf": 1.28693,
+   "px": 84557.35,
+   "liq": 65704.8,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790893079,
+   "b": 26100403,
+   "hf": 1.28596,
+   "px": 84494.46,
+   "liq": 65705.17,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790896679,
+   "b": 26100703,
+   "hf": 1.28709,
+   "px": 84568.82,
+   "liq": 65705.55,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790900291,
+   "b": 26101003,
+   "hf": 1.2902,
+   "px": 84773.58,
+   "liq": 65705.92,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790903915,
+   "b": 26101303,
+   "hf": 1.28927,
+   "px": 84713.07,
+   "liq": 65706.29,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790907515,
+   "b": 26101603,
+   "hf": 1.28897,
+   "px": 84693.66,
+   "liq": 65706.67,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790911127,
+   "b": 26101903,
+   "hf": 1.29335,
+   "px": 84982.22,
+   "liq": 65707.04,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790914727,
+   "b": 26102203,
+   "hf": 1.29851,
+   "px": 85321.84,
+   "liq": 65707.41,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790915171,
+   "b": 26102240,
+   "hf": 1.31499,
+   "px": 86404.39,
+   "liq": 65707.46,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1790915183,
+   "b": 26102241,
+   "hf": 1.28,
+   "px": 86404.39,
+   "liq": 67503.44,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1790918339,
+   "b": 26102503,
+   "hf": 1.27999,
+   "px": 86404.39,
+   "liq": 67503.77,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790921963,
+   "b": 26102803,
+   "hf": 1.27736,
+   "px": 86227.11,
+   "liq": 67504.15,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790925563,
+   "b": 26103103,
+   "hf": 1.27281,
+   "px": 85920.5,
+   "liq": 67504.53,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790929187,
+   "b": 26103403,
+   "hf": 1.27921,
+   "px": 86353.1,
+   "liq": 67504.91,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790932787,
+   "b": 26103703,
+   "hf": 1.276,
+   "px": 86136.6,
+   "liq": 67505.29,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790936411,
+   "b": 26104003,
+   "hf": 1.2786,
+   "px": 86312.82,
+   "liq": 67505.68,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790940035,
+   "b": 26104303,
+   "hf": 1.2801,
+   "px": 86414.3,
+   "liq": 67506.06,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790943647,
+   "b": 26104603,
+   "hf": 1.28106,
+   "px": 86479.58,
+   "liq": 67506.44,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046479,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790947283,
+   "b": 26104903,
+   "hf": 1.28363,
+   "px": 86654.12,
+   "liq": 67506.83,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790950895,
+   "b": 26105203,
+   "hf": 1.279,
+   "px": 86341.58,
+   "liq": 67507.21,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790954519,
+   "b": 26105503,
+   "hf": 1.26375,
+   "px": 85308.88,
+   "liq": 67504.32,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790958143,
+   "b": 26105803,
+   "hf": 1.26246,
+   "px": 85221.97,
+   "liq": 67504.71,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790961767,
+   "b": 26106103,
+   "hf": 1.26027,
+   "px": 85074.75,
+   "liq": 67505.09,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790965367,
+   "b": 26106403,
+   "hf": 1.2535,
+   "px": 84617.79,
+   "liq": 67505.47,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790969003,
+   "b": 26106703,
+   "hf": 1.24529,
+   "px": 84064.19,
+   "liq": 67505.86,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790972615,
+   "b": 26107003,
+   "hf": 1.24664,
+   "px": 84155.85,
+   "liq": 67506.24,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790976227,
+   "b": 26107303,
+   "hf": 1.2496,
+   "px": 84356.3,
+   "liq": 67506.62,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790979839,
+   "b": 26107603,
+   "hf": 1.25112,
+   "px": 84459.32,
+   "liq": 67507,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790983463,
+   "b": 26107903,
+   "hf": 1.25072,
+   "px": 84433,
+   "liq": 67507.38,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790987063,
+   "b": 26108203,
+   "hf": 1.25125,
+   "px": 84469.22,
+   "liq": 67507.76,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790990699,
+   "b": 26108503,
+   "hf": 1.25229,
+   "px": 84539.55,
+   "liq": 67508.15,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790994311,
+   "b": 26108803,
+   "hf": 1.25278,
+   "px": 84573.35,
+   "liq": 67508.53,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1790997911,
+   "b": 26109103,
+   "hf": 1.2532,
+   "px": 84602.29,
+   "liq": 67508.91,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791001511,
+   "b": 26109403,
+   "hf": 1.25275,
+   "px": 84572.33,
+   "liq": 67509.29,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791005123,
+   "b": 26109703,
+   "hf": 1.25132,
+   "px": 84476.14,
+   "liq": 67509.68,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.0004648,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791008735,
+   "b": 26110003,
+   "hf": 1.25268,
+   "px": 84568.72,
+   "liq": 67510.06,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791012347,
+   "b": 26110303,
+   "hf": 1.25301,
+   "px": 84591.3,
+   "liq": 67510.44,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791015959,
+   "b": 26110603,
+   "hf": 1.25186,
+   "px": 84514.36,
+   "liq": 67510.83,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791019571,
+   "b": 26110903,
+   "hf": 1.25252,
+   "px": 84558.96,
+   "liq": 67511.21,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791023171,
+   "b": 26111203,
+   "hf": 1.25192,
+   "px": 84518.9,
+   "liq": 67511.59,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791026783,
+   "b": 26111503,
+   "hf": 1.2522,
+   "px": 84538.27,
+   "liq": 67511.98,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791030383,
+   "b": 26111803,
+   "hf": 1.25326,
+   "px": 84610.75,
+   "liq": 67512.36,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791033995,
+   "b": 26112103,
+   "hf": 1.25541,
+   "px": 84756.08,
+   "liq": 67512.74,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791037619,
+   "b": 26112403,
+   "hf": 1.25585,
+   "px": 84786.32,
+   "liq": 67513.13,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791041231,
+   "b": 26112703,
+   "hf": 1.25502,
+   "px": 84733.51,
+   "liq": 67515.4,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791044843,
+   "b": 26113003,
+   "hf": 1.25577,
+   "px": 84784.26,
+   "liq": 67515.78,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791048455,
+   "b": 26113303,
+   "hf": 1.25584,
+   "px": 84789.76,
+   "liq": 67516.17,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791052079,
+   "b": 26113603,
+   "hf": 1.25703,
+   "px": 84870.14,
+   "liq": 67516.55,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791055691,
+   "b": 26113903,
+   "hf": 1.25716,
+   "px": 84879.33,
+   "liq": 67516.94,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791059291,
+   "b": 26114203,
+   "hf": 1.2545,
+   "px": 84700.29,
+   "liq": 67517.32,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791062891,
+   "b": 26114503,
+   "hf": 1.25453,
+   "px": 84702.93,
+   "liq": 67517.7,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791066503,
+   "b": 26114803,
+   "hf": 1.25422,
+   "px": 84682.19,
+   "liq": 67518.08,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791070103,
+   "b": 26115103,
+   "hf": 1.25523,
+   "px": 84751.24,
+   "liq": 67518.47,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791073715,
+   "b": 26115403,
+   "hf": 1.25455,
+   "px": 84705.85,
+   "liq": 67518.85,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791077327,
+   "b": 26115703,
+   "hf": 1.25559,
+   "px": 84776.31,
+   "liq": 67519.24,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791080939,
+   "b": 26116003,
+   "hf": 1.25514,
+   "px": 84746.27,
+   "liq": 67519.62,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791084539,
+   "b": 26116303,
+   "hf": 1.25508,
+   "px": 84742.78,
+   "liq": 67520,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791088163,
+   "b": 26116603,
+   "hf": 1.25592,
+   "px": 84800.12,
+   "liq": 67520.39,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046481,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791091763,
+   "b": 26116903,
+   "hf": 1.25542,
+   "px": 84767.03,
+   "liq": 67520.77,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791095375,
+   "b": 26117203,
+   "hf": 1.25698,
+   "px": 84872.46,
+   "liq": 67521.16,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791098975,
+   "b": 26117503,
+   "hf": 1.25888,
+   "px": 85001.3,
+   "liq": 67521.54,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791102599,
+   "b": 26117803,
+   "hf": 1.25897,
+   "px": 85008.41,
+   "liq": 67521.92,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791106211,
+   "b": 26118103,
+   "hf": 1.25955,
+   "px": 85047.57,
+   "liq": 67522.31,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791109847,
+   "b": 26118403,
+   "hf": 1.26181,
+   "px": 85201.05,
+   "liq": 67522.7,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791113459,
+   "b": 26118703,
+   "hf": 1.26302,
+   "px": 85282.68,
+   "liq": 67523.08,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791117059,
+   "b": 26119003,
+   "hf": 1.2626,
+   "px": 85254.82,
+   "liq": 67523.46,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791120659,
+   "b": 26119303,
+   "hf": 1.26024,
+   "px": 85096.39,
+   "liq": 67523.85,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791124271,
+   "b": 26119603,
+   "hf": 1.26195,
+   "px": 85211.9,
+   "liq": 67524.23,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791127871,
+   "b": 26119903,
+   "hf": 1.26161,
+   "px": 85187.64,
+   "liq": 67522.79,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791131483,
+   "b": 26120203,
+   "hf": 1.2629,
+   "px": 85275.34,
+   "liq": 67523.17,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791135095,
+   "b": 26120503,
+   "hf": 1.26366,
+   "px": 85326.97,
+   "liq": 67523.56,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791138719,
+   "b": 26120803,
+   "hf": 1.26312,
+   "px": 85290.72,
+   "liq": 67523.95,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791142331,
+   "b": 26121103,
+   "hf": 1.26325,
+   "px": 85300.33,
+   "liq": 67524.33,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791145955,
+   "b": 26121403,
+   "hf": 1.26438,
+   "px": 85377.09,
+   "liq": 67524.72,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791149567,
+   "b": 26121703,
+   "hf": 1.27095,
+   "px": 85820.77,
+   "liq": 67525.1,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791153167,
+   "b": 26122003,
+   "hf": 1.28254,
+   "px": 86604.31,
+   "liq": 67525.49,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791156767,
+   "b": 26122303,
+   "hf": 1.28195,
+   "px": 86564.95,
+   "liq": 67525.87,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791160379,
+   "b": 26122603,
+   "hf": 1.27967,
+   "px": 86411.26,
+   "liq": 67526.26,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791163979,
+   "b": 26122903,
+   "hf": 1.28469,
+   "px": 86751.04,
+   "liq": 67526.64,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791167579,
+   "b": 26123203,
+   "hf": 1.28146,
+   "px": 86532.99,
+   "liq": 67527.03,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791171179,
+   "b": 26123503,
+   "hf": 1.27939,
+   "px": 86393.62,
+   "liq": 67527.41,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791174791,
+   "b": 26123803,
+   "hf": 1.27231,
+   "px": 85916.49,
+   "liq": 67527.8,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791178403,
+   "b": 26124103,
+   "hf": 1.26568,
+   "px": 85468.81,
+   "liq": 67528.18,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": null,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791182015,
+   "b": 26124403,
+   "hf": 1.27284,
+   "px": 85953.02,
+   "liq": 67528.57,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791185639,
+   "b": 26124703,
+   "hf": 1.27963,
+   "px": 86412.22,
+   "liq": 67528.95,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791189263,
+   "b": 26125003,
+   "hf": 1.27873,
+   "px": 86352.11,
+   "liq": 67529.34,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791192875,
+   "b": 26125303,
+   "hf": 1.27222,
+   "px": 85912.7,
+   "liq": 67529.72,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791196475,
+   "b": 26125603,
+   "hf": 1.27355,
+   "px": 86002.98,
+   "liq": 67530.11,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791200099,
+   "b": 26125903,
+   "hf": 1.27231,
+   "px": 85919.43,
+   "liq": 67530.49,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791203735,
+   "b": 26126203,
+   "hf": 1.27463,
+   "px": 86076.85,
+   "liq": 67530.88,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046482,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791207359,
+   "b": 26126503,
+   "hf": 1.27539,
+   "px": 86128.41,
+   "liq": 67531.27,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791210983,
+   "b": 26126803,
+   "hf": 1.26709,
+   "px": 85562.12,
+   "liq": 67526.27,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791214595,
+   "b": 26127103,
+   "hf": 1.2617,
+   "px": 85198.22,
+   "liq": 67526.65,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791218207,
+   "b": 26127403,
+   "hf": 1.26195,
+   "px": 85215.63,
+   "liq": 67527.04,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791221819,
+   "b": 26127703,
+   "hf": 1.26294,
+   "px": 85283.23,
+   "liq": 67527.42,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791225419,
+   "b": 26128003,
+   "hf": 1.26725,
+   "px": 85574.93,
+   "liq": 67527.81,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791229019,
+   "b": 26128303,
+   "hf": 1.26725,
+   "px": 85574.93,
+   "liq": 67528.19,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791232631,
+   "b": 26128603,
+   "hf": 1.26864,
+   "px": 85669.12,
+   "liq": 67528.58,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791236231,
+   "b": 26128903,
+   "hf": 1.27024,
+   "px": 85777.81,
+   "liq": 67528.96,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": null,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791239843,
+   "b": 26129203,
+   "hf": 1.27165,
+   "px": 85873.38,
+   "liq": 67529.35,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791243467,
+   "b": 26129503,
+   "hf": 1.2716,
+   "px": 85871.06,
+   "liq": 67529.74,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791247091,
+   "b": 26129803,
+   "hf": 1.27101,
+   "px": 85831.36,
+   "liq": 67530.12,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791250739,
+   "b": 26130103,
+   "hf": 1.27033,
+   "px": 85785.84,
+   "liq": 67530.51,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": null,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791254363,
+   "b": 26130403,
+   "hf": 1.27033,
+   "px": 85786.68,
+   "liq": 67530.9,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": null,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791257963,
+   "b": 26130703,
+   "hf": 1.26803,
+   "px": 85631.78,
+   "liq": 67531.28,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791261575,
+   "b": 26131003,
+   "hf": 1.26376,
+   "px": 85343.69,
+   "liq": 67531.67,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791265175,
+   "b": 26131303,
+   "hf": 1.26712,
+   "px": 85571.42,
+   "liq": 67532.05,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791268787,
+   "b": 26131603,
+   "hf": 1.26035,
+   "px": 85114.18,
+   "liq": 67532.44,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791272399,
+   "b": 26131903,
+   "hf": 1.26348,
+   "px": 85326.6,
+   "liq": 67532.83,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046483,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791276023,
+   "b": 26132203,
+   "hf": 1.27163,
+   "px": 85877.42,
+   "liq": 67533.21,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791279647,
+   "b": 26132503,
+   "hf": 1.27306,
+   "px": 85974.52,
+   "liq": 67533.6,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791283331,
+   "b": 26132803,
+   "hf": 1.27317,
+   "px": 85982.56,
+   "liq": 67533.99,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791286931,
+   "b": 26133103,
+   "hf": 1.27474,
+   "px": 86088.93,
+   "liq": 67534.38,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791290531,
+   "b": 26133403,
+   "hf": 1.27763,
+   "px": 86284.23,
+   "liq": 67534.76,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791294155,
+   "b": 26133703,
+   "hf": 1.27463,
+   "px": 86082.21,
+   "liq": 67535.15,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791297779,
+   "b": 26134003,
+   "hf": 1.27522,
+   "px": 86125.56,
+   "liq": 67538.06,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791301403,
+   "b": 26134303,
+   "hf": 1.28163,
+   "px": 86559.12,
+   "liq": 67538.43,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791305015,
+   "b": 26134603,
+   "hf": 1.26815,
+   "px": 85649.64,
+   "liq": 67538.78,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791308627,
+   "b": 26134903,
+   "hf": 1.26588,
+   "px": 85496.56,
+   "liq": 67539.14,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791312227,
+   "b": 26135203,
+   "hf": 1.26933,
+   "px": 85730.17,
+   "liq": 67539.5,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791315827,
+   "b": 26135503,
+   "hf": 1.26485,
+   "px": 85427.81,
+   "liq": 67539.86,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791319427,
+   "b": 26135803,
+   "hf": 1.26764,
+   "px": 85616.82,
+   "liq": 67540.22,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791323027,
+   "b": 26136103,
+   "hf": 1.26538,
+   "px": 85464.41,
+   "liq": 67540.58,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791326639,
+   "b": 26136403,
+   "hf": 1.26684,
+   "px": 85563.31,
+   "liq": 67540.94,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791330239,
+   "b": 26136703,
+   "hf": 1.26526,
+   "px": 85457.15,
+   "liq": 67541.29,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791333851,
+   "b": 26137003,
+   "hf": 1.26576,
+   "px": 85491.66,
+   "liq": 67541.65,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046484,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791337487,
+   "b": 26137303,
+   "hf": 1.26353,
+   "px": 85341.69,
+   "liq": 67542.01,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791341099,
+   "b": 26137603,
+   "hf": 1.2405,
+   "px": 83786.26,
+   "liq": 67542.37,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791344711,
+   "b": 26137903,
+   "hf": 1.24336,
+   "px": 83980.02,
+   "liq": 67542.73,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791348323,
+   "b": 26138203,
+   "hf": 1.24563,
+   "px": 84134,
+   "liq": 67543.09,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791351923,
+   "b": 26138503,
+   "hf": 1.24491,
+   "px": 84085.25,
+   "liq": 67543.45,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791355535,
+   "b": 26138803,
+   "hf": 1.24789,
+   "px": 84286.94,
+   "liq": 67543.81,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791359159,
+   "b": 26139103,
+   "hf": 1.2461,
+   "px": 84167.06,
+   "liq": 67544.17,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791362771,
+   "b": 26139403,
+   "hf": 1.24475,
+   "px": 84076.26,
+   "liq": 67544.53,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791366395,
+   "b": 26139703,
+   "hf": 1.24217,
+   "px": 83901.97,
+   "liq": 67544.89,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791370031,
+   "b": 26140003,
+   "hf": 1.23951,
+   "px": 83723.31,
+   "liq": 67545.25,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791373631,
+   "b": 26140303,
+   "hf": 1.23942,
+   "px": 83717.54,
+   "liq": 67545.61,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791377231,
+   "b": 26140603,
+   "hf": 1.23784,
+   "px": 83610.98,
+   "liq": 67545.97,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791380843,
+   "b": 26140903,
+   "hf": 1.22839,
+   "px": 82972.94,
+   "liq": 67546.33,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791384479,
+   "b": 26141203,
+   "hf": 1.22845,
+   "px": 82973.1,
+   "liq": 67542.79,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791388091,
+   "b": 26141503,
+   "hf": 1.23279,
+   "px": 83266.35,
+   "liq": 67543.15,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791391691,
+   "b": 26141803,
+   "hf": 1.23459,
+   "px": 83388.8,
+   "liq": 67543.53,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791395315,
+   "b": 26142103,
+   "hf": 1.22999,
+   "px": 83078.09,
+   "liq": 67543.91,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046485,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791398915,
+   "b": 26142403,
+   "hf": 1.23328,
+   "px": 83300.99,
+   "liq": 67544.28,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": null,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791402527,
+   "b": 26142703,
+   "hf": 1.23327,
+   "px": 83300.99,
+   "liq": 67544.66,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": null,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791406139,
+   "b": 26143003,
+   "hf": 1.2328,
+   "px": 83269.6,
+   "liq": 67545.04,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791409751,
+   "b": 26143303,
+   "hf": 1.23314,
+   "px": 83293.12,
+   "liq": 67545.41,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791413375,
+   "b": 26143603,
+   "hf": 1.23049,
+   "px": 83114.72,
+   "liq": 67545.79,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791416975,
+   "b": 26143903,
+   "hf": 1.23125,
+   "px": 83166.54,
+   "liq": 67546.17,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046487,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791420599,
+   "b": 26144203,
+   "hf": 1.23236,
+   "px": 83241.9,
+   "liq": 67546.55,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791424235,
+   "b": 26144503,
+   "hf": 1.23366,
+   "px": 83330.07,
+   "liq": 67546.93,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791427835,
+   "b": 26144803,
+   "hf": 1.2303,
+   "px": 83103.66,
+   "liq": 67547.3,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791431435,
+   "b": 26145103,
+   "hf": 1.23011,
+   "px": 83091.26,
+   "liq": 67547.68,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046487,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791433295,
+   "b": 26145255,
+   "hf": 1.21741,
+   "px": 82233.48,
+   "liq": 67547.88,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046487,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1791433307,
+   "b": 26145256,
+   "hf": 1.28,
+   "px": 82233.48,
+   "liq": 64244.91,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1791435083,
+   "b": 26145403,
+   "hf": 1.28736,
+   "px": 82706.57,
+   "liq": 64245.09,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791438683,
+   "b": 26145703,
+   "hf": 1.28944,
+   "px": 82840.72,
+   "liq": 64245.44,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791442307,
+   "b": 26146003,
+   "hf": 1.28481,
+   "px": 82543.65,
+   "liq": 64245.8,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791445919,
+   "b": 26146303,
+   "hf": 1.29159,
+   "px": 82979.66,
+   "liq": 64246.16,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791449531,
+   "b": 26146603,
+   "hf": 1.29002,
+   "px": 82879.46,
+   "liq": 64246.52,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791453131,
+   "b": 26146903,
+   "hf": 1.29054,
+   "px": 82913.1,
+   "liq": 64246.88,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046487,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791456731,
+   "b": 26147203,
+   "hf": 1.28414,
+   "px": 82502.65,
+   "liq": 64247.24,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046487,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791460355,
+   "b": 26147503,
+   "hf": 1.28303,
+   "px": 82431.66,
+   "liq": 64247.59,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046487,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791462287,
+   "b": 26147664,
+   "hf": 1.28303,
+   "px": 82431.66,
+   "liq": 64247.77,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046487,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1791462299,
+   "b": 26147665,
+   "hf": 1.28303,
+   "px": 82431.66,
+   "liq": 64247.77,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046487,
+   "sup": 0.00046475,
+   "tag": "after"
+  },
+  {
+   "t": 1791463967,
+   "b": 26147803,
+   "hf": 1.27868,
+   "px": 82152.44,
+   "liq": 64247.93,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046486,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791467567,
+   "b": 26148103,
+   "hf": 1.2781,
+   "px": 82115.65,
+   "liq": 64248.28,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046487,
+   "sup": 0.00046475
+  },
+  {
+   "t": 1791471059,
+   "b": 26148392,
+   "hf": 1.2849,
+   "px": 82551.29,
+   "liq": 64247.17,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00046487,
+   "sup": 0.00046475,
+   "tag": "before"
+  },
+  {
+   "t": 1791471071,
+   "b": 26148393,
+   "hf": 1.2849,
+   "px": 82551.29,
+   "liq": 64247.17,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351583,
+   "sup": 0.00351494,
+   "tag": "after"
+  },
+  {
+   "t": 1791471083,
+   "b": 26148394,
+   "hf": 1.2849,
+   "px": 82551.29,
+   "liq": 64247.17,
+   "coll": 0.00046471,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351583,
+   "sup": 0.00351494,
+   "tag": "before"
+  },
+  {
+   "t": 1791471095,
+   "b": 26148395,
+   "hf": 9.72066,
+   "px": 82551.29,
+   "liq": 8492.35,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351583,
+   "sup": 0.00351494,
+   "tag": "before"
+  },
+  {
+   "t": 1791471095,
+   "b": 26148395,
+   "hf": 9.72066,
+   "px": 82551.29,
+   "liq": 8492.35,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351583,
+   "sup": 0.00351494,
+   "tag": "after"
+  },
+  {
+   "t": 1791471107,
+   "b": 26148396,
+   "hf": 1.28,
+   "px": 82551.29,
+   "liq": 64493.2,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351583,
+   "sup": 0.00351494,
+   "tag": "after"
+  },
+  {
+   "t": 1791471191,
+   "b": 26148403,
+   "hf": 1.28,
+   "px": 82551.29,
+   "liq": 64493.21,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351583,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791474815,
+   "b": 26148703,
+   "hf": 1.25892,
+   "px": 81192.1,
+   "liq": 64493.57,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351583,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791478439,
+   "b": 26149003,
+   "hf": 1.25902,
+   "px": 81199.12,
+   "liq": 64493.94,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351584,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791482051,
+   "b": 26149303,
+   "hf": 1.25249,
+   "px": 80778.28,
+   "liq": 64494.3,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351584,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791485699,
+   "b": 26149603,
+   "hf": 1.25908,
+   "px": 81204.15,
+   "liq": 64494.67,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351584,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791489299,
+   "b": 26149903,
+   "hf": 1.26347,
+   "px": 81487.3,
+   "liq": 64495.03,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351584,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791492911,
+   "b": 26150203,
+   "hf": 1.26604,
+   "px": 81653.97,
+   "liq": 64495.4,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351584,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791496547,
+   "b": 26150503,
+   "hf": 1.2652,
+   "px": 81600.33,
+   "liq": 64495.77,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351585,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791500171,
+   "b": 26150803,
+   "hf": 1.26554,
+   "px": 81622.69,
+   "liq": 64496.13,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351587,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791503771,
+   "b": 26151103,
+   "hf": 1.26689,
+   "px": 81709.99,
+   "liq": 64496.5,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351586,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791507371,
+   "b": 26151403,
+   "hf": 1.26419,
+   "px": 81535.98,
+   "liq": 64496.86,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351585,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791510983,
+   "b": 26151703,
+   "hf": 1.26436,
+   "px": 81547.64,
+   "liq": 64497.23,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351586,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791514607,
+   "b": 26152003,
+   "hf": 1.26859,
+   "px": 81820.73,
+   "liq": 64497.59,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351585,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791518207,
+   "b": 26152303,
+   "hf": 1.27209,
+   "px": 82047.03,
+   "liq": 64497.96,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351586,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791521807,
+   "b": 26152603,
+   "hf": 1.27534,
+   "px": 82257.14,
+   "liq": 64498.32,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351586,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791525443,
+   "b": 26152903,
+   "hf": 1.27578,
+   "px": 82286.41,
+   "liq": 64498.69,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351587,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791529043,
+   "b": 26153203,
+   "hf": 1.27596,
+   "px": 82298.01,
+   "liq": 64499.05,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351587,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791532667,
+   "b": 26153503,
+   "hf": 1.27671,
+   "px": 82347.05,
+   "liq": 64499.42,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351587,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791536279,
+   "b": 26153803,
+   "hf": 1.27787,
+   "px": 82422.23,
+   "liq": 64499.79,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351587,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791539879,
+   "b": 26154103,
+   "hf": 1.27844,
+   "px": 82459.34,
+   "liq": 64500.15,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351587,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791543503,
+   "b": 26154403,
+   "hf": 1.27858,
+   "px": 82468.75,
+   "liq": 64500.52,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351588,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791547103,
+   "b": 26154703,
+   "hf": 1.29043,
+   "px": 83234.03,
+   "liq": 64500.88,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351587,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791550703,
+   "b": 26155003,
+   "hf": 1.28556,
+   "px": 82920.14,
+   "liq": 64501.24,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351588,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791554303,
+   "b": 26155303,
+   "hf": 1.27797,
+   "px": 82431.13,
+   "liq": 64501.61,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351588,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791557927,
+   "b": 26155603,
+   "hf": 1.28465,
+   "px": 82866.13,
+   "liq": 64505.05,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351589,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791560267,
+   "b": 26155798,
+   "hf": 1.28249,
+   "px": 82727.38,
+   "liq": 64505.29,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351588,
+   "sup": 0.00351494,
+   "tag": "before"
+  },
+  {
+   "t": 1791560279,
+   "b": 26155799,
+   "hf": 1.28249,
+   "px": 82727.38,
+   "liq": 64505.29,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351588,
+   "sup": 0.00351494,
+   "tag": "after"
+  },
+  {
+   "t": 1791561527,
+   "b": 26155903,
+   "hf": 1.28249,
+   "px": 82727.38,
+   "liq": 64505.42,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351588,
+   "sup": 0.00351494
+  },
+  {
+   "t": 1791562583,
+   "b": 26155990,
+   "hf": 1.28249,
+   "px": 82727.38,
+   "liq": 64505.53,
+   "coll": 0.00351567,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 0.00351589,
+   "sup": 0.00351494,
+   "tag": "before"
+  },
+  {
+   "t": 1791562595,
+   "b": 26155991,
+   "hf": null,
+   "px": null,
+   "liq": null,
+   "coll": 0,
+   "debt": 0,
+   "cf": 0,
+   "nav": 0.0035159,
+   "sup": 0.00351494,
+   "tag": "after"
+  },
   {
    "t": 1791563339,
    "b": 26156053,
@@ -781,18 +7671,6 @@
    "nav": 0.0035159,
    "sup": 0.00351494,
    "tag": "before"
-  },
-  {
-   "t": 1791563351,
-   "b": 26156054,
-   "hf": null,
-   "px": null,
-   "liq": null,
-   "coll": 0,
-   "debt": 0,
-   "cf": 0,
-   "nav": 4.77995679,
-   "sup": 4.77865456
   },
   {
    "t": 1791563351,
@@ -834,6 +7712,18 @@
    "tag": "after"
   },
   {
+   "t": 1791565163,
+   "b": 26156203,
+   "hf": null,
+   "px": 82810.15,
+   "liq": null,
+   "coll": 4.77644089,
+   "debt": 0,
+   "cf": 0.845,
+   "nav": 4.77995678,
+   "sup": 4.77865456
+  },
+  {
    "t": 1791565307,
    "b": 26156215,
    "hf": null,
@@ -860,255 +7750,243 @@
    "tag": "after"
   },
   {
-   "t": 1791566975,
-   "b": 26156354,
-   "hf": 2.2199,
+   "t": 1791568775,
+   "b": 26156503,
+   "hf": 2.21989,
    "px": 82491.07,
-   "liq": 37159.85,
+   "liq": 37159.99,
    "coll": 4.77644089,
-   "debt": 150000.51,
+   "debt": 150001.07,
    "cf": 0.845,
-   "nav": 4.77995602,
+   "nav": 4.77995519,
    "sup": 4.77865456
   },
   {
-   "t": 1791570599,
-   "b": 26156654,
-   "hf": 2.2182,
+   "t": 1791572387,
+   "b": 26156803,
+   "hf": 2.21819,
    "px": 82428.48,
-   "liq": 37160.13,
+   "liq": 37160.24,
    "coll": 4.77644089,
-   "debt": 150001.64,
+   "debt": 150002.1,
    "cf": 0.845,
-   "nav": 4.77995437,
+   "nav": 4.77995477,
    "sup": 4.77865456
   },
   {
-   "t": 1791574211,
-   "b": 26156954,
-   "hf": 2.21478,
+   "t": 1791575999,
+   "b": 26157103,
+   "hf": 2.21477,
    "px": 82301.98,
-   "liq": 37160.35,
+   "liq": 37160.45,
    "coll": 4.77644089,
-   "debt": 150002.54,
+   "debt": 150002.96,
    "cf": 0.845,
-   "nav": 4.77995558,
+   "nav": 4.77995639,
    "sup": 4.77865456
   },
   {
-   "t": 1791577811,
-   "b": 26157254,
+   "t": 1791579611,
+   "b": 26157403,
    "hf": 2.21225,
    "px": 82208.59,
-   "liq": 37160.56,
+   "liq": 37160.66,
    "coll": 4.77644089,
-   "debt": 150003.39,
+   "debt": 150003.81,
    "cf": 0.845,
-   "nav": 4.77995726,
+   "nav": 4.7799581,
    "sup": 4.77865456
   },
   {
-   "t": 1791581423,
-   "b": 26157554,
-   "hf": 2.21646,
+   "t": 1791583223,
+   "b": 26157703,
+   "hf": 2.21645,
    "px": 82365.35,
-   "liq": 37160.77,
+   "liq": 37160.87,
    "coll": 4.77644089,
-   "debt": 150004.24,
+   "debt": 150004.66,
    "cf": 0.845,
-   "nav": 4.77995896,
+   "nav": 4.77995981,
    "sup": 4.77865456
   },
   {
-   "t": 1791585035,
-   "b": 26157854,
-   "hf": 2.21525,
+   "t": 1791586835,
+   "b": 26158003,
+   "hf": 2.21524,
    "px": 82320.87,
-   "liq": 37160.98,
+   "liq": 37161.09,
    "coll": 4.77644089,
-   "debt": 150005.09,
+   "debt": 150005.52,
    "cf": 0.845,
-   "nav": 4.77996067,
+   "nav": 4.77996153,
    "sup": 4.77865456
   },
   {
-   "t": 1791588647,
-   "b": 26158154,
-   "hf": 2.21859,
+   "t": 1791590435,
+   "b": 26158303,
+   "hf": 2.21858,
    "px": 82445.37,
-   "liq": 37161.19,
+   "liq": 37161.3,
    "coll": 4.77644089,
-   "debt": 150005.94,
+   "debt": 150006.36,
    "cf": 0.845,
-   "nav": 4.77996235,
+   "nav": 4.77996318,
    "sup": 4.77865456
   },
   {
-   "t": 1791592247,
-   "b": 26158454,
-   "hf": 2.21739,
+   "t": 1791594035,
+   "b": 26158603,
+   "hf": 2.21738,
    "px": 82401.29,
-   "liq": 37161.4,
+   "liq": 37161.5,
    "coll": 4.77644089,
-   "debt": 150006.79,
+   "debt": 150007.21,
    "cf": 0.845,
-   "nav": 4.77996415,
+   "nav": 4.77996511,
    "sup": 4.77865456
   },
   {
-   "t": 1791595847,
-   "b": 26158754,
-   "hf": 2.21806,
+   "t": 1791597635,
+   "b": 26158903,
+   "hf": 2.21805,
    "px": 82426.53,
-   "liq": 37161.61,
+   "liq": 37161.71,
    "coll": 4.77644089,
-   "debt": 150007.63,
+   "debt": 150008.05,
    "cf": 0.845,
-   "nav": 4.77996607,
+   "nav": 4.77996704,
    "sup": 4.77865456
   },
   {
-   "t": 1791599447,
-   "b": 26159054,
-   "hf": 2.21895,
+   "t": 1791601235,
+   "b": 26159203,
+   "hf": 2.21894,
    "px": 82460.15,
-   "liq": 37161.82,
+   "liq": 37161.92,
    "coll": 4.77644089,
-   "debt": 150008.47,
+   "debt": 150008.89,
    "cf": 0.845,
-   "nav": 4.77996801,
+   "nav": 4.77996896,
    "sup": 4.77865456
   },
   {
-   "t": 1791603047,
-   "b": 26159354,
-   "hf": 2.21637,
+   "t": 1791604835,
+   "b": 26159503,
+   "hf": 2.21636,
    "px": 82364.76,
-   "liq": 37162.03,
+   "liq": 37162.13,
    "coll": 4.77644089,
-   "debt": 150009.32,
+   "debt": 150009.73,
    "cf": 0.845,
-   "nav": 4.77996995,
+   "nav": 4.77997093,
    "sup": 4.77865456
   },
   {
-   "t": 1791606659,
-   "b": 26159654,
-   "hf": 2.21925,
+   "t": 1791608459,
+   "b": 26159803,
+   "hf": 2.21924,
    "px": 82472.32,
-   "liq": 37162.24,
+   "liq": 37162.34,
    "coll": 4.77644089,
-   "debt": 150010.17,
+   "debt": 150010.6,
    "cf": 0.845,
-   "nav": 4.7799718,
+   "nav": 4.77997265,
    "sup": 4.77865456
   },
   {
-   "t": 1791610271,
-   "b": 26159954,
+   "t": 1791612071,
+   "b": 26160103,
    "hf": 2.21926,
    "px": 82473.27,
-   "liq": 37162.47,
+   "liq": 37162.57,
    "coll": 4.77644089,
-   "debt": 150011.09,
+   "debt": 150011.51,
    "cf": 0.845,
-   "nav": 4.77997283,
+   "nav": 4.77997378,
    "sup": 4.77865456
   },
   {
-   "t": 1791613907,
-   "b": 26160254,
+   "t": 1791615695,
+   "b": 26160403,
    "hf": 2.22169,
    "px": 82564.13,
-   "liq": 37162.68,
+   "liq": 37162.78,
    "coll": 4.77644089,
-   "debt": 150011.95,
+   "debt": 150012.37,
    "cf": 0.845,
-   "nav": 4.7799747,
+   "nav": 4.77997559,
    "sup": 4.77865456
   },
   {
-   "t": 1791617507,
-   "b": 26160554,
-   "hf": 2.21812,
+   "t": 1791619295,
+   "b": 26160703,
+   "hf": 2.21811,
    "px": 82431.68,
-   "liq": 37162.89,
+   "liq": 37162.99,
    "coll": 4.77644089,
-   "debt": 150012.79,
+   "debt": 150013.21,
    "cf": 0.845,
-   "nav": 4.77997658,
+   "nav": 4.77997753,
    "sup": 4.77865456
   },
   {
-   "t": 1791621107,
-   "b": 26160854,
-   "hf": 2.22275,
+   "t": 1791622895,
+   "b": 26161003,
+   "hf": 2.22274,
    "px": 82604.29,
-   "liq": 37163.1,
+   "liq": 37163.2,
    "coll": 4.77644089,
-   "debt": 150013.64,
+   "debt": 150014.06,
    "cf": 0.845,
-   "nav": 4.77997843,
+   "nav": 4.77997936,
    "sup": 4.77865456
   },
   {
-   "t": 1791624707,
-   "b": 26161154,
+   "t": 1791626495,
+   "b": 26161303,
    "hf": 2.22484,
    "px": 82682.47,
-   "liq": 37163.31,
+   "liq": 37163.41,
    "coll": 4.77644089,
-   "debt": 150014.49,
+   "debt": 150014.91,
    "cf": 0.845,
-   "nav": 4.77998024,
+   "nav": 4.77998112,
    "sup": 4.77865456
   },
   {
-   "t": 1791628319,
-   "b": 26161454,
+   "t": 1791630107,
+   "b": 26161603,
    "hf": 2.2224,
    "px": 82592.26,
-   "liq": 37163.52,
+   "liq": 37163.62,
    "coll": 4.77644089,
-   "debt": 150015.34,
+   "debt": 150015.76,
    "cf": 0.845,
-   "nav": 4.77998203,
+   "nav": 4.77998289,
    "sup": 4.77865456
   },
   {
-   "t": 1791631943,
-   "b": 26161754,
-   "hf": 2.22252,
+   "t": 1791633731,
+   "b": 26161903,
+   "hf": 2.22251,
    "px": 82597.05,
-   "liq": 37163.74,
+   "liq": 37163.85,
    "coll": 4.77644089,
-   "debt": 150016.23,
+   "debt": 150016.69,
    "cf": 0.845,
-   "nav": 4.77998332,
+   "nav": 4.77998372,
    "sup": 4.77865456
   },
   {
-   "t": 1791635543,
-   "b": 26162054,
-   "hf": 2.22365,
+   "t": 1791637343,
+   "b": 26162203,
+   "hf": 2.22364,
    "px": 82639.5,
-   "liq": 37163.97,
+   "liq": 37164.09,
    "coll": 4.77644089,
-   "debt": 150017.16,
+   "debt": 150017.63,
    "cf": 0.845,
-   "nav": 4.77998415,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791639167,
-   "b": 26162354,
-   "hf": 2.22373,
-   "px": 82643.17,
-   "liq": 37164.21,
-   "coll": 4.77644089,
-   "debt": 150018.12,
-   "cf": 0.845,
-   "nav": 4.77998481,
+   "nav": 4.77998454,
    "sup": 4.77865456
   },
   {
@@ -1138,555 +8016,567 @@
    "tag": "after"
   },
   {
-   "t": 1791642779,
-   "b": 26162654,
-   "hf": 1.20956,
-   "px": 82613.67,
-   "liq": 68300.47,
+   "t": 1791640967,
+   "b": 26162503,
+   "hf": 1.21,
+   "px": 82643.17,
+   "liq": 68300.21,
    "coll": 4.77644089,
-   "debt": 275703.68,
+   "debt": 275702.59,
    "cf": 0.845,
-   "nav": 4.77998254,
+   "nav": 4.77998457,
    "sup": 4.77865456
   },
   {
-   "t": 1791646403,
-   "b": 26162954,
+   "t": 1791644579,
+   "b": 26162803,
+   "hf": 1.20958,
+   "px": 82613.67,
+   "liq": 68299.54,
+   "coll": 4.77644089,
+   "debt": 275704.81,
+   "cf": 0.845,
+   "nav": 4.7799803,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791648203,
+   "b": 26163103,
    "hf": 1.21178,
    "px": 82764.53,
-   "liq": 68299.81,
+   "liq": 68300.07,
    "coll": 4.77644089,
-   "debt": 275705.89,
+   "debt": 275706.94,
    "cf": 0.845,
-   "nav": 4.77997897,
+   "nav": 4.77997821,
    "sup": 4.77865456
   },
   {
-   "t": 1791650027,
-   "b": 26163254,
-   "hf": 1.21249,
+   "t": 1791651815,
+   "b": 26163403,
+   "hf": 1.21248,
    "px": 82813.27,
-   "liq": 68300.33,
+   "liq": 68300.59,
    "coll": 4.77644089,
-   "debt": 275708.01,
+   "debt": 275709.05,
    "cf": 0.845,
-   "nav": 4.77997779,
+   "nav": 4.77997737,
    "sup": 4.77865456
   },
   {
-   "t": 1791653627,
-   "b": 26163554,
-   "hf": 1.21282,
+   "t": 1791655415,
+   "b": 26163703,
+   "hf": 1.21281,
    "px": 82836.3,
-   "liq": 68300.84,
+   "liq": 68301.09,
    "coll": 4.77644089,
-   "debt": 275710.09,
+   "debt": 275711.07,
    "cf": 0.845,
-   "nav": 4.77997701,
+   "nav": 4.77997705,
    "sup": 4.77865456
   },
   {
-   "t": 1791657227,
-   "b": 26163854,
+   "t": 1791659027,
+   "b": 26164003,
    "hf": 1.21193,
    "px": 82776.54,
-   "liq": 68301.34,
+   "liq": 68301.58,
    "coll": 4.77644089,
-   "debt": 275712.07,
+   "debt": 275713.06,
    "cf": 0.845,
-   "nav": 4.77997694,
+   "nav": 4.77997662,
    "sup": 4.77865456
   },
   {
-   "t": 1791660839,
-   "b": 26164154,
+   "t": 1791662639,
+   "b": 26164303,
    "hf": 1.21255,
    "px": 82819.44,
-   "liq": 68301.83,
+   "liq": 68302.07,
    "coll": 4.77644089,
-   "debt": 275714.06,
+   "debt": 275715.05,
    "cf": 0.845,
-   "nav": 4.77997626,
+   "nav": 4.77997588,
    "sup": 4.77865456
   },
   {
-   "t": 1791664451,
-   "b": 26164454,
+   "t": 1791666239,
+   "b": 26164603,
    "hf": 1.21308,
    "px": 82856.24,
-   "liq": 68302.32,
+   "liq": 68302.57,
    "coll": 4.77644089,
-   "debt": 275716.06,
-   "cf": 0.845,
-   "nav": 4.77997487,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791668051,
-   "b": 26164754,
-   "hf": 1.21301,
-   "px": 82851.95,
-   "liq": 68302.82,
-   "coll": 4.77644089,
-   "debt": 275718.06,
-   "cf": 0.845,
-   "nav": 4.77997289,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791671651,
-   "b": 26165054,
-   "hf": 1.21301,
-   "px": 82852.45,
-   "liq": 68303.32,
-   "coll": 4.77644089,
-   "debt": 275720.07,
-   "cf": 0.845,
-   "nav": 4.77997087,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791675275,
-   "b": 26165354,
-   "hf": 1.21279,
-   "px": 82837.95,
-   "liq": 68303.83,
-   "coll": 4.77644089,
-   "debt": 275722.13,
-   "cf": 0.845,
-   "nav": 4.77996834,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791678887,
-   "b": 26165654,
-   "hf": 1.21187,
-   "px": 82776.17,
-   "liq": 68304.34,
-   "coll": 4.77644089,
-   "debt": 275724.2,
-   "cf": 0.845,
-   "nav": 4.77996586,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791682511,
-   "b": 26165954,
-   "hf": 1.2127,
-   "px": 82833.23,
-   "liq": 68304.85,
-   "coll": 4.77644089,
-   "debt": 275726.27,
-   "cf": 0.845,
-   "nav": 4.77996327,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791686111,
-   "b": 26166254,
-   "hf": 1.21303,
-   "px": 82856.28,
-   "liq": 68305.35,
-   "coll": 4.77644089,
-   "debt": 275728.27,
-   "cf": 0.845,
-   "nav": null,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791689723,
-   "b": 26166554,
-   "hf": 1.21111,
-   "px": 82726.09,
-   "liq": 68305.82,
-   "coll": 4.77644089,
-   "debt": 275730.17,
-   "cf": 0.845,
-   "nav": 4.77996057,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791693347,
-   "b": 26166854,
-   "hf": 1.21152,
-   "px": 82754.58,
-   "liq": 68306.28,
-   "coll": 4.77644089,
-   "debt": 275732.04,
-   "cf": 0.845,
-   "nav": 4.77996035,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791696947,
-   "b": 26167154,
-   "hf": 1.21335,
-   "px": 82879.88,
-   "liq": 68306.73,
-   "coll": 4.77644089,
-   "debt": 275733.84,
-   "cf": 0.845,
-   "nav": 4.77996084,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791700559,
-   "b": 26167454,
-   "hf": 1.21337,
-   "px": 82881.83,
-   "liq": 68307.17,
-   "coll": 4.77644089,
-   "debt": 275735.64,
-   "cf": 0.845,
-   "nav": 4.7799619,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791704159,
-   "b": 26167754,
-   "hf": 1.21329,
-   "px": 82876.79,
-   "liq": 68307.62,
-   "coll": 4.77644089,
-   "debt": 275737.43,
-   "cf": 0.845,
-   "nav": 4.77996326,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791707795,
-   "b": 26168054,
-   "hf": 1.21265,
-   "px": 82833.64,
-   "liq": 68308.07,
-   "coll": 4.77644089,
-   "debt": 275739.24,
-   "cf": 0.845,
-   "nav": 4.77996445,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791711419,
-   "b": 26168354,
-   "hf": 1.21257,
-   "px": 82828.93,
-   "liq": 68308.51,
-   "coll": 4.77644089,
-   "debt": 275741.02,
-   "cf": 0.845,
-   "nav": 4.7799657,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791715031,
-   "b": 26168654,
-   "hf": 1.21185,
-   "px": 82780.1,
-   "liq": 68308.95,
-   "coll": 4.77644089,
-   "debt": 275742.81,
-   "cf": 0.845,
-   "nav": 4.7799668,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791718655,
-   "b": 26168954,
-   "hf": 1.21279,
-   "px": 82844.93,
-   "liq": 68309.4,
-   "coll": 4.77644089,
-   "debt": 275744.63,
-   "cf": 0.845,
-   "nav": 4.77996758,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791722255,
-   "b": 26169254,
-   "hf": 1.21405,
-   "px": 82931.57,
-   "liq": 68309.85,
-   "coll": 4.77644089,
-   "debt": 275746.45,
-   "cf": 0.845,
-   "nav": 4.77996795,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791725867,
-   "b": 26169554,
-   "hf": 1.21329,
-   "px": 82880.04,
-   "liq": 68310.31,
-   "coll": 4.77644089,
-   "debt": 275748.3,
-   "cf": 0.845,
-   "nav": 4.77996906,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791729467,
-   "b": 26169854,
-   "hf": 1.21421,
-   "px": 82943.78,
-   "liq": 68310.76,
-   "coll": 4.77644089,
-   "debt": 275750.13,
-   "cf": 0.845,
-   "nav": 4.77997049,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791733067,
-   "b": 26170154,
-   "hf": 1.21617,
-   "px": 83080,
-   "liq": 68312.64,
-   "coll": 4.77644089,
-   "debt": 275751.98,
-   "cf": 0.845,
-   "nav": 4.77997118,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791736703,
-   "b": 26170454,
-   "hf": 1.22288,
-   "px": 83539.01,
-   "liq": 68313.11,
-   "coll": 4.77644089,
-   "debt": 275753.88,
-   "cf": 0.845,
-   "nav": 4.77997107,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791740303,
-   "b": 26170754,
-   "hf": 1.22595,
-   "px": 83749.2,
-   "liq": 68313.58,
-   "coll": 4.77644089,
-   "debt": 275755.79,
-   "cf": 0.845,
-   "nav": 4.77997069,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791743903,
-   "b": 26171054,
-   "hf": 1.22539,
-   "px": 83711.4,
-   "liq": 68314.06,
-   "coll": 4.77644089,
-   "debt": 275757.73,
-   "cf": 0.845,
-   "nav": 4.77997035,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791747515,
-   "b": 26171354,
-   "hf": 1.22153,
-   "px": 83448.08,
-   "liq": 68314.54,
-   "coll": 4.77644089,
-   "debt": 275759.66,
-   "cf": 0.845,
-   "nav": 4.77997113,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791751139,
-   "b": 26171654,
-   "hf": 1.22163,
-   "px": 83455.62,
-   "liq": 68315.01,
-   "coll": 4.77644089,
-   "debt": 275761.56,
-   "cf": 0.845,
-   "nav": 4.77997183,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791754739,
-   "b": 26171954,
-   "hf": 1.2213,
-   "px": 83433.38,
-   "liq": 68315.47,
-   "coll": 4.77644089,
-   "debt": 275763.41,
-   "cf": 0.845,
-   "nav": 4.77997302,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791758351,
-   "b": 26172254,
-   "hf": 1.21916,
-   "px": 83288.33,
-   "liq": 68315.95,
-   "coll": 4.77644089,
-   "debt": 275765.33,
-   "cf": 0.845,
-   "nav": 4.7799736,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791761963,
-   "b": 26172554,
-   "hf": 1.22162,
-   "px": 83456.6,
-   "liq": 68316.42,
-   "coll": 4.77644089,
-   "debt": 275767.24,
+   "debt": 275717.06,
    "cf": 0.845,
    "nav": 4.77997391,
    "sup": 4.77865456
   },
   {
-   "t": 1791765575,
-   "b": 26172854,
-   "hf": 1.22309,
-   "px": 83557.93,
-   "liq": 68316.9,
+   "t": 1791669839,
+   "b": 26164903,
+   "hf": 1.213,
+   "px": 82851.95,
+   "liq": 68303.07,
    "coll": 4.77644089,
-   "debt": 275769.17,
+   "debt": 275719.06,
    "cf": 0.845,
-   "nav": 4.77997479,
+   "nav": 4.77997188,
    "sup": 4.77865456
   },
   {
-   "t": 1791769187,
-   "b": 26173154,
+   "t": 1791673451,
+   "b": 26165203,
+   "hf": 1.213,
+   "px": 82852.45,
+   "liq": 68303.57,
+   "coll": 4.77644089,
+   "debt": 275721.08,
+   "cf": 0.845,
+   "nav": 4.77996972,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791677063,
+   "b": 26165503,
+   "hf": 1.21278,
+   "px": 82837.95,
+   "liq": 68304.08,
+   "coll": 4.77644089,
+   "debt": 275723.15,
+   "cf": 0.845,
+   "nav": 4.77996713,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791680687,
+   "b": 26165803,
+   "hf": 1.21187,
+   "px": 82776.17,
+   "liq": 68304.59,
+   "coll": 4.77644089,
+   "debt": 275725.23,
+   "cf": 0.845,
+   "nav": 4.77996453,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791684299,
+   "b": 26166103,
+   "hf": 1.21269,
+   "px": 82833.23,
+   "liq": 68305.11,
+   "coll": 4.77644089,
+   "debt": 275727.3,
+   "cf": 0.845,
+   "nav": 4.77996198,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791687911,
+   "b": 26166403,
+   "hf": 1.21302,
+   "px": 82856.28,
+   "liq": 68305.58,
+   "coll": 4.77644089,
+   "debt": 275729.2,
+   "cf": 0.845,
+   "nav": 4.77996112,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791691511,
+   "b": 26166703,
+   "hf": 1.21111,
+   "px": 82726.09,
+   "liq": 68306.05,
+   "coll": 4.77644089,
+   "debt": 275731.11,
+   "cf": 0.845,
+   "nav": 4.77996023,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791695135,
+   "b": 26167003,
+   "hf": 1.21152,
+   "px": 82754.58,
+   "liq": 68306.51,
+   "coll": 4.77644089,
+   "debt": 275732.96,
+   "cf": 0.845,
+   "nav": 4.77996037,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791698735,
+   "b": 26167303,
+   "hf": 1.21334,
+   "px": 82879.88,
+   "liq": 68306.95,
+   "coll": 4.77644089,
+   "debt": 275734.73,
+   "cf": 0.845,
+   "nav": 4.77996112,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791702347,
+   "b": 26167603,
+   "hf": 1.21337,
+   "px": 82881.83,
+   "liq": 68307.4,
+   "coll": 4.77644089,
+   "debt": 275736.53,
+   "cf": 0.845,
+   "nav": 4.77996274,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791705959,
+   "b": 26167903,
+   "hf": 1.21328,
+   "px": 82876.79,
+   "liq": 68307.84,
+   "coll": 4.77644089,
+   "debt": 275738.33,
+   "cf": 0.845,
+   "nav": 4.77996376,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791709583,
+   "b": 26168203,
+   "hf": 1.21264,
+   "px": 82833.64,
+   "liq": 68308.28,
+   "coll": 4.77644089,
+   "debt": 275740.12,
+   "cf": 0.845,
+   "nav": 4.77996512,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791713219,
+   "b": 26168503,
+   "hf": 1.21257,
+   "px": 82828.93,
+   "liq": 68308.73,
+   "coll": 4.77644089,
+   "debt": 275741.91,
+   "cf": 0.845,
+   "nav": 4.77996624,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791716819,
+   "b": 26168803,
+   "hf": 1.21184,
+   "px": 82780.1,
+   "liq": 68309.17,
+   "coll": 4.77644089,
+   "debt": 275743.7,
+   "cf": 0.845,
+   "nav": 4.77996722,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791720443,
+   "b": 26169103,
+   "hf": 1.21279,
+   "px": 82844.93,
+   "liq": 68309.63,
+   "coll": 4.77644089,
+   "debt": 275745.53,
+   "cf": 0.845,
+   "nav": 4.77996785,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791724055,
+   "b": 26169403,
+   "hf": 1.21405,
+   "px": 82931.57,
+   "liq": 68310.08,
+   "coll": 4.77644089,
+   "debt": 275747.37,
+   "cf": 0.845,
+   "nav": 4.7799683,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791727655,
+   "b": 26169703,
+   "hf": 1.21328,
+   "px": 82880.04,
+   "liq": 68310.54,
+   "coll": 4.77644089,
+   "debt": 275749.21,
+   "cf": 0.845,
+   "nav": 4.7799698,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791731255,
+   "b": 26170003,
+   "hf": 1.21418,
+   "px": 82943.78,
+   "liq": 68312.41,
+   "coll": 4.77644089,
+   "debt": 275751.05,
+   "cf": 0.845,
+   "nav": 4.77997095,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791734855,
+   "b": 26170303,
+   "hf": 1.22289,
+   "px": 83539.01,
+   "liq": 68312.87,
+   "coll": 4.77644089,
+   "debt": 275752.91,
+   "cf": 0.845,
+   "nav": 4.7799711,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791738491,
+   "b": 26170603,
+   "hf": 1.22596,
+   "px": 83749.2,
+   "liq": 68313.34,
+   "coll": 4.77644089,
+   "debt": 275754.82,
+   "cf": 0.845,
+   "nav": 4.77997095,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791742091,
+   "b": 26170903,
+   "hf": 1.22539,
+   "px": 83711.4,
+   "liq": 68313.82,
+   "coll": 4.77644089,
+   "debt": 275756.75,
+   "cf": 0.845,
+   "nav": 4.77997057,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791745691,
+   "b": 26171203,
+   "hf": 1.22153,
+   "px": 83448.08,
+   "liq": 68314.3,
+   "coll": 4.77644089,
+   "debt": 275758.7,
+   "cf": 0.845,
+   "nav": 4.77997083,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791749327,
+   "b": 26171503,
+   "hf": 1.22163,
+   "px": 83455.62,
+   "liq": 68314.78,
+   "coll": 4.77644089,
+   "debt": 275760.63,
+   "cf": 0.845,
+   "nav": 4.77997135,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791752927,
+   "b": 26171803,
+   "hf": 1.2213,
+   "px": 83433.38,
+   "liq": 68315.24,
+   "coll": 4.77644089,
+   "debt": 275762.46,
+   "cf": 0.845,
+   "nav": 4.77997257,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791756527,
+   "b": 26172103,
+   "hf": 1.21917,
+   "px": 83288.33,
+   "liq": 68315.71,
+   "coll": 4.77644089,
+   "debt": 275764.36,
+   "cf": 0.845,
+   "nav": 4.77997334,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791760139,
+   "b": 26172403,
+   "hf": 1.22162,
+   "px": 83456.6,
+   "liq": 68316.18,
+   "coll": 4.77644089,
+   "debt": 275766.28,
+   "cf": 0.845,
+   "nav": 4.77997381,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791763751,
+   "b": 26172703,
+   "hf": 1.2231,
+   "px": 83557.93,
+   "liq": 68316.66,
+   "coll": 4.77644089,
+   "debt": 275768.19,
+   "cf": 0.845,
+   "nav": 4.77997408,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791767363,
+   "b": 26173003,
    "hf": 1.22636,
    "px": 83781.74,
-   "liq": 68317.38,
+   "liq": 68317.14,
    "coll": 4.77644089,
-   "debt": 275771.11,
+   "debt": 275770.13,
    "cf": 0.845,
-   "nav": 4.77997536,
+   "nav": 4.77997528,
    "sup": 4.77865456
   },
   {
-   "t": 1791772787,
-   "b": 26173454,
+   "t": 1791770975,
+   "b": 26173303,
+   "hf": 1.21964,
+   "px": 83322.9,
+   "liq": 68317.62,
+   "coll": 4.77644089,
+   "debt": 275772.1,
+   "cf": 0.845,
+   "nav": 4.77997524,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791774575,
+   "b": 26173603,
    "hf": 1.22597,
    "px": 83755.86,
-   "liq": 68317.87,
+   "liq": 68318.12,
    "coll": 4.77644089,
-   "debt": 275773.1,
+   "debt": 275774.09,
    "cf": 0.845,
-   "nav": 4.77997492,
+   "nav": 4.77997468,
    "sup": 4.77865456
   },
   {
-   "t": 1791776387,
-   "b": 26173754,
+   "t": 1791778187,
+   "b": 26173903,
    "hf": 1.2212,
    "px": 83430.67,
-   "liq": 68318.36,
+   "liq": 68318.61,
    "coll": 4.77644089,
-   "debt": 275775.09,
+   "debt": 275776.08,
    "cf": 0.845,
-   "nav": 4.77997461,
+   "nav": 4.77997443,
    "sup": 4.77865456
   },
   {
-   "t": 1791779999,
-   "b": 26174054,
-   "hf": 1.21925,
-   "px": 83297.43,
-   "liq": 68318.81,
-   "coll": 4.77644089,
-   "debt": 275776.89,
-   "cf": 0.845,
-   "nav": 4.77997637,
-   "sup": 4.77865456
-  },
-  {
-   "t": 1791783611,
-   "b": 26174354,
+   "t": 1791781799,
+   "b": 26174203,
    "hf": 1.22571,
    "px": 83739.55,
-   "liq": 68319.2,
+   "liq": 68319,
    "coll": 4.77644089,
-   "debt": 275778.45,
+   "debt": 275777.67,
    "cf": 0.845,
-   "nav": 4.77998059,
+   "nav": 4.77997845,
    "sup": 4.77865456
   },
   {
-   "t": 1791787211,
-   "b": 26174654,
-   "hf": 1.22519,
+   "t": 1791785399,
+   "b": 26174503,
+   "hf": 1.2252,
    "px": 83704.73,
-   "liq": 68319.58,
+   "liq": 68319.39,
    "coll": 4.77644089,
-   "debt": 275780.02,
+   "debt": 275779.23,
    "cf": 0.845,
-   "nav": 4.7799853,
+   "nav": 4.77998283,
    "sup": 4.77865456
   },
   {
-   "t": 1791790811,
-   "b": 26174954,
+   "t": 1791788999,
+   "b": 26174803,
    "hf": 1.22595,
    "px": 83756.84,
-   "liq": 68319.97,
+   "liq": 68319.78,
    "coll": 4.77644089,
-   "debt": 275781.58,
+   "debt": 275780.79,
    "cf": 0.845,
-   "nav": 4.77998961,
+   "nav": 4.77998753,
    "sup": 4.77865456
   },
   {
-   "t": 1791794423,
-   "b": 26175254,
+   "t": 1791792611,
+   "b": 26175103,
+   "hf": 1.22645,
+   "px": 83791.03,
+   "liq": 68320.17,
+   "coll": 4.77644089,
+   "debt": 275782.37,
+   "cf": 0.845,
+   "nav": 4.77999176,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791796211,
+   "b": 26175403,
    "hf": 1.22027,
    "px": 83369.42,
-   "liq": 68320.38,
+   "liq": 68320.59,
    "coll": 4.77644089,
-   "debt": 275783.22,
+   "debt": 275784.08,
    "cf": 0.845,
-   "nav": 4.77999358,
+   "nav": 4.77999492,
    "sup": 4.77865456
   },
   {
-   "t": 1791798023,
-   "b": 26175554,
-   "hf": 1.21909,
+   "t": 1791799811,
+   "b": 26175703,
+   "hf": 1.21908,
    "px": 83288.91,
-   "liq": 68320.81,
+   "liq": 68321.02,
    "coll": 4.77644089,
-   "debt": 275784.95,
+   "debt": 275785.79,
    "cf": 0.845,
-   "nav": 4.7799962,
+   "nav": 4.77999771,
    "sup": 4.77865456
   },
   {
-   "t": 1791801623,
-   "b": 26175854,
-   "hf": 1.21854,
+   "t": 1791803411,
+   "b": 26176003,
+   "hf": 1.21853,
    "px": 83251.8,
-   "liq": 68321.21,
+   "liq": 68321.4,
    "coll": 4.77644089,
-   "debt": 275786.56,
+   "debt": 275787.32,
    "cf": 0.845,
-   "nav": 4.78000057,
+   "nav": 4.7800034,
    "sup": 4.77865456
   },
   {
-   "t": 1791805223,
-   "b": 26176154,
+   "t": 1791807011,
+   "b": 26176303,
    "hf": 1.21826,
    "px": 83233.6,
-   "liq": 68321.59,
+   "liq": 68321.77,
    "coll": 4.77644089,
-   "debt": 275788.09,
+   "debt": 275788.85,
    "cf": 0.845,
-   "nav": 4.78000621,
+   "nav": 4.780009,
    "sup": 4.77865456
   }
  ],
@@ -1900,6 +8790,24 @@
     "share_price_usd": 83370.01,
     "share_price_wbtc": 1.00028335,
     "btc_usd": 83346.4
+   },
+   {
+    "t": 1791809039,
+    "b": 26176472,
+    "nav_usd": 395223.02,
+    "nav_wbtc": 4.78001266,
+    "share_price_usd": 82705.92,
+    "share_price_wbtc": 1.0002842,
+    "btc_usd": 82682.42
+   },
+   {
+    "t": 1791809123,
+    "b": 26176479,
+    "nav_usd": 395223.03,
+    "nav_wbtc": 4.78001279,
+    "share_price_usd": 82705.92,
+    "share_price_wbtc": 1.00028423,
+    "btc_usd": 82682.42
    }
   ]
  },
@@ -2041,959 +8949,966 @@
    "b": 26176280,
    "borrow_apy": 4.978,
    "lend_apy": 6.189
+  },
+  {
+   "t": 1791809039,
+   "b": 26176472,
+   "borrow_apy": 4.978,
+   "lend_apy": 6.191
+  },
+  {
+   "t": 1791809123,
+   "b": 26176479,
+   "borrow_apy": 4.978,
+   "lend_apy": 6.19
   }
  ],
  "core_usdc_rates": [
   {
-   "t": 1789116695,
-   "b": 25953080,
-   "apy": 5.741
+   "t": 1789133435,
+   "b": 25954472,
+   "apy": 8.573
   },
   {
-   "t": 1789131119,
-   "b": 25954280,
-   "apy": 8.478
-  },
-  {
-   "t": 1789145591,
-   "b": 25955480,
+   "t": 1789147907,
+   "b": 25955672,
    "apy": 6.202
   },
   {
-   "t": 1789160051,
-   "b": 25956680,
+   "t": 1789162355,
+   "b": 25956872,
    "apy": 9.035
   },
   {
-   "t": 1789174511,
-   "b": 25957880,
-   "apy": 7.465
-  },
-  {
-   "t": 1789189007,
-   "b": 25959080,
+   "t": 1789176827,
+   "b": 25958072,
    "apy": 5.061
   },
   {
-   "t": 1789203455,
-   "b": 25960280,
-   "apy": 5.013
-  },
-  {
-   "t": 1789217867,
-   "b": 25961480,
-   "apy": 5.021
-  },
-  {
-   "t": 1789232303,
-   "b": 25962680,
-   "apy": 5.087
-  },
-  {
-   "t": 1789246775,
-   "b": 25963880,
-   "apy": 6.373
-  },
-  {
-   "t": 1789261211,
-   "b": 25965080,
-   "apy": 6.171
-  },
-  {
-   "t": 1789275659,
-   "b": 25966280,
-   "apy": 6.003
-  },
-  {
-   "t": 1789290083,
-   "b": 25967480,
-   "apy": 6.001
-  },
-  {
-   "t": 1789304519,
-   "b": 25968680,
-   "apy": 8.605
-  },
-  {
-   "t": 1789318919,
-   "b": 25969880,
-   "apy": 4.914
-  },
-  {
-   "t": 1789333367,
-   "b": 25971080,
-   "apy": 4.914
-  },
-  {
-   "t": 1789347863,
-   "b": 25972280,
-   "apy": 4.915
-  },
-  {
-   "t": 1789362287,
-   "b": 25973480,
-   "apy": 4.917
-  },
-  {
-   "t": 1789376687,
-   "b": 25974680,
-   "apy": 4.921
-  },
-  {
-   "t": 1789391087,
-   "b": 25975880,
-   "apy": 4.92
-  },
-  {
-   "t": 1789405571,
-   "b": 25977080,
-   "apy": 5.457
-  },
-  {
-   "t": 1789420079,
-   "b": 25978280,
-   "apy": 6.029
-  },
-  {
-   "t": 1789434563,
-   "b": 25979480,
-   "apy": 5.115
-  },
-  {
-   "t": 1789448987,
-   "b": 25980680,
-   "apy": 5.115
-  },
-  {
-   "t": 1789463411,
-   "b": 25981880,
-   "apy": 5.116
-  },
-  {
-   "t": 1789477895,
-   "b": 25983080,
-   "apy": 5.121
-  },
-  {
-   "t": 1789492379,
-   "b": 25984280,
-   "apy": 5.301
-  },
-  {
-   "t": 1789506863,
-   "b": 25985480,
-   "apy": 5.122
-  },
-  {
-   "t": 1789521287,
-   "b": 25986680,
-   "apy": 6.071
-  },
-  {
-   "t": 1789535711,
-   "b": 25987880,
-   "apy": 6.116
-  },
-  {
-   "t": 1789550183,
-   "b": 25989080,
-   "apy": 6.441
-  },
-  {
-   "t": 1789564631,
-   "b": 25990280,
-   "apy": 5.047
-  },
-  {
-   "t": 1789579103,
-   "b": 25991480,
-   "apy": 9.291
-  },
-  {
-   "t": 1789593563,
-   "b": 25992680,
-   "apy": 7.506
-  },
-  {
-   "t": 1789607999,
-   "b": 25993880,
-   "apy": 7.612
-  },
-  {
-   "t": 1789622459,
-   "b": 25995080,
-   "apy": 26.413
-  },
-  {
-   "t": 1789636871,
-   "b": 25996280,
-   "apy": 12.52
-  },
-  {
-   "t": 1789651367,
-   "b": 25997480,
-   "apy": 11.277
-  },
-  {
-   "t": 1789665815,
-   "b": 25998680,
-   "apy": 7.96
-  },
-  {
-   "t": 1789680299,
-   "b": 25999880,
-   "apy": 11.169
-  },
-  {
-   "t": 1789694759,
-   "b": 26001080,
-   "apy": 6.611
-  },
-  {
-   "t": 1789709159,
-   "b": 26002280,
-   "apy": 5.508
-  },
-  {
-   "t": 1789723583,
-   "b": 26003480,
-   "apy": 7.877
-  },
-  {
-   "t": 1789738067,
-   "b": 26004680,
-   "apy": 8.461
-  },
-  {
-   "t": 1789752491,
-   "b": 26005880,
-   "apy": 5.07
-  },
-  {
-   "t": 1789766903,
-   "b": 26007080,
-   "apy": 5.029
-  },
-  {
-   "t": 1789781363,
-   "b": 26008280,
-   "apy": 5.034
-  },
-  {
-   "t": 1789795823,
-   "b": 26009480,
-   "apy": 5.105
-  },
-  {
-   "t": 1789810271,
-   "b": 26010680,
-   "apy": 5.111
-  },
-  {
-   "t": 1789824755,
-   "b": 26011880,
-   "apy": 5.007
-  },
-  {
-   "t": 1789839239,
-   "b": 26013080,
-   "apy": 5.089
-  },
-  {
-   "t": 1789853747,
-   "b": 26014280,
-   "apy": 5.08
-  },
-  {
-   "t": 1789868231,
-   "b": 26015480,
-   "apy": 5.125
-  },
-  {
-   "t": 1789882691,
-   "b": 26016680,
-   "apy": 5.062
-  },
-  {
-   "t": 1789897151,
-   "b": 26017880,
-   "apy": 5.65
-  },
-  {
-   "t": 1789911575,
-   "b": 26019080,
-   "apy": 5.095
-  },
-  {
-   "t": 1789926023,
-   "b": 26020280,
-   "apy": 5.27
-  },
-  {
-   "t": 1789940483,
-   "b": 26021480,
-   "apy": 5.193
-  },
-  {
-   "t": 1789954955,
-   "b": 26022680,
-   "apy": 5.056
-  },
-  {
-   "t": 1789969451,
-   "b": 26023880,
-   "apy": 5.055
-  },
-  {
-   "t": 1789983923,
-   "b": 26025080,
-   "apy": 10.954
-  },
-  {
-   "t": 1789998479,
-   "b": 26026280,
-   "apy": 5.12
-  },
-  {
-   "t": 1790012999,
-   "b": 26027480,
-   "apy": 6.893
-  },
-  {
-   "t": 1790027543,
-   "b": 26028680,
-   "apy": 4.985
-  },
-  {
-   "t": 1790042027,
-   "b": 26029880,
-   "apy": 5.123
-  },
-  {
-   "t": 1790056547,
-   "b": 26031080,
-   "apy": 4.99
-  },
-  {
-   "t": 1790071103,
-   "b": 26032280,
-   "apy": 6.175
-  },
-  {
-   "t": 1790085527,
-   "b": 26033480,
-   "apy": 9.487
-  },
-  {
-   "t": 1790100095,
-   "b": 26034680,
-   "apy": 5.779
-  },
-  {
-   "t": 1790114555,
-   "b": 26035880,
-   "apy": 10.589
-  },
-  {
-   "t": 1790129039,
-   "b": 26037080,
-   "apy": 9.194
-  },
-  {
-   "t": 1790143523,
-   "b": 26038280,
-   "apy": 7.757
-  },
-  {
-   "t": 1790158031,
-   "b": 26039480,
-   "apy": 6.76
-  },
-  {
-   "t": 1790172563,
-   "b": 26040680,
-   "apy": 5.064
-  },
-  {
-   "t": 1790187131,
-   "b": 26041880,
-   "apy": 5.057
-  },
-  {
-   "t": 1790201603,
-   "b": 26043080,
-   "apy": 12.03
-  },
-  {
-   "t": 1790216111,
-   "b": 26044280,
-   "apy": 5.899
-  },
-  {
-   "t": 1790230595,
-   "b": 26045480,
-   "apy": 5.089
-  },
-  {
-   "t": 1790245187,
-   "b": 26046680,
-   "apy": 5.018
-  },
-  {
-   "t": 1790259731,
-   "b": 26047880,
-   "apy": 5.005
-  },
-  {
-   "t": 1790274239,
-   "b": 26049080,
-   "apy": 4.85
-  },
-  {
-   "t": 1790288747,
-   "b": 26050280,
-   "apy": 4.904
-  },
-  {
-   "t": 1790303267,
-   "b": 26051480,
-   "apy": 4.914
-  },
-  {
-   "t": 1790317775,
-   "b": 26052680,
-   "apy": 5.099
-  },
-  {
-   "t": 1790332235,
-   "b": 26053880,
-   "apy": 5.526
-  },
-  {
-   "t": 1790346683,
-   "b": 26055080,
-   "apy": 7.432
-  },
-  {
-   "t": 1790361215,
-   "b": 26056280,
-   "apy": 8.743
-  },
-  {
-   "t": 1790375663,
-   "b": 26057480,
-   "apy": 6.187
-  },
-  {
-   "t": 1790390171,
-   "b": 26058680,
-   "apy": 8.292
-  },
-  {
-   "t": 1790404607,
-   "b": 26059880,
-   "apy": 4.997
-  },
-  {
-   "t": 1790419127,
-   "b": 26061080,
-   "apy": 5.039
-  },
-  {
-   "t": 1790433587,
-   "b": 26062280,
-   "apy": 4.949
-  },
-  {
-   "t": 1790448047,
-   "b": 26063480,
-   "apy": 5.113
-  },
-  {
-   "t": 1790462519,
-   "b": 26064680,
-   "apy": 6.749
-  },
-  {
-   "t": 1790476979,
-   "b": 26065880,
-   "apy": 7.379
-  },
-  {
-   "t": 1790491427,
-   "b": 26067080,
-   "apy": 5.036
-  },
-  {
-   "t": 1790505911,
-   "b": 26068280,
-   "apy": 5.564
-  },
-  {
-   "t": 1790520395,
-   "b": 26069480,
-   "apy": 6.229
-  },
-  {
-   "t": 1790534927,
-   "b": 26070680,
-   "apy": 7.457
-  },
-  {
-   "t": 1790549483,
-   "b": 26071880,
-   "apy": 6.329
-  },
-  {
-   "t": 1790563943,
-   "b": 26073080,
-   "apy": 5.001
-  },
-  {
-   "t": 1790578367,
-   "b": 26074280,
-   "apy": 5.03
-  },
-  {
-   "t": 1790592815,
-   "b": 26075480,
-   "apy": 16.205
-  },
-  {
-   "t": 1790607251,
-   "b": 26076680,
-   "apy": 12.155
-  },
-  {
-   "t": 1790621723,
-   "b": 26077880,
-   "apy": 5.071
-  },
-  {
-   "t": 1790636195,
-   "b": 26079080,
-   "apy": 5.11
-  },
-  {
-   "t": 1790650655,
-   "b": 26080280,
-   "apy": 5.126
-  },
-  {
-   "t": 1790665103,
-   "b": 26081480,
-   "apy": 5.434
-  },
-  {
-   "t": 1790679587,
-   "b": 26082680,
-   "apy": 5.101
-  },
-  {
-   "t": 1790693999,
-   "b": 26083880,
-   "apy": 5.333
-  },
-  {
-   "t": 1790708483,
-   "b": 26085080,
-   "apy": 4.8
-  },
-  {
-   "t": 1790722931,
-   "b": 26086280,
-   "apy": 4.868
-  },
-  {
-   "t": 1790737391,
-   "b": 26087480,
-   "apy": 6.706
-  },
-  {
-   "t": 1790751839,
-   "b": 26088680,
-   "apy": 5.274
-  },
-  {
-   "t": 1790766311,
-   "b": 26089880,
-   "apy": 8.735
-  },
-  {
-   "t": 1790780747,
-   "b": 26091080,
-   "apy": 10.682
-  },
-  {
-   "t": 1790795207,
-   "b": 26092280,
-   "apy": 8.182
-  },
-  {
-   "t": 1790809715,
-   "b": 26093480,
-   "apy": 12.675
-  },
-  {
-   "t": 1790824127,
-   "b": 26094680,
-   "apy": 5.101
-  },
-  {
-   "t": 1790838563,
-   "b": 26095880,
-   "apy": 5.835
-  },
-  {
-   "t": 1790853011,
-   "b": 26097080,
-   "apy": 5.119
-  },
-  {
-   "t": 1790867519,
-   "b": 26098280,
-   "apy": 5.114
-  },
-  {
-   "t": 1790881955,
-   "b": 26099480,
-   "apy": 5.095
-  },
-  {
-   "t": 1790896403,
-   "b": 26100680,
-   "apy": 5.097
-  },
-  {
-   "t": 1790910851,
-   "b": 26101880,
-   "apy": 5.116
-  },
-  {
-   "t": 1790925287,
-   "b": 26103080,
-   "apy": 4.983
-  },
-  {
-   "t": 1790939759,
-   "b": 26104280,
-   "apy": 4.819
-  },
-  {
-   "t": 1790954243,
-   "b": 26105480,
-   "apy": 5.252
-  },
-  {
-   "t": 1790968727,
-   "b": 26106680,
-   "apy": 5.066
-  },
-  {
-   "t": 1790983187,
-   "b": 26107880,
-   "apy": 8.543
-  },
-  {
-   "t": 1790997635,
-   "b": 26109080,
-   "apy": 8.463
-  },
-  {
-   "t": 1791012071,
-   "b": 26110280,
-   "apy": 6.513
-  },
-  {
-   "t": 1791026507,
-   "b": 26111480,
-   "apy": 5.079
-  },
-  {
-   "t": 1791040955,
-   "b": 26112680,
-   "apy": 7.216
-  },
-  {
-   "t": 1791055415,
-   "b": 26113880,
-   "apy": 5.102
-  },
-  {
-   "t": 1791069827,
-   "b": 26115080,
-   "apy": 5.1
-  },
-  {
-   "t": 1791084263,
-   "b": 26116280,
-   "apy": 5.097
-  },
-  {
-   "t": 1791098699,
-   "b": 26117480,
-   "apy": 5.098
-  },
-  {
-   "t": 1791113183,
-   "b": 26118680,
-   "apy": 5.084
-  },
-  {
-   "t": 1791127595,
-   "b": 26119880,
-   "apy": 5.089
-  },
-  {
-   "t": 1791142055,
-   "b": 26121080,
-   "apy": 5.065
-  },
-  {
-   "t": 1791156491,
-   "b": 26122280,
+   "t": 1789191311,
+   "b": 25959272,
    "apy": 5.061
   },
   {
-   "t": 1791170903,
-   "b": 26123480,
-   "apy": 5.06
+   "t": 1789205759,
+   "b": 25960472,
+   "apy": 5.012
   },
   {
-   "t": 1791185363,
-   "b": 26124680,
-   "apy": 5.085
+   "t": 1789220171,
+   "b": 25961672,
+   "apy": 4.968
   },
   {
-   "t": 1791199823,
-   "b": 26125880,
-   "apy": 5.134
-  },
-  {
-   "t": 1791214319,
-   "b": 26127080,
-   "apy": 5.113
-  },
-  {
-   "t": 1791228743,
-   "b": 26128280,
-   "apy": 5.109
-  },
-  {
-   "t": 1791243191,
-   "b": 26129480,
-   "apy": 5.103
-  },
-  {
-   "t": 1791257687,
-   "b": 26130680,
-   "apy": 5.077
-  },
-  {
-   "t": 1791272123,
-   "b": 26131880,
-   "apy": 5.226
-  },
-  {
-   "t": 1791286655,
-   "b": 26133080,
-   "apy": 5.08
-  },
-  {
-   "t": 1791301127,
-   "b": 26134280,
-   "apy": 5.073
-  },
-  {
-   "t": 1791315551,
-   "b": 26135480,
-   "apy": 5.111
-  },
-  {
-   "t": 1791329963,
-   "b": 26136680,
-   "apy": 5.106
-  },
-  {
-   "t": 1791344435,
-   "b": 26137880,
-   "apy": 5.388
-  },
-  {
-   "t": 1791358883,
-   "b": 26139080,
-   "apy": 6.982
-  },
-  {
-   "t": 1791373355,
-   "b": 26140280,
-   "apy": 8.558
-  },
-  {
-   "t": 1791387815,
-   "b": 26141480,
-   "apy": 6.739
-  },
-  {
-   "t": 1791402251,
-   "b": 26142680,
-   "apy": 5.119
-  },
-  {
-   "t": 1791416699,
-   "b": 26143880,
-   "apy": 5.11
-  },
-  {
-   "t": 1791431159,
-   "b": 26145080,
-   "apy": 8.104
-  },
-  {
-   "t": 1791445643,
-   "b": 26146280,
-   "apy": 7.698
-  },
-  {
-   "t": 1791460079,
-   "b": 26147480,
-   "apy": 5.627
-  },
-  {
-   "t": 1791474539,
-   "b": 26148680,
-   "apy": 5.093
-  },
-  {
-   "t": 1791489023,
-   "b": 26149880,
-   "apy": 7.465
-  },
-  {
-   "t": 1791503495,
-   "b": 26151080,
-   "apy": 4.894
-  },
-  {
-   "t": 1791517931,
-   "b": 26152280,
-   "apy": 5.338
-  },
-  {
-   "t": 1791532391,
-   "b": 26153480,
-   "apy": 5.555
-  },
-  {
-   "t": 1791546827,
-   "b": 26154680,
-   "apy": 5.304
-  },
-  {
-   "t": 1791561251,
-   "b": 26155880,
-   "apy": 5.395
-  },
-  {
-   "t": 1791575723,
-   "b": 26157080,
-   "apy": 5.09
-  },
-  {
-   "t": 1791590159,
-   "b": 26158280,
-   "apy": 5.053
-  },
-  {
-   "t": 1791604559,
-   "b": 26159480,
-   "apy": 5.039
-  },
-  {
-   "t": 1791619019,
-   "b": 26160680,
-   "apy": 5.067
-  },
-  {
-   "t": 1791633455,
-   "b": 26161880,
-   "apy": 5.556
-  },
-  {
-   "t": 1791647927,
-   "b": 26163080,
-   "apy": 6.858
-  },
-  {
-   "t": 1791662363,
-   "b": 26164280,
-   "apy": 6.498
-  },
-  {
-   "t": 1791676787,
-   "b": 26165480,
-   "apy": 6.774
-  },
-  {
-   "t": 1791691235,
-   "b": 26166680,
-   "apy": 6.293
-  },
-  {
-   "t": 1791705671,
-   "b": 26167880,
-   "apy": 5.872
-  },
-  {
-   "t": 1791720167,
-   "b": 26169080,
-   "apy": 5.96
-  },
-  {
-   "t": 1791734579,
-   "b": 26170280,
+   "t": 1789234619,
+   "b": 25962872,
    "apy": 6.153
   },
   {
-   "t": 1791749039,
-   "b": 26171480,
-   "apy": 6.254
+   "t": 1789249079,
+   "b": 25964072,
+   "apy": 6.373
   },
   {
-   "t": 1791763475,
-   "b": 26172680,
-   "apy": 6.313
+   "t": 1789263527,
+   "b": 25965272,
+   "apy": 6.092
   },
   {
-   "t": 1791777911,
-   "b": 26173880,
-   "apy": 6.503
+   "t": 1789277975,
+   "b": 25966472,
+   "apy": 6.001
   },
   {
-   "t": 1791792323,
-   "b": 26175080,
+   "t": 1789292387,
+   "b": 25967672,
    "apy": 5.112
   },
   {
-   "t": 1791806735,
-   "b": 26176280,
+   "t": 1789306823,
+   "b": 25968872,
+   "apy": 8.511
+  },
+  {
+   "t": 1789321235,
+   "b": 25970072,
+   "apy": 4.914
+  },
+  {
+   "t": 1789335671,
+   "b": 25971272,
+   "apy": 4.914
+  },
+  {
+   "t": 1789350167,
+   "b": 25972472,
+   "apy": 4.917
+  },
+  {
+   "t": 1789364591,
+   "b": 25973672,
+   "apy": 4.917
+  },
+  {
+   "t": 1789378991,
+   "b": 25974872,
+   "apy": 4.922
+  },
+  {
+   "t": 1789393391,
+   "b": 25976072,
+   "apy": 8.736
+  },
+  {
+   "t": 1789407887,
+   "b": 25977272,
+   "apy": 5.436
+  },
+  {
+   "t": 1789422395,
+   "b": 25978472,
+   "apy": 6.087
+  },
+  {
+   "t": 1789436891,
+   "b": 25979672,
+   "apy": 5.115
+  },
+  {
+   "t": 1789451291,
+   "b": 25980872,
+   "apy": 5.115
+  },
+  {
+   "t": 1789465715,
+   "b": 25982072,
+   "apy": 5.116
+  },
+  {
+   "t": 1789480235,
+   "b": 25983272,
+   "apy": 5.124
+  },
+  {
+   "t": 1789494743,
+   "b": 25984472,
+   "apy": 5.301
+  },
+  {
+   "t": 1789509167,
+   "b": 25985672,
+   "apy": 5.122
+  },
+  {
+   "t": 1789523603,
+   "b": 25986872,
+   "apy": 6.08
+  },
+  {
+   "t": 1789538027,
+   "b": 25988072,
+   "apy": 6.155
+  },
+  {
+   "t": 1789552499,
+   "b": 25989272,
+   "apy": 6.608
+  },
+  {
+   "t": 1789566947,
+   "b": 25990472,
+   "apy": 5.035
+  },
+  {
+   "t": 1789581407,
+   "b": 25991672,
+   "apy": 10.08
+  },
+  {
+   "t": 1789595867,
+   "b": 25992872,
+   "apy": 7.652
+  },
+  {
+   "t": 1789610303,
+   "b": 25994072,
+   "apy": 5.971
+  },
+  {
+   "t": 1789624763,
+   "b": 25995272,
+   "apy": 25.116
+  },
+  {
+   "t": 1789639211,
+   "b": 25996472,
+   "apy": 7.629
+  },
+  {
+   "t": 1789653671,
+   "b": 25997672,
+   "apy": 12.111
+  },
+  {
+   "t": 1789668119,
+   "b": 25998872,
+   "apy": 5.68
+  },
+  {
+   "t": 1789682627,
+   "b": 26000072,
+   "apy": 9.751
+  },
+  {
+   "t": 1789697063,
+   "b": 26001272,
+   "apy": 6.611
+  },
+  {
+   "t": 1789711463,
+   "b": 26002472,
+   "apy": 5.457
+  },
+  {
+   "t": 1789725887,
+   "b": 26003672,
+   "apy": 7.849
+  },
+  {
+   "t": 1789740371,
+   "b": 26004872,
+   "apy": 11.894
+  },
+  {
+   "t": 1789754795,
+   "b": 26006072,
+   "apy": 5.086
+  },
+  {
+   "t": 1789769219,
+   "b": 26007272,
+   "apy": 5.029
+  },
+  {
+   "t": 1789783679,
+   "b": 26008472,
+   "apy": 5.038
+  },
+  {
+   "t": 1789798127,
+   "b": 26009672,
+   "apy": 5.104
+  },
+  {
+   "t": 1789812599,
+   "b": 26010872,
+   "apy": 4.969
+  },
+  {
+   "t": 1789827059,
+   "b": 26012072,
+   "apy": 5.05
+  },
+  {
+   "t": 1789841567,
+   "b": 26013272,
+   "apy": 5.089
+  },
+  {
+   "t": 1789856051,
+   "b": 26014472,
+   "apy": 5.108
+  },
+  {
+   "t": 1789870547,
+   "b": 26015672,
+   "apy": 5.143
+  },
+  {
+   "t": 1789885019,
+   "b": 26016872,
+   "apy": 5.057
+  },
+  {
+   "t": 1789899467,
+   "b": 26018072,
+   "apy": 6.365
+  },
+  {
+   "t": 1789913879,
+   "b": 26019272,
+   "apy": 5.098
+  },
+  {
+   "t": 1789928351,
+   "b": 26020472,
+   "apy": 5.811
+  },
+  {
+   "t": 1789942799,
+   "b": 26021672,
+   "apy": 6.407
+  },
+  {
+   "t": 1789957295,
+   "b": 26022872,
+   "apy": 5.057
+  },
+  {
+   "t": 1789971767,
+   "b": 26024072,
+   "apy": 5.052
+  },
+  {
+   "t": 1789986239,
+   "b": 26025272,
+   "apy": 8.02
+  },
+  {
+   "t": 1790000783,
+   "b": 26026472,
+   "apy": 6.512
+  },
+  {
+   "t": 1790015315,
+   "b": 26027672,
+   "apy": 10.903
+  },
+  {
+   "t": 1790029871,
+   "b": 26028872,
+   "apy": 7.677
+  },
+  {
+   "t": 1790044355,
+   "b": 26030072,
+   "apy": 4.98
+  },
+  {
+   "t": 1790058887,
+   "b": 26031272,
+   "apy": 4.985
+  },
+  {
+   "t": 1790073407,
+   "b": 26032472,
+   "apy": 6.162
+  },
+  {
+   "t": 1790087843,
+   "b": 26033672,
+   "apy": 6.993
+  },
+  {
+   "t": 1790102411,
+   "b": 26034872,
+   "apy": 6.073
+  },
+  {
+   "t": 1790116871,
+   "b": 26036072,
+   "apy": 10.589
+  },
+  {
+   "t": 1790131355,
+   "b": 26037272,
+   "apy": 9.235
+  },
+  {
+   "t": 1790145863,
+   "b": 26038472,
+   "apy": 7.758
+  },
+  {
+   "t": 1790160359,
+   "b": 26039672,
+   "apy": 5.063
+  },
+  {
+   "t": 1790174867,
+   "b": 26040872,
+   "apy": 5.046
+  },
+  {
+   "t": 1790189435,
+   "b": 26042072,
+   "apy": 5.021
+  },
+  {
+   "t": 1790203931,
+   "b": 26043272,
+   "apy": 12.746
+  },
+  {
+   "t": 1790218415,
+   "b": 26044472,
+   "apy": 5.964
+  },
+  {
+   "t": 1790232935,
+   "b": 26045672,
+   "apy": 5.092
+  },
+  {
+   "t": 1790247539,
+   "b": 26046872,
+   "apy": 5.018
+  },
+  {
+   "t": 1790262059,
+   "b": 26048072,
+   "apy": 5.01
+  },
+  {
+   "t": 1790276555,
+   "b": 26049272,
+   "apy": 4.851
+  },
+  {
+   "t": 1790291063,
+   "b": 26050472,
+   "apy": 4.893
+  },
+  {
+   "t": 1790305571,
+   "b": 26051672,
+   "apy": 5.073
+  },
+  {
+   "t": 1790320079,
+   "b": 26052872,
+   "apy": 5.102
+  },
+  {
+   "t": 1790334539,
+   "b": 26054072,
+   "apy": 5.123
+  },
+  {
+   "t": 1790349035,
+   "b": 26055272,
+   "apy": 7.452
+  },
+  {
+   "t": 1790363519,
+   "b": 26056472,
+   "apy": 7.894
+  },
+  {
+   "t": 1790378003,
+   "b": 26057672,
+   "apy": 5.088
+  },
+  {
+   "t": 1790392475,
+   "b": 26058872,
+   "apy": 10.861
+  },
+  {
+   "t": 1790406959,
+   "b": 26060072,
+   "apy": 5.021
+  },
+  {
+   "t": 1790421443,
+   "b": 26061272,
+   "apy": 5.04
+  },
+  {
+   "t": 1790435903,
+   "b": 26062472,
+   "apy": 4.949
+  },
+  {
+   "t": 1790450351,
+   "b": 26063672,
+   "apy": 5.115
+  },
+  {
+   "t": 1790464823,
+   "b": 26064872,
+   "apy": 6.636
+  },
+  {
+   "t": 1790479307,
+   "b": 26066072,
+   "apy": 7.393
+  },
+  {
+   "t": 1790493755,
+   "b": 26067272,
+   "apy": 5.039
+  },
+  {
+   "t": 1790508239,
+   "b": 26068472,
+   "apy": 5.589
+  },
+  {
+   "t": 1790522711,
+   "b": 26069672,
+   "apy": 6.229
+  },
+  {
+   "t": 1790537255,
+   "b": 26070872,
+   "apy": 7.322
+  },
+  {
+   "t": 1790551787,
+   "b": 26072072,
+   "apy": 6.47
+  },
+  {
+   "t": 1790566247,
+   "b": 26073272,
+   "apy": 5
+  },
+  {
+   "t": 1790580671,
+   "b": 26074472,
+   "apy": 5.019
+  },
+  {
+   "t": 1790595119,
+   "b": 26075672,
+   "apy": 15.589
+  },
+  {
+   "t": 1790609567,
+   "b": 26076872,
+   "apy": 12.167
+  },
+  {
+   "t": 1790624027,
+   "b": 26078072,
+   "apy": 5.072
+  },
+  {
+   "t": 1790638499,
+   "b": 26079272,
+   "apy": 5.11
+  },
+  {
+   "t": 1790652983,
+   "b": 26080472,
+   "apy": 5.495
+  },
+  {
+   "t": 1790667431,
+   "b": 26081672,
+   "apy": 5.434
+  },
+  {
+   "t": 1790681891,
+   "b": 26082872,
+   "apy": 5.103
+  },
+  {
+   "t": 1790696315,
+   "b": 26084072,
+   "apy": 5.407
+  },
+  {
+   "t": 1790710787,
+   "b": 26085272,
+   "apy": 4.855
+  },
+  {
+   "t": 1790725235,
+   "b": 26086472,
+   "apy": 4.876
+  },
+  {
+   "t": 1790739695,
+   "b": 26087672,
+   "apy": 5.181
+  },
+  {
+   "t": 1790754155,
+   "b": 26088872,
+   "apy": 5.27
+  },
+  {
+   "t": 1790768615,
+   "b": 26090072,
+   "apy": 6.722
+  },
+  {
+   "t": 1790783075,
+   "b": 26091272,
+   "apy": 10.22
+  },
+  {
+   "t": 1790797523,
+   "b": 26092472,
+   "apy": 17.789
+  },
+  {
+   "t": 1790812019,
+   "b": 26093672,
+   "apy": 12.624
+  },
+  {
+   "t": 1790826443,
+   "b": 26094872,
+   "apy": 5.12
+  },
+  {
+   "t": 1790840879,
+   "b": 26096072,
+   "apy": 6.486
+  },
+  {
+   "t": 1790855339,
+   "b": 26097272,
+   "apy": 5.119
+  },
+  {
+   "t": 1790869823,
+   "b": 26098472,
+   "apy": 5.115
+  },
+  {
+   "t": 1790884271,
+   "b": 26099672,
+   "apy": 5.093
+  },
+  {
+   "t": 1790898707,
+   "b": 26100872,
+   "apy": 5.103
+  },
+  {
+   "t": 1790913155,
+   "b": 26102072,
+   "apy": 5.119
+  },
+  {
+   "t": 1790927603,
+   "b": 26103272,
+   "apy": 4.911
+  },
+  {
+   "t": 1790942075,
+   "b": 26104472,
+   "apy": 4.813
+  },
+  {
+   "t": 1790956547,
+   "b": 26105672,
+   "apy": 5.11
+  },
+  {
+   "t": 1790971043,
+   "b": 26106872,
+   "apy": 5.067
+  },
+  {
+   "t": 1790985491,
+   "b": 26108072,
+   "apy": 5.094
+  },
+  {
+   "t": 1790999939,
+   "b": 26109272,
+   "apy": 8.482
+  },
+  {
+   "t": 1791014387,
+   "b": 26110472,
+   "apy": 5.637
+  },
+  {
+   "t": 1791028811,
+   "b": 26111672,
+   "apy": 6.142
+  },
+  {
+   "t": 1791043259,
+   "b": 26112872,
+   "apy": 6.252
+  },
+  {
+   "t": 1791057719,
+   "b": 26114072,
+   "apy": 5.1
+  },
+  {
+   "t": 1791072143,
+   "b": 26115272,
+   "apy": 5.1
+  },
+  {
+   "t": 1791086579,
+   "b": 26116472,
+   "apy": 5.097
+  },
+  {
+   "t": 1791101027,
+   "b": 26117672,
+   "apy": 5.098
+  },
+  {
+   "t": 1791115487,
+   "b": 26118872,
+   "apy": 5.081
+  },
+  {
+   "t": 1791129911,
+   "b": 26120072,
+   "apy": 5.088
+  },
+  {
+   "t": 1791144359,
+   "b": 26121272,
+   "apy": 5.067
+  },
+  {
+   "t": 1791158807,
+   "b": 26122472,
+   "apy": 5.061
+  },
+  {
+   "t": 1791173207,
+   "b": 26123672,
+   "apy": 5.062
+  },
+  {
+   "t": 1791187679,
+   "b": 26124872,
+   "apy": 5.103
+  },
+  {
+   "t": 1791202151,
+   "b": 26126072,
+   "apy": 5.136
+  },
+  {
+   "t": 1791216623,
+   "b": 26127272,
+   "apy": 5.113
+  },
+  {
+   "t": 1791231059,
+   "b": 26128472,
+   "apy": 5.109
+  },
+  {
+   "t": 1791245519,
+   "b": 26129672,
+   "apy": 5.107
+  },
+  {
+   "t": 1791260003,
+   "b": 26130872,
+   "apy": 5.077
+  },
+  {
+   "t": 1791274439,
+   "b": 26132072,
+   "apy": 5.226
+  },
+  {
+   "t": 1791288959,
+   "b": 26133272,
+   "apy": 5.081
+  },
+  {
+   "t": 1791303443,
+   "b": 26134472,
+   "apy": 5.074
+  },
+  {
+   "t": 1791317855,
+   "b": 26135672,
+   "apy": 5.162
+  },
+  {
+   "t": 1791332279,
+   "b": 26136872,
+   "apy": 5.106
+  },
+  {
+   "t": 1791346751,
+   "b": 26138072,
+   "apy": 6.943
+  },
+  {
+   "t": 1791361187,
+   "b": 26139272,
+   "apy": 6.982
+  },
+  {
+   "t": 1791375659,
+   "b": 26140472,
+   "apy": 6.956
+  },
+  {
+   "t": 1791390119,
+   "b": 26141672,
+   "apy": 7.363
+  },
+  {
+   "t": 1791404555,
+   "b": 26142872,
+   "apy": 5.119
+  },
+  {
+   "t": 1791419027,
+   "b": 26144072,
+   "apy": 6.202
+  },
+  {
+   "t": 1791433499,
+   "b": 26145272,
+   "apy": 14.452
+  },
+  {
+   "t": 1791447959,
+   "b": 26146472,
+   "apy": 6.426
+  },
+  {
+   "t": 1791462383,
+   "b": 26147672,
+   "apy": 5.102
+  },
+  {
+   "t": 1791476867,
+   "b": 26148872,
+   "apy": 5.348
+  },
+  {
+   "t": 1791491339,
+   "b": 26150072,
+   "apy": 7.33
+  },
+  {
+   "t": 1791505799,
+   "b": 26151272,
+   "apy": 4.904
+  },
+  {
+   "t": 1791520235,
+   "b": 26152472,
+   "apy": 5.302
+  },
+  {
+   "t": 1791534695,
+   "b": 26153672,
+   "apy": 5.535
+  },
+  {
+   "t": 1791549131,
+   "b": 26154872,
+   "apy": 6.634
+  },
+  {
+   "t": 1791563579,
+   "b": 26156072,
+   "apy": 5.459
+  },
+  {
+   "t": 1791578039,
+   "b": 26157272,
+   "apy": 5.092
+  },
+  {
+   "t": 1791592463,
+   "b": 26158472,
+   "apy": 5.058
+  },
+  {
+   "t": 1791606875,
+   "b": 26159672,
+   "apy": 5.119
+  },
+  {
+   "t": 1791621323,
+   "b": 26160872,
+   "apy": 5.077
+  },
+  {
+   "t": 1791635759,
+   "b": 26162072,
+   "apy": 5.618
+  },
+  {
+   "t": 1791650243,
+   "b": 26163272,
+   "apy": 6.917
+  },
+  {
+   "t": 1791664667,
+   "b": 26164472,
+   "apy": 6.583
+  },
+  {
+   "t": 1791679103,
+   "b": 26165672,
+   "apy": 6.774
+  },
+  {
+   "t": 1791693563,
+   "b": 26166872,
+   "apy": 6.013
+  },
+  {
+   "t": 1791708011,
+   "b": 26168072,
+   "apy": 5.781
+  },
+  {
+   "t": 1791722471,
+   "b": 26169272,
+   "apy": 6.019
+  },
+  {
+   "t": 1791736919,
+   "b": 26170472,
+   "apy": 6.151
+  },
+  {
+   "t": 1791751355,
+   "b": 26171672,
+   "apy": 5.917
+  },
+  {
+   "t": 1791765791,
+   "b": 26172872,
+   "apy": 6.314
+  },
+  {
+   "t": 1791780215,
+   "b": 26174072,
+   "apy": 5.075
+  },
+  {
+   "t": 1791794639,
+   "b": 26175272,
+   "apy": 5.638
+  },
+  {
+   "t": 1791809039,
+   "b": 26176472,
    "apy": 4.978
   }
  ],
  "capacity": {
-  "t": 1791806747,
-  "block": 26176280,
-  "core_usdc_room_to_kink": 854705,
-  "core_usdc_liquidity": 3474211,
+  "t": 1791809141,
+  "block": 26176479,
+  "core_usdc_room_to_kink": 856692,
+  "core_usdc_liquidity": 3476424,
   "core_usdc_borrow_apy": 4.978,
   "core_usdc_rebate_apr": 2,
   "core_usdc_net_borrow_apy": 2.978,
-  "core_usdc_after_1m_apy": 6.3,
-  "bluechip_usdc_room_under_cap": 776468.5796210002,
-  "core_usdg_liquidity": 8539281,
-  "core_usdg_borrow_apy": 4.03,
-  "core_usdg_after_1m_apy": 4.496,
-  "core_usdg_after_3_5m_apy": 11.514,
-  "bluechip_usdg_room_under_cap": 2265188.115803
+  "core_usdc_after_1m_apy": 6.284,
+  "bluechip_usdc_room_under_cap": 776449.2675510002,
+  "core_usdg_liquidity": 8369277,
+  "core_usdg_borrow_apy": 4.039,
+  "core_usdg_after_1m_apy": 4.915,
+  "core_usdg_after_3_5m_apy": 11.977,
+  "bluechip_usdg_room_under_cap": 2265179.886643
  }
 }
