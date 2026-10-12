@@ -112,6 +112,10 @@ chain = L.read_chain()  # the one hard requirement: without the position there i
 apys, apys_err = safe(L.read_vault_apys)
 rebate, rebate_err = safe(L.read_borrow_rebate)
 rewards, rewards_err = safe(lambda: L.read_rewards(chain["btc_px"]))
+rebate_hist, rebate_hist_err = safe(lambda: L.read_rebate_history([c["opportunity"] for c in (rebate or {}).get("campaigns", [])]))
+LOOP = CONFIG["loop_sleeve"]
+loop_draws = {s: chain["debt_usdc"] * s * (LOOP["leverage"] - 1) for s in LOOP["shares"]}
+loop_in, loop_err = safe(lambda: L.read_loop_inputs([round(d) for d in loop_draws.values()]))
 
 snap = None
 if SNAPSHOT_PATH.exists():
@@ -195,6 +199,7 @@ this_sample = {
     "nav": round(chain["nav_wbtc"], 8) if chain["nav_healthy"] else None, "sup": round(chain["supply"], 8),
     "rew_usd": round(rewards["total_usd"], 2) if rewards else None,
     "rew_wbtc": round(rewards["total_wbtc"], 8) if rewards and rewards["total_wbtc"] else None,
+    "core_borrow": round(core["borrow_apy"], 3),
 }
 points = list((snap or {}).get("samples", []))
 points += [s for s in live_samples if s.get("b", 0) > synced_block]
@@ -230,6 +235,60 @@ for p in after_relever:
     if closest is None or headroom < closest["headroom"]:
         closest = {"headroom": headroom, "t": p["t"], "hf": p["hf"], "trigger": b["repay_trigger"]}
 liq_buffer = (1 - 1 / hf_now) * 100 if hf_now else None
+lowest = None
+if closest:
+    lowest = {**closest, "to_liq": (1 - 1 / closest["hf"]) * 100}
+
+# Share of the health-factor manager's runs since the first re-lever that found the position inside the band.
+band_runs = [h for h in runs.get("hourly", []) if first_relever and h["t"] + 3600 > first_relever["t"]]
+inside_n = sum(h["states"].get("inside the band, no action", 0) for h in band_runs)
+band_total = sum(h["n"] for h in band_runs)
+
+
+def trailing_spread(days):
+    """Vault yield, gross borrow, rebate and spread averaged over the last `days`, or None without the history."""
+    t_lo = now - days * DAY
+    key = {7: "apy_7d", 30: "apy_30d"}[days]
+    vs = [v for v in vault_rows if v.get(key) is not None and v["usdc"] > 0]
+    if not vs:
+        return None
+    vault = sum(v[key] * v["usdc"] for v in vs) / sum(v["usdc"] for v in vs)
+    hist = [(r["t"], r["apy"]) for r in (snap or {}).get("core_usdc_rates", []) if r["t"] >= t_lo]
+    last_t = hist[-1][0] if hist else 0
+    hist += [(s["t"], s["core_borrow"]) for s in live_samples if s.get("core_borrow") and s["t"] > last_t and s["t"] >= t_lo]
+    hist.append((now, core["borrow_apy"]))
+    if hist[0][0] > t_lo + DAY:  # the history does not reach back far enough to call this a trailing average
+        return None
+    borrow = sum(v for _, v in hist) / len(hist) * (1 + rp)
+    if rebate_hist is None:
+        return None
+    reb = sum(v for d, v in rebate_hist if d >= t_lo - DAY / 2) / days
+    net = borrow - reb
+    return {"vault": vault, "borrow_gross": borrow, "rebate": reb, "borrow_net": net, "spread": vault - net}
+
+
+spreads = [{"key": "live", "label": "Live", "vault": deploy_apy, "borrow_gross": borrow_gross, "rebate": rebate_pct, "borrow_net": borrow_net, "spread": spread}]
+for d in (7, 30):
+    tr = trailing_spread(d)
+    if tr and tr["spread"] is not None:
+        spreads.append({"key": f"{d}d", "label": f"{d}d avg", **tr})
+spreads = [s for s in spreads if s["spread"] is not None]
+for s in spreads:
+    s["carry"] = ltv * s["spread"] * (1 - PERF_FEE)
+
+# Loop sleeve projection. Today's only USDG line with room is too thin for the loop's own draw, so the
+# projection prices the loop at today's Core-hub USDG rate, which is what more Aave capacity would offer.
+loop_proj = None
+if spread is not None and loop_in:
+    a, L_ = loop_in["syrup_7d"], LOOP["leverage"]
+    b_need = chain["core_usdg"]["borrow_apy"]
+    y_loop = a * L_ - b_need * (L_ - 1)
+    rows_ = [{"share": 0.0, "carry": carry}]
+    for s_ in LOOP["shares"]:
+        mix = (1 - s_) * deploy_apy + s_ * y_loop
+        rows_.append({"share": s_, "carry": ltv * (mix - borrow_net) * (1 - PERF_FEE), "today_rate": loop_in["borrow_after"].get(round(loop_draws[s_]))})
+    loop_proj = {"syrup": a, "borrow": b_need, "gd_now": loop_in["borrow_now"], "gd_liq": loop_in["liquidity"], "yield": y_loop, "rows": rows_,
+                 "breakeven": a * L_ / (L_ - 1), "loop_hf": LOOP["collateral_factor"] * L_ / (L_ - 1)}
 
 
 def share_price(p):
@@ -396,6 +455,11 @@ def hf_chart():
     body.append(f'<text class="lab band-lab" x="{PAD_L + f.pw + 6}" y="{f.y(b["borrow_trigger"]) + 4:.1f}">borrow {b["borrow_trigger"]:.2f}</text>'
                 f'<text class="lab band-lab" x="{PAD_L + f.pw + 6}" y="{f.y(b["repay_trigger"]) + 12:.1f}">repay {b["repay_trigger"]:.2f}</text>')
     body.append(f'<path class="line" d="{path(f, pts, "hf")}"/>')
+    # Name the planned hold so a high HF after the seed borrow does not read as a fault.
+    if seed and first_relever and seed.get("hf_after"):
+        xm = (f.x(seed["t"]) + f.x(first_relever["t"])) / 2
+        body.append(f'<text class="lab" x="{xm:.1f}" y="{f.y(seed["hf_after"]) + 18:.1f}" text-anchor="middle">hold: seed borrow, re-lever off by design</text>')
+        body.append(f'<text class="lab" x="{f.x(first_relever["t"]) + 8:.1f}" y="{f.y(first_relever["hf_after"] or 1.21) - 22:.1f}">re-lever on: levered to target</text>')
     if synced_at and any(p["t"] > synced_at for p in pts):
         xs = f.x(synced_at)
         body.append(f'<line class="sync" x1="{xs:.1f}" y1="{PAD_T}" x2="{xs:.1f}" y2="{PAD_T + f.ph}"/><text class="lab" x="{xs + 4:.1f}" y="{PAD_T + 12}">last sync</text>')
@@ -462,6 +526,24 @@ def price_chart():
     return chart_svg("priceChart", f, "".join(body), hover, "BTC oracle price against the no-action corridor, the liquidation price and agent actions")
 
 
+def iso_ts(s):
+    return int(datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp())
+
+
+def share_events():
+    """What moved the strategy, oldest first: the config names what the data cannot, the data names the rest."""
+    ev = [(iso_ts(x["t"]), x["label"]) for x in CONFIG["milestones"]["events"]]
+    if deposit_tx:
+        ev.append((deposit_tx["t"], f"pre-pilot deposit of {deposit_tx['amount']}"))
+    if seed:
+        ev.append((seed["t"], f"seed borrow of {seed['amount']} on the Core hub"))
+    if first_relever:
+        ev.append((first_relever["t"], f"re-lever to the {first_relever['target'] or band['borrow_target']:.2f} target"))
+    ev += [(t["t"], f"rewards claimed, {t['amount']}") for t in transactions if t["kind"] == "claim"]
+    ev += [(t["t"], f"redemption of {t['amount']}") for t in transactions if t["kind"] == "redemption"]
+    return sorted(ev)
+
+
 def share_chart():
     pts = []
     for p in ((snap or {}).get("series") or {}).get("points", []):
@@ -472,21 +554,38 @@ def share_chart():
         return '<p class="empty">The share-price history appears after the first sync.</p>'
     vals = [p["sp"] for p in pts]
     pad = max((max(vals) - min(vals)) * 0.25, 0.00005)
-    f = Frame(pts[0]["t"], max(now, pts[-1]["t"]), min(vals) - pad, max(vals) + pad, h=240)
+    f = Frame(pts[0]["t"], max(now, pts[-1]["t"]), min(vals) - pad, max(vals) + pad, h=260)
     body = []
+    tp = CONFIG["milestones"]["testing_phase"]
+    a, b = max(f.t0, iso_ts(tp["from"])), min(f.t1, iso_ts(tp["to"]))
+    if b > a:
+        body.append(f'<rect class="phase" x="{f.x(a):.1f}" y="{PAD_T}" width="{f.x(b) - f.x(a):.1f}" height="{f.ph}"/>'
+                    f'<text class="lab" x="{f.x(a) + 6:.1f}" y="{PAD_T + f.ph - 8}">{esc(tp["label"])}</text>')
     step = 10 ** math.floor(math.log10((f.y1 - f.y0) / 3))
     body.append(y_ticks(f, [v * step for v in range(math.ceil(f.y0 / step), math.floor(f.y1 / step) + 1)][::2] or [f.y0], lambda v: f"{v:.4f}"))
     body.append(time_ticks(f))
     body.append(f'<path class="line" d="{path(f, pts, "sp")}"/>')
-    for t in transactions:
-        if t["kind"] in ("subscription", "claim", "redemption"):
-            x = f.x(t["t"])
-            label = {"subscription": "deposit", "claim": "rewards claimed", "redemption": "redemption"}[t["kind"]]
-            body.append(f'<line class="event" x1="{x:.1f}" y1="{PAD_T}" x2="{x:.1f}" y2="{PAD_T + f.ph}"><title>{esc(tx_title(t))}</title></line>'
-                        f'<text class="lab" x="{x + 4:.1f}" y="{PAD_T + 12}">{label}</text>')
+    # Numbered markers; events within 6 hours share one marker, and the list under the chart says what each is.
+    groups = []
+    for i, (ts, label) in enumerate(share_events(), start=1):
+        if f.t0 <= ts <= f.t1:
+            if groups and ts - groups[-1]["t"] <= 6 * 3600:
+                groups[-1]["n"].append(i)
+            else:
+                groups.append({"t": ts, "n": [i]})
+    for g in groups:
+        x = f.x(g["t"])
+        tag = "·".join(str(k) for k in g["n"])
+        body.append(f'<line class="event" x1="{x:.1f}" y1="{PAD_T + 16}" x2="{x:.1f}" y2="{PAD_T + f.ph}"/>'
+                    f'<text class="lab ev-num" x="{x:.1f}" y="{PAD_T + 10}" text-anchor="middle">{tag}</text>')
     body.append(f'<text class="lab" x="{PAD_L + f.pw + 6}" y="{f.y(pts[-1]["sp"]) + 4:.1f}">{pts[-1]["sp"]:.5f}</text>')
     hover = [{"x": round(f.x(p["t"]), 1), "l": [stamp(p["t"]), f"{p['sp']:.6f} WBTC per share"]} for p in pts]
     return chart_svg("shareChart", f, "".join(body), hover, "Share price in WBTC since inception")
+
+
+def share_events_list():
+    items = "".join(f'<li><span class="when">{i}. {esc(utc(ts).strftime("%-d %b %H:%M"))}</span><span>{esc(label)}</span></li>' for i, (ts, label) in enumerate(share_events(), start=1))
+    return f'<ul class="timeline events">{items}</ul>'
 
 
 # --- The automation at work: legs, counters, narrative ------------------------------------------
@@ -584,54 +683,43 @@ def leg_rows():
 
 
 def narrative():
+    """The story in one line per step: (when, what). Generated from the transactions and the run log."""
     cs = clusters()
     items = []
-    hourly = runs.get("hourly", [])
     for i, c in enumerate(cs):
         kinds = [t["kind"] for t in c["txs"]]
-        when = stamp(c["t"])
+        when = short(c["t"])
         if "subscription" in kinds:
             sub = next(t for t in c["txs"] if t["kind"] == "subscription")
             col = next((t for t in c["txs"] if t["kind"] == "collateral"), None)
-            s = f"<b>Deposit, {esc(when)}.</b> The subscription and redemption approver approved and settled a subscription: {esc(sub['action'][0].lower() + sub['action'][1:])}"
-            if col:
-                s += f" The settler supplied it as collateral on the Aave V4 Bluechip spoke {dur(col['t'] - sub['t'])} later, with no debt yet."
-            items.append(s)
+            items.append((when, f"<b>Deposit.</b> {esc(sub['amount'])} subscribed" + (f" and supplied as collateral {dur(col['t'] - sub['t'])} later." if col else ".")))
         elif "seed_borrow" in kinds:
             t = next(t for t in c["txs"] if t["kind"] == "seed_borrow")
-            items.append(f"<b>Seed borrow, {esc(when)}.</b> The {esc(t['actor'])} made the first borrow: {esc(t['action'].split(': ', 1)[-1])} HF went from no debt to <b>{hf_txt(t['hf_after'])}</b>. "
-                         "The health-factor manager does not open a position from zero debt, so the first borrow is manual by design.")
+            items.append((when, f"<b>Seed borrow.</b> The {esc(t['actor'])} borrowed {esc(t['amount'])} and split it across both vaults (HF {hf_txt(t['hf_after'])}). "
+                                "The agent manages a position but does not open one, so the first borrow is manual."))
         elif "relever" in kinds:
             t = next(t for t in c["txs"] if t["kind"] == "relever")
-            lead = ""
-            if c["switch"]:
-                lead = f"Re-lever was switched on at {utc(c['switch']['t']).strftime('%H:%M:%S')} UTC. "
-            items.append(f"<b>Re-lever, {esc(when)}.</b> {lead}The health-factor manager read HF {hf_txt(t['hf_before'])}, above the {band_at(t['t'])['borrow_trigger']:.2f} borrow trigger, and acted: "
-                         f"{esc(t['action'].split(': ', 1)[-1])} HF landed at <b>{hf_txt(t['hf_after'])}</b> against a {t['target'] or band_at(t['t'])['borrow_target']:.2f} target"
-                         + (f", {dur(t['t'] - c['switch']['t'])} after the switch." if c["switch"] else "."))
+            lead = f"Switched on at {utc(c['switch']['t']).strftime('%H:%M:%S')}; {dur(t['t'] - c['switch']['t'])} later the agent " if c["switch"] else "The agent "
+            items.append((when, f"<b>Re-lever.</b> {lead}borrowed {esc(t['amount'])} and landed HF at {hf_txt(t['hf_after'])} (target {t['target'] or band_at(t['t'])['borrow_target']:.2f})."))
         elif "derisk" in kinds:
             t = next(t for t in c["txs"] if t["kind"] == "derisk")
-            items.append(f"<b>De-risk, {esc(when)}.</b> HF {hf_txt(t['hf_before'])} fell below the {band_at(t['t'])['repay_trigger']:.2f} repay trigger. {esc(t['action'].split(': ', 1)[-1])} HF back to <b>{hf_txt(t['hf_after'])}</b>.")
+            items.append((when, f"<b>De-risk.</b> HF fell below {band_at(t['t'])['repay_trigger']:.2f}; the agent repaid {esc(t['amount'])} (HF {hf_txt(t['hf_after'])})."))
         elif "claim" in kinds:
             t = next(t for t in c["txs"] if t["kind"] == "claim")
-            items.append(f"<b>Rewards claimed, {esc(when)}.</b> {esc(t['action'])} The claim moves them into NAV in one step.")
-        # Then what the agents did until the next event.
+            items.append((when, f"<b>Rewards claimed.</b> {esc(t['amount'])} moved into NAV in one step."))
         a = c["t1"] + 1
         b_end = cs[i + 1]["t"] if i + 1 < len(cs) else now
         st = states_between(a, b_end)
         total = sum(st.values())
         if total >= 3:
             main = max(st, key=st.get)
-            seg = [p for p in points if a <= p["t"] < b_end and p.get("hf") and not p.get("tag")]
-            rng = f" HF ranged {min(p['hf'] for p in seg):.4f} to {max(p['hf'] for p in seg):.4f}." if seg else ""
             if main == "above the borrow trigger, re-lever switched off":
-                items.append(f"<b>Held above the band on purpose, {esc(short(a))} → {esc(short(b_end))}.</b> Re-lever was switched off, so the manager ran {total} times and each run read "
-                             f"&ldquo;above the borrow trigger, re-lever switched off&rdquo;.{rng}")
+                items.append((f"{short(a)} → {short(b_end)}", f"<b>Hold.</b> Re-lever was off on purpose: {total} checks, no action."))
             elif main == "inside the band, no action" and i + 1 == len(cs):
-                tail = f" The closest the BTC price came to the repay trigger was {closest['headroom']:.1f}% ({esc(short(closest['t']))}, HF {closest['hf']:.4f})." if closest else ""
-                items.append(f"<b>Inside the band since.</b> {total} runs from {esc(short(a))} to the last sync, {st.get(main, 0)} of them inside the band with no action needed.{rng}{tail}")
+                low = f" Lowest HF {lowest['hf']:.4f}." if lowest else ""
+                items.append(("Since then", f"<b>Inside the band.</b> {st.get(main, 0):,} of {total:,} checks needed no action.{low}"))
     if rewards:
-        items.append(f"<b>Rewards outside NAV.</b> The Aave borrow rebate and the vault rewards accrue at the fund's Safe and reach NAV only when claimed. Unclaimed at this build: {usd(rewards['total_usd'], 2)} (≈ {n(rewards['total_wbtc'], 6)} WBTC).")
+        items.append(("Now", f"<b>Rewards.</b> {usd(rewards['total_usd'], 2)} unclaimed (≈ {n(rewards['total_wbtc'], 5)} WBTC), outside NAV until claimed."))
     return items
 
 
@@ -657,12 +745,11 @@ def counters():
     cells = []
     cells.append(("Agent runs", f"{runs_total:,}" if by_agent else "n/a", f"{runs_ok:,} completed · {runs_fail:,} failed" if by_agent else snap_label))
     cells.append(("Transactions", f"{len(window_txs)}", f"{len(agent_txs)} by agents · {len(manual_txs)} by the Manager Safe"))
-    cells.append(("Closest call", pct(closest["headroom"], 1) if closest else "n/a", f"price headroom to the repay trigger, {short(closest['t'])}" if closest else "after the first re-lever"))
-    cells.append(("Liquidation buffer", pct(liq_buffer, 1), f"liquidation at {usd(chain['liq_px'])} vs {usd(px)}" if chain["liq_px"] else "no debt"))
-    sub = "deposit to fully levered"
-    if lever_time is not None and relever_switch:
-        sub = f"re-lever held off until {short(relever_switch['t'])}; borrowed {dur(first_relever['t'] - relever_switch['t'])} after the switch"
-    cells.append(("Deposit to levered", dur(lever_time) if lever_time is not None else "n/a", sub))
+    cells.append(("Lowest HF", f"{lowest['hf']:.4f}" if lowest else "n/a",
+                  f"{short(lowest['t'])}; the agent repays only below {lowest['trigger']:.2f}, liquidation is at 1.00" if lowest else "after the first re-lever"))
+    cells.append(("Liquidation buffer", pct(liq_buffer, 1), f"BTC would have to fall this far; liquidation at {usd(chain['liq_px'])}" if chain["liq_px"] else "no debt"))
+    cells.append(("Inside the band", f"{inside_n / band_total * 100:.0f}%" if band_total else "n/a",
+                  f"{inside_n:,} of {band_total:,} checks since the re-lever needed no action" if band_total else "after the first re-lever"))
     return "".join(f'<div class="counter"><div class="c-label">{esc(a)}</div><div class="c-value">{esc(b)}</div><div class="c-sub">{esc(c)}</div></div>' for a, b, c in cells)
 
 
@@ -684,9 +771,10 @@ def legs_table():
     rows = leg_rows() if snap else []
     if not rows:
         return f'<p class="empty">{esc(snap_label.capitalize())}.</p>'
-    body = "".join(f'<tr><td class="mid">{esc(r["win"])}</td><td class="num nowrap"><span class="mono">{esc(r["px"])}</span><br><span class="dim">{esc(r["move"])}</span></td><td class="mid">{esc(r["saw"])}</td>'
-                   f'<td>{r["resp"]}</td><td class="dim mid">{esc(r["detail"])}{(" · debt " + esc(r["debt"]) + " USDC") if r["debt"] not in ("n/a", "0") else ""}</td><td class="mono num nowrap">{esc(r["hf"])}</td></tr>' for r in rows)
-    return ('<div class="table-scroll"><table class="data"><thead><tr><th>Window (UTC)</th><th class="num">BTC (USD), move</th><th>What the band saw</th><th>Response</th><th>Detail</th><th class="num">HF after</th></tr></thead>'
+    body = "".join(f'<tr><td class="mid">{esc(r["win"])}</td><td class="num nowrap"><span class="mono">{esc(r["px"])}</span><br><span class="dim">{esc(r["move"])}</span></td>'
+                   f'<td class="wide">{esc(r["saw"][:1].upper() + r["saw"][1:])}<br><span class="dim">{esc(r["detail"])}{(" · debt " + esc(r["debt"]) + " USDC") if r["debt"] not in ("n/a", "0") else ""}</span></td>'
+                   f'<td>{r["resp"]}</td><td class="mono num nowrap">{esc(r["hf"])}</td></tr>' for r in rows)
+    return ('<div class="table-scroll"><table class="data"><thead><tr><th>When (UTC)</th><th class="num">BTC price, move</th><th>What happened</th><th>Agent action</th><th class="num">HF after</th></tr></thead>'
             f'<tbody>{body}</tbody></table></div>')
 
 
@@ -717,7 +805,7 @@ def capacity_line():
 # Simulator inputs.
 sim = {
     "cf": cf, "liveHf": hf_now or band["borrow_target"], "spread": spread if spread is not None else 0, "fee": PERF_FEE, "px": px,
-    "minHf": MIN_HF, "maxHf": 1.6, "target": band["borrow_target"], "repay": band["repay_trigger"], "borrow": band["borrow_trigger"],
+    "minHf": MIN_HF, "lowHf": 1.05, "maxHf": 1.6, "target": band["borrow_target"], "repay": band["repay_trigger"], "borrow": band["borrow_trigger"],
 }
 
 loop_live = chain["maple_active"]
@@ -839,6 +927,10 @@ h2 { font-size: var(--kpk-text-fs-section); font-weight: 500; margin: 0; letter-
 .chart .mk.manual path { fill: var(--kpk-ink); }
 .chart .mk.deposit circle { fill: var(--kpk-surface-card); stroke: var(--kpk-ink); }
 .chart .xhair { stroke: var(--kpk-ink-muted); stroke-width: 1; }
+.chart .phase { fill: var(--kpk-ink); opacity: 0.05; }
+.chart .ev-num { fill: var(--kpk-ink); font-weight: 500; }
+.timeline.events { margin-top: 8px; font-size: var(--kpk-text-fs-meta); gap: 4px; }
+.timeline.events li { grid-template-columns: 130px 1fr; }
 @media (max-width: 640px) {
   .chart { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .chart svg { min-width: 720px; }
@@ -875,10 +967,38 @@ table.data td.mid { min-width: 130px; }
 .sim-out { display: flex; align-items: baseline; gap: 10px; }
 .sim-out .big { font-size: 36px; font-weight: 500; color: var(--c-good); font-variant-numeric: tabular-nums; }
 .slider-wrap { margin-top: 18px; }
+.spread-picker { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.picker-label { font-size: var(--kpk-text-fs-meta); color: var(--kpk-ink-muted); margin-right: 2px; }
+.spread-btn { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; padding: 6px 11px; border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-label); background: var(--kpk-surface); color: var(--kpk-ink-muted); font: inherit; cursor: pointer; text-align: left; }
+.spread-btn i { font-style: normal; font-size: var(--kpk-text-fs-tag); letter-spacing: 0.03em; }
+.spread-btn b { font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.spread-btn[aria-current="true"] { border-color: var(--c-good); color: var(--kpk-ink); }
+.spread-btn[aria-current="true"] b { color: var(--c-good); }
+.picker-note { flex: 1 1 100%; font-size: var(--kpk-text-fs-tag); color: var(--kpk-ink-muted); }
+.hero { display: grid; grid-template-columns: 1.3fr 1fr; gap: var(--kpk-space-4); }
+@media (max-width: 760px) { .hero { grid-template-columns: 1fr; } }
+.hero-value { font-size: var(--kpk-text-slide-stat); margin: 10px 0 8px; }
+.stat-note { font-size: var(--kpk-text-body-small); color: var(--kpk-ink-muted); max-width: 52ch; }
+.stat-note b { color: var(--kpk-ink); font-weight: 500; }
+.side-stats { display: flex; flex-direction: column; gap: 10px; }
+.mini { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; background: var(--kpk-surface-card); border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-card); padding: 12px 16px; flex: 1; }
+.m-label { font-size: var(--kpk-text-body-small); color: var(--kpk-ink-muted); font-weight: 500; }
+.m-label em { display: block; font-style: normal; font-weight: 400; font-size: var(--kpk-text-fs-tag); margin-top: 2px; }
+.m-value { font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.loop-proj { margin-top: 14px; padding-top: 12px; border-top: var(--kpk-rule-soft) solid var(--kpk-line); display: flex; flex-direction: column; gap: 8px; }
+table.data.compact { max-width: 460px; }
+details.fold > summary { cursor: pointer; font-size: var(--kpk-text-body-small); font-weight: 500; }
+details.fold[open] > summary { margin-bottom: 10px; }
+.muted-row { color: var(--kpk-ink-faint); }
+.timeline { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; font-size: var(--kpk-text-body-small); }
+.timeline li { display: grid; grid-template-columns: 150px 1fr; gap: 12px; }
+@media (max-width: 640px) { .timeline li { grid-template-columns: 1fr; gap: 2px; } }
+.timeline .when { color: var(--kpk-ink-muted); font-family: var(--kpk-font-mono); font-size: var(--kpk-text-data-mono); }
+.timeline b { font-weight: 500; }
 .ends { display: flex; justify-content: space-between; font-size: var(--kpk-text-fs-tag); color: var(--kpk-ink-muted); margin-bottom: 6px; }
 .ends .hi { color: var(--c-bad); }
 input[type=range] { width: 100%; -webkit-appearance: none; appearance: none; height: 6px; border-radius: 4px; outline: none; margin: 0;
-  background: linear-gradient(to right, var(--c-good) 0%, var(--c-good) 60%, var(--kpk-orange-500) 85%, var(--c-bad) 100%); }
+  background: linear-gradient(to right, var(--c-good) 0%, var(--c-good) 62%, var(--kpk-orange-500) 80%, var(--c-bad) 88%, var(--c-bad) 100%); }
 input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--kpk-ink); border: 3px solid var(--kpk-surface-card); cursor: pointer; }
 input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--kpk-ink); border: 3px solid var(--kpk-surface-card); cursor: pointer; }
 .marks { position: relative; height: 80px; margin-top: 4px; }
@@ -941,13 +1061,14 @@ JS = """
   if (!S || !slider) return;
   function hfOf(v) { return S.maxHf - v / 100; }
   function valOf(hf) { return Math.round((S.maxHf - hf) * 100); }
-  slider.min = 0; slider.max = valOf(S.minHf); slider.value = valOf(Math.min(S.maxHf, Math.max(S.minHf, S.liveHf)));
+  slider.min = 0; slider.max = valOf(S.lowHf); slider.value = valOf(Math.min(S.maxHf, Math.max(S.lowHf, S.liveHf)));
   // Three label rows: the band's four values sit within 0.10 of each other.
   var sameAsTarget = Math.abs(S.liveHf - S.target) < 0.006;
   var marks = [
     { hf: S.borrow, label: 'borrow trigger ' + S.borrow.toFixed(2), row: 0 },
     { hf: S.target, label: sameAsTarget ? 'target ' + S.target.toFixed(2) + ' = live' : 'target ' + S.target.toFixed(2), row: 1 },
-    { hf: S.repay, label: 'repay trigger ' + S.repay.toFixed(2), row: 0 }
+    { hf: S.repay, label: 'repay trigger ' + S.repay.toFixed(2), row: 0 },
+    { hf: S.minHf, label: 'minimum today ' + S.minHf.toFixed(2), row: 1 }
   ];
   if (!sameAsTarget) marks.push({ hf: S.liveHf, label: 'live ' + S.liveHf.toFixed(3), row: 2 });
   var box = document.getElementById('hfMarks'), els = [];
@@ -969,8 +1090,18 @@ JS = """
     document.getElementById('simBorrow').textContent = fmt(S.px * ltv, 0) + ' USDC';
     document.getElementById('simUsd').textContent = '$' + fmt(S.px * ltv * S.spread / 100 * (1 - S.fee), 0) + ' a year';
     document.getElementById('simDrop').textContent = ((1 - 1 / hf) * 100).toFixed(1) + '%';
+    document.getElementById('simWarn').hidden = hf >= S.minHf - 0.0001;
     els.forEach(function (m) { m.el.classList.toggle('on', Math.abs(m.hf - hf) < 0.006); });
   }
+  // Spread picker: switching basis re-runs the simulation at the current HF.
+  var btns = [].slice.call(document.querySelectorAll('.spread-btn'));
+  btns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      S.spread = parseFloat(btn.getAttribute('data-spread'));
+      btns.forEach(function (b) { b.setAttribute('aria-current', b === btn ? 'true' : 'false'); });
+      render();
+    });
+  });
   slider.addEventListener('input', render);
   render();
 })();
@@ -991,6 +1122,51 @@ math_strip = (f'<div class="math"><div class="chunk"><span class="term">{pct(dep
 terms_band = f"repay below {band['repay_trigger']:.2f} back to {band['repay_target']:.2f}; re-lever above {band['borrow_trigger']:.2f} back to {band['borrow_target']:.2f}"
 drop_from_repay = (1 - 1 / band["repay_trigger"]) * 100
 drop_from_min = (1 - 1 / MIN_HF) * 100
+
+
+hf_caption = ""
+if seed and first_relever:
+    hf_caption = (f"HF started high on purpose. The first borrow is manual and was sized below the target ({seed['amount']}, HF {hf_txt(seed['hf_after'])}); "
+                  f"re-lever stayed off until {short(relever_switch['t'] if relever_switch else first_relever['t'])}, when the agent levered to the "
+                  f"{first_relever['target'] or band['borrow_target']:.2f} target in one step. Since then the line sits inside the band.")
+
+
+def mini(label, value, sub):
+    return f'<div class="mini"><span class="m-label">{esc(label)}<em>{sub}</em></span><span class="m-value">{value}</span></div>'
+
+
+rew_split = " · ".join(f"{esc(g['group'].lower())} {usd(g['claimable_usd'] + g['pending_usd'], 2)}" for g in rewards["groups"]) if rewards else ""
+hero_side = "".join([
+    mini("NAV", f"{n(chain['nav_wbtc'], 4)} WBTC", f"≈ {usd(chain['nav_usd'])}"),
+    mini("Share price", f"{n(chain['share_price_wbtc'], 6)} WBTC", f"last settled {n(chain['last_settled_wbtc'], 6)}"),
+    mini("Health factor", hf_txt(hf_now), f"band {band['repay_trigger']:.2f} · {band['borrow_target']:.2f} · {band['borrow_trigger']:.2f} (repay · target · re-lever)"),
+    mini("LTV", f"{ltv * 100:.1f}%", f"collateral factor {cf * 100:.1f}% ÷ HF · liquidation at {usd(chain['liq_px'])}"),
+    mini("Unclaimed rewards", usd(rewards["total_usd"], 2) if rewards else "n/a", (f"≈ {n(rewards['total_wbtc'], 5)} WBTC, not yet in NAV · {rew_split}") if rewards else "not read at this build"),
+])
+trail_bits = [f"{s['label']} {s['carry']:+.2f}%" for s in spreads if s["key"] != "live"]
+trail_line = ("On trailing rates: " + " · ".join(trail_bits) + ". ") if trail_bits else ""
+per_btc = usd(px * ltv * spread / 100 * (1 - PERF_FEE)) if spread is not None else "n/a"
+
+spread_buttons = "".join(
+    f'<button type="button" class="spread-btn" data-spread="{s["spread"]:.6f}" data-vault="{s["vault"]:.4f}" data-net="{s["borrow_net"]:.4f}" aria-current="{"true" if s["key"] == "live" else "false"}">'
+    f'<i>{esc(s["label"])}</i><b>{s["spread"]:+.2f} pp</b></button>' for s in spreads)
+
+def share_label(s):
+    return "0% (today)" if s == 0 else f"{s * 100:.0f}%"
+
+
+loop_html = ""
+if loop_proj:
+    lp = loop_proj
+    rows_html = "".join(
+        f'<tr><td>{share_label(r["share"])}</td><td class="num mono"><b>{r["carry"]:+.2f}%</b></td></tr>' for r in lp["rows"])
+    first_draw = next((r for r in lp["rows"] if r["share"] > 0 and r.get("today_rate") is not None), None)
+    caveat = (f" That needs more Aave room for the Maple spoke: the one USDG line with room today (Global Dollar hub, {musd(lp['gd_liq'])} free at {pct(lp['gd_now'])}) "
+              f"would rise to {pct(first_draw['today_rate'])} for a {first_draw['share'] * 100:.0f}% loop at today's fund size, above the loop's {pct(lp['breakeven'])} break-even.") if first_draw else ""
+    loop_html = (f'<div class="loop-proj"><div class="stat-label">What the loop would add <span class="pill">projection</span></div>'
+                 f'<table class="data compact"><thead><tr><th>Loop share of the borrowed stablecoins</th><th class="num">Carry on BTC</th></tr></thead><tbody>{rows_html}</tbody></table>'
+                 f'<div class="stat-sub">At today\'s rates: syrupUSDG yields {pct(lp["syrup"])} (7-day, Maple). Borrowing USDG at {pct(lp["borrow"])}, today\'s Core-hub rate, at {LOOP["leverage"]}x, the loop earns {pct(lp["yield"], 1)} on its equity; the rest of the stablecoins stay in the liquid sleeve.{caveat} '
+                 f'At {LOOP["leverage"]}x the loop\'s own health factor is {lp["loop_hf"]:.3f}: a {(1 - 1 / lp["loop_hf"]) * 100:.1f}% markdown of syrupUSDG would liquidate it, which is why it is capped and partly unwound when borrow costs rise.</div></div>')
 
 page = f"""<!doctype html>
 <html lang="en">
@@ -1028,38 +1204,24 @@ page = f"""<!doctype html>
 <section id="numbers">
   <span class="label">Headline numbers</span>
   <h2>What the fund earns on BTC</h2>
-  <div class="grid g3">
-    <div class="card">
-      <div class="stat-label">NAV</div>
-      <div class="stat-value">{n(chain['nav_wbtc'], 4)} <span class="muted" style="font-size:20px">WBTC</span></div>
-      <div class="stat-sub">≈ {usd(chain['nav_usd'])} · share price <b>{n(chain['share_price_wbtc'], 6)} WBTC</b> (last settled {n(chain['last_settled_wbtc'], 6)})</div>
-      <div class="kv"><span>Unclaimed rewards, not yet in NAV</span><span class="mono">{(usd(rewards['total_usd'], 2) + ' ≈ ' + n(rewards['total_wbtc'], 6) + ' WBTC') if rewards else 'not read at this build'}</span></div>
-      {rew_rows}
-      {f'<div class="kv"><span>NAV plus unclaimed rewards</span><span class="mono">≈ {n(nav_plus, 5)} WBTC</span></div>' if nav_plus else ''}
-    </div>
-    <div class="card">
-      <div class="stat-label">Health factor</div>
-      <div class="stat-value">{hf_txt(hf_now)}</div>
-      <div class="stat-sub">band: repay below {band['repay_trigger']:.2f}, re-lever above {band['borrow_trigger']:.2f}, both back to {band['borrow_target']:.2f} ({esc(band_asof)})</div>
-      <div class="kv"><span>LTV (collateral factor ÷ HF)</span><span class="mono">{ltv * 100:.1f}% = {cf * 100:.1f}% ÷ {hf_txt(hf_now)}</span></div>
-      <div class="kv"><span>BTC drop to liquidation</span><span class="mono">{pct(liq_buffer, 1)} · at {usd(chain['liq_px'])}</span></div>
-    </div>
-    <div class="card">
+  <div class="hero">
+    <div class="card hero-main">
       <div class="stat-label">Carry on BTC <span class="pill">projection</span></div>
-      <div class="stat-value good">{carry_txt}</div>
-      <div class="stat-sub">a year, at current rates, net of the {rebate_txt} Merkl borrow rebate and the 10% performance fee. Not a promise: rates move.</div>
-      <div class="kv"><span>Before the 10% fee</span><span class="mono">{(f'{carry / (1 - PERF_FEE):+.2f}%') if carry is not None else 'n/a'}</span></div>
-      <div class="kv"><span>Per 1 BTC, at today's price</span><span class="mono">{('≈ ' + usd(px * ltv * spread / 100 * (1 - PERF_FEE)) + ' a year') if spread is not None else 'n/a'}</span></div>
+      <div class="stat-value hero-value good">{carry_txt}</div>
+      <div class="stat-note">a year on the BTC held, at current rates. The fund borrows USDC at <b>{ltv * 100:.1f}%</b> LTV and earns a <b>{n(spread)} pp</b> spread on it, net of the {rebate_txt} Merkl borrow rebate and the 10% performance fee. Not a promise: rates move.</div>
+      <div class="stat-sub">{esc(trail_line)}≈ {per_btc} a year per 1 BTC at today's price.</div>
       <div class="kv"><span>Realised</span><span class="mono">{'see below' if realised else 'from ' + (utc(realised_from).strftime('%-d %b') if realised_from else 'n/a')}</span></div>
       {realised_html}
     </div>
+    <div class="side-stats">{hero_side}</div>
   </div>
   {math_strip}
   {f'<div class="note">{esc(nav_note)}</div>' if nav_note else ''}
   <div class="card">
     <div class="stat-label">Share price in WBTC since inception</div>
     {share_chart()}
-    <div class="stat-sub">Deposits mint at the last settled price, which can step the line slightly; claimed rewards step NAV up once. Both are marked.</div>
+    {share_events_list()}
+    <div class="stat-sub">{esc(CONFIG['milestones']['testing_phase']['note'][:1].upper() + CONFIG['milestones']['testing_phase']['note'][1:])} (shaded). At that size a single test deposit or redemption moves the share price by tens of parts per million: the two small dips. Deposits mint at the last settled price, and claimed rewards step NAV up once; both are marked.</div>
   </div>
 </section>
 
@@ -1093,6 +1255,7 @@ page = f"""<!doctype html>
     <div class="leg-kind">Loop sleeve · {'active' if loop_live else 'planned, not active'}</div>
     <div class="leg-sub" style="margin-top:6px">{esc(loop['what'][:1].upper() + loop['what'][1:])}, taking {esc(loop['share'])}. {esc(loop['limits'])}
     {'The fund now holds a position on that spoke.' if loop_live else 'It appears here as live once the fund holds a position on that spoke; until then all borrowed USDC sits in the liquid sleeve.'}</div>
+    {loop_html}
   </div>
 </section>
 
@@ -1101,14 +1264,20 @@ page = f"""<!doctype html>
   <div class="card">
     <div class="sim-head">
       <div><h2>Carry per 1 BTC at a target health factor</h2>
-      <p class="lede">The position is managed by health factor, so the simulator is too: HF sets LTV (collateral factor ÷ HF), LTV sets the carry. Live legs only, at today's spread of {n(spread)} pp; the loop sleeve is not included.</p></div>
+      <p class="lede">The position is managed by health factor, so the simulator is too: HF sets LTV (collateral factor ÷ HF), LTV sets the carry. Live legs only; the loop sleeve is not included.</p></div>
       <div class="sim-out"><span class="big" id="simCarry">{carry_txt}</span><span class="muted">a year on BTC<br>at HF <b id="simHf">{hf_txt(hf_now)}</b>, after fee</span></div>
     </div>
+    <div class="spread-picker" role="group" aria-label="Which spread to simulate with">
+      <span class="picker-label">Spread</span>
+      {spread_buttons}
+      <span class="picker-note"><b>Live</b> is today's borrow rate against the vaults' 24-hour yield. The trailing options average the vault yield, the Core-hub USDC rate and the Merkl rebate over the same window, as a check on today's figure.{'' if len(spreads) > 1 else ' Trailing options appear once the rate history reaches back far enough.'}</span>
+    </div>
     <div class="slider-wrap">
-      <div class="ends"><span>HF 1.60, less carry</span><span class="hi">HF {MIN_HF:.2f} minimum, more carry</span></div>
+      <div class="ends"><span>HF 1.60, less carry</span><span class="hi">HF 1.05, more carry</span></div>
       <input type="range" id="hfSlider" step="1" aria-label="Target health factor">
       <div class="marks" id="hfMarks"></div>
     </div>
+    <div class="note" id="simWarn" hidden>Below today's {MIN_HF:.2f} minimum: the fund would need its mandate changed to run here, and each step down leaves less room before liquidation.</div>
     <div class="sim-grid">
       <div class="sim-cell"><div class="k">LTV</div><div class="v" id="simLtv"></div></div>
       <div class="sim-cell"><div class="k">Borrowed per 1 BTC</div><div class="v" id="simBorrow"></div></div>
@@ -1129,13 +1298,14 @@ page = f"""<!doctype html>
     <div class="stat-label">Health factor over time</div>
     <div class="legend"><span><i></i>health factor (log scale)</span><span><i class="band"></i>band in force</span><span><i class="liq"></i>liquidation</span><span><span class="shape" style="color:var(--c-band)">▲</span>re-lever</span><span><span class="shape" style="color:var(--c-liq)">▼</span>repay</span><span><span class="shape">◆</span>manual borrow</span><span><span class="shape">┊</span>deposit</span></div>
     {hf_chart()}
+    <div class="stat-sub">{hf_caption}</div>
   </div>
   <div class="card">
     <div class="stat-label">BTC oracle price against agent rebalances</div>
     <div class="statrow">
       <div><div class="c-label">BTC oracle price</div><div class="c-value">{usd(px)}</div><div class="c-sub">{(pct((px / next(p['px'] for p in points if p.get('px')) - 1) * 100, 1, sign=True) + ' in the window') if any(p.get('px') for p in points) else ''}</div></div>
       <div><div class="c-label">Agent rebalances</div><div class="c-value">{len([t for t in window_txs if t['kind'] in ('relever', 'derisk')])}</div><div class="c-sub">{len([t for t in window_txs if t['kind'] == 'relever'])} re-lever · {len([t for t in window_txs if t['kind'] == 'derisk'])} repay</div></div>
-      <div><div class="c-label">Closest call</div><div class="c-value">{pct(closest['headroom'], 1) if closest else 'n/a'}</div><div class="c-sub">{('price headroom to the repay trigger, ' + short(closest['t'])) if closest else 'after the first re-lever'}</div></div>
+      <div><div class="c-label">Lowest HF</div><div class="c-value">{f"{lowest['hf']:.4f}" if lowest else 'n/a'}</div><div class="c-sub">{(short(lowest['t']) + f": BTC was {lowest['headroom']:.1f}% above the level where the agent starts repaying, {lowest['to_liq']:.1f}% above liquidation") if lowest else 'after the first re-lever'}</div></div>
       <div><div class="c-label">Buffer to liquidation</div><div class="c-value">{pct(liq_buffer, 1)}</div><div class="c-sub">liquidation price {usd(chain['liq_px'])}</div></div>
     </div>
     <div class="legend"><span><i></i>BTC oracle price (Aave V4)</span><span><i class="band"></i>no-action corridor</span><span><i class="liq"></i>liquidation price</span></div>
@@ -1143,9 +1313,11 @@ page = f"""<!doctype html>
     <div class="stat-sub">The corridor is the liquidation price × [repay trigger, borrow trigger], using the band in force at each moment. Inside it the agent does nothing; it moves whenever the agent borrows or repays, or the band is retuned.</div>
   </div>
   <div class="card">
-    <div class="stat-label">Price legs and what the agent did in each</div>
-    <p class="lede">HF is the BTC price ÷ the liquidation price, so a rally lifts HF toward the borrow trigger and a sell-off pushes it toward the repay trigger.</p>
-    {legs_table()}
+    <details class="fold">
+      <summary>Step by step: each stretch of time and what the agent did</summary>
+      <p class="lede">Each row is either an action or the quiet stretch between two actions. In the quiet stretches the agent checks the position every 5 minutes and correctly does nothing. HF moves with the BTC price: a rally lifts it toward the re-lever trigger, a sell-off pushes it toward the repay trigger.</p>
+      {legs_table()}
+    </details>
   </div>
   <div class="card">
     <div class="stat-label">Every onchain action</div>
@@ -1154,7 +1326,7 @@ page = f"""<!doctype html>
   </div>
   <div class="card">
     <div class="stat-label">How it works</div>
-    <ul class="notes">{''.join('<li>' + x + '</li>' for x in narrative()) if snap else '<li>' + esc(snap_label.capitalize()) + '.</li>'}</ul>
+    <ul class="timeline">{''.join(f'<li><span class="when">{esc(w)}</span><span>{x}</span></li>' for w, x in narrative()) if snap else '<li>' + esc(snap_label.capitalize()) + '.</li>'}</ul>
   </div>
 </section>
 
@@ -1190,12 +1362,20 @@ page = f"""<!doctype html>
     </div>
   </div>
   <div class="card">
+    <div class="stat-label">Onchain permissions</div>
+    <ul class="notes" style="margin-top:8px">
+      <li><b>No key can move the fund's assets directly.</b> The Safe that holds the position has a single owner, a contract that holds no key. Every action reaches it through a Zodiac Roles permissions layer.</li>
+      <li><b>Only whitelisted actions.</b> That layer allows a fixed set of calls on approved contracts, such as borrowing, repaying and supplying on the named Aave V4 spoke and depositing into the two KPK USDC vaults. Anything outside that set is rejected onchain. Each agent gets a narrower role inside that set, and so does the Manager Safe (2 of 5 signers).</li>
+      <li><b>Changes are slow and visible.</b> The outer set of permissions is owned by a timelock: KPK's Security Council proposes a change, and it waits 3 days onchain before it can take effect.</li>
+    </ul>
+  </div>
+  <div class="card">
     <div class="stat-label">Main risks</div>
     <ul class="notes" style="margin-top:8px">
       <li><b>BTC price:</b> depositors keep full BTC exposure.</li>
       <li><b>Liquidation:</b> a fast BTC drop, larger than the automations can react to, can lead to liquidation.</li>
       <li><b>Smart contracts:</b> Aave V4, Morpho, Maple, the stablecoins (USDC, USDG), the BTC wrappers (WBTC, cbBTC, later cirBTC) and the fund's own contracts.</li>
-      <li><b>Credit:</b> Maple lends to institutional borrowers; a borrower default can mark syrup tokens down. This applies once the loop sleeve is live.</li>
+      <li class="muted-row"><b>Credit (future, once the loop sleeve is live):</b> Maple lends to institutional borrowers; a borrower default can mark syrup tokens down.</li>
       <li><b>Oracles and pegs:</b> WBTC or USDG/USDC moving off their pegs.</li>
     </ul>
   </div>
