@@ -1093,13 +1093,14 @@ table.data td.mid { min-width: 130px; }
 .spread-btn[aria-current="true"] { border-color: var(--c-good); color: var(--kpk-ink); }
 .spread-btn[aria-current="true"] b { color: var(--c-good); }
 .picker-note { flex: 1 1 100%; font-size: var(--kpk-text-fs-tag); color: var(--kpk-ink-muted); }
-.headline { display: grid; grid-template-columns: 1.3fr 1fr; gap: var(--kpk-space-4); }
+.headline { display: grid; grid-template-columns: 1.3fr 1fr; gap: var(--kpk-space-4); align-items: start; }
 @media (max-width: 760px) { .headline { grid-template-columns: 1fr; } }
 .hero-value { font-size: var(--kpk-text-slide-stat); margin: 10px 0 8px; }
 .stat-note { font-size: var(--kpk-text-body-small); color: var(--kpk-ink-muted); max-width: 52ch; }
 .stat-note b { color: var(--kpk-ink); font-weight: 500; }
-.side-stats { display: flex; flex-direction: column; gap: 10px; }
-.mini { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; background: var(--kpk-surface-card); border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-card); padding: 12px 16px; flex: 1; }
+.side-stats { display: flex; flex-direction: column; background: var(--kpk-surface-card); border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-card); padding: 4px 18px; }
+.mini { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; }
+.mini + .mini { border-top: var(--kpk-rule-soft) solid var(--kpk-line); }
 .m-label { font-size: var(--kpk-text-body-small); color: var(--kpk-ink-muted); font-weight: 500; }
 .m-label em { display: block; font-style: normal; font-weight: 400; font-size: var(--kpk-text-fs-tag); margin-top: 2px; }
 .m-value { font-size: 20px; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -1407,7 +1408,8 @@ def mini(label, value, sub):
     return f'<div class="mini"><span class="m-label">{esc(label)}<em>{sub}</em></span><span class="m-value">{value}</span></div>'
 
 
-rew_split = " · ".join(f"{esc(g['group'])} {usd(g['claimable_usd'] + g['pending_usd'], 2)}" for g in rewards["groups"]) if rewards else ""
+REW_SHORT = {"Aave borrow rebate": "rebate", "USDC vault rewards": "vault rewards", "Other rewards": "other"}
+rew_split = " · ".join(f"{esc(REW_SHORT.get(g['group'], g['group']))} {usd(g['claimable_usd'] + g['pending_usd'], 2)}" for g in rewards["groups"]) if rewards else ""
 hero_side = "".join([
     mini("NAV", f"{n(chain['nav_wbtc'], 4)} WBTC", f"≈ {usd(chain['nav_usd'])}"),
     mini("Share price", f"{n(chain['share_price_wbtc'], 6)} WBTC", f"last settled {n(chain['last_settled_wbtc'], 6)}"),
