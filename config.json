@@ -85,12 +85,11 @@
     ],
     "backup": {
       "label": "Backup lenders",
-      "text": "Aave V3 Core, Spark (strong for cbBTC), Morpho and Compound. Their permissions are part of the next governance batch, so the fund can move or spread its borrowing when one venue runs short of depth or turns expensive.",
+      "text": "Aave V3 Core, Spark (strong for cbBTC) and Morpho. Their permissions are part of the next governance batch, so the fund can move or spread its borrowing when one venue runs short of depth or turns expensive.",
       "icons": [
         "aave",
         "spark",
-        "morpho",
-        "compound"
+        "morpho"
       ],
       "status": "in progress"
     }
@@ -175,5 +174,13 @@
     "hf_exit_below": 1.13,
     "spread_exit": "two 6-hour windows in a row",
     "as_of": "10 Oct 2026"
+  },
+  "charts_from": "2026-10-01T00:00:00Z",
+  "docs": {
+    "fund": "https://docs.kpk.io/funds/funds/btc-carry",
+    "automation": "https://docs.kpk.io/vaults/infrastructure/automation",
+    "risk_framework": "https://docs.kpk.io/vaults/infrastructure/risk-framework",
+    "investment_framework": "https://docs.kpk.io/funds/infrastructure/investment-framework",
+    "cap_example_tx": "https://etherscan.io/tx/0x5c15f1ea3873bd1d74f74fb1251568a701edee4b5fee56dd401b4c3ebfb0c828"
   }
 }

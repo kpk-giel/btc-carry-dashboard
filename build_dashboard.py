@@ -218,6 +218,8 @@ window_t0 = (snap or {}).get("window_start", {}).get("t") or (points[0]["t"] if 
 runs = (snap or {}).get("runs") or {}
 
 history_t0 = (snap or {}).get("history_start", {}).get("t") or window_t0
+# The HF and price charts start here: early setup is noise, and the testing examples worth seeing are from October.
+charts_t0 = max(history_t0, int(datetime.strptime(CONFIG.get("charts_from", "2000-01-01T00:00:00Z"), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp()))
 # The live phase starts at the pre-pilot subscription; everything before it is setup and tests at a few dollars.
 live_txs = [t for t in transactions if t["t"] >= window_t0]
 test_txs = [t for t in transactions if t["t"] < window_t0]
@@ -278,7 +280,7 @@ def trailing_spread(days):
 
 
 spreads = [{"key": "live", "label": "Live", "vault": deploy_apy, "borrow_gross": borrow_gross, "rebate": rebate_pct, "borrow_net": borrow_net, "spread": spread}]
-for d in (7, 30):
+for d in (7,):  # 30d dropped (Giel, 12 Oct): most of its window predates the rebate on this hub
     tr = trailing_spread(d)
     if tr and tr["spread"] is not None:
         spreads.append({"key": f"{d}d", "label": f"{d}d avg", **tr})
@@ -452,10 +454,10 @@ def iso_ts(s):
 
 
 def hf_chart():
-    pts = [p for p in points if p["t"] >= history_t0 and p.get("hf")]
+    pts = [p for p in points if p["t"] >= charts_t0 and p.get("hf")]
     if len(pts) < 2:
         return '<p class="empty">The health-factor history appears once the position has a few readings.</p>'
-    t0, t1 = history_t0, max(now, pts[-1]["t"])
+    t0, t1 = charts_t0, max(now, pts[-1]["t"])
     # Capped: after a near-full unwind HF reads in the tens of thousands, which would flatten the band.
     top = min(max(max(p["hf"] for p in pts) * 1.08, band["borrow_trigger"] * 1.1), 3.0)
     f = Frame(t0, t1, 0.97, top, log=True)
@@ -485,7 +487,7 @@ def hf_chart():
     body.append(f'<path class="line" d="{path(f, pts_plot, "hf_plot")}"/>')
     # Name the planned hold so a high HF after the seed borrow does not read as a fault.
     if seed and first_relever and seed.get("hf_after"):
-        body.append(f'<text class="lab" x="{f.x(seed["t"]) - 10:.1f}" y="{f.y(min(seed["hf_after"], top)) + 4:.1f}" text-anchor="end">seed borrow, then a hold with re-lever off on purpose</text>')
+        body.append(f'<text class="lab" x="{f.x(seed["t"]) - 10:.1f}" y="{f.y(min(seed["hf_after"], top)) + 4:.1f}" text-anchor="end">seed borrow, then a planned hold</text>')
         body.append(f'<text class="lab" x="{f.x(first_relever["t"]) + 8:.1f}" y="{f.y(first_relever["hf_after"] or 1.21) - 22:.1f}">re-lever on: levered to target</text>')
     if synced_at and any(p["t"] > synced_at for p in pts):
         xs = f.x(synced_at)
@@ -506,10 +508,10 @@ def hf_chart():
 
 
 def price_chart():
-    pts = [p for p in points if p["t"] >= history_t0 and p.get("px")]
+    pts = [p for p in points if p["t"] >= charts_t0 and p.get("px")]
     if len(pts) < 2:
         return '<p class="empty">The price history appears once the position has a few readings.</p>'
-    t0, t1 = history_t0, max(now, pts[-1]["t"])
+    t0, t1 = charts_t0, max(now, pts[-1]["t"])
     # A near-empty loan has a liquidation price near zero; leave a gap there rather than a spike.
     with_liq = [p for p in pts if p.get("liq") and p["liq"] > 0.3 * p["px"]]
     lo = min([p["px"] for p in pts] + [p["liq"] for p in with_liq]) * 0.96
@@ -958,6 +960,29 @@ h2 { font-size: var(--kpk-text-fs-section); font-weight: 500; margin: 0; letter-
 .leg-amount { font-size: 22px; font-weight: 500; margin-top: 6px; font-variant-numeric: tabular-nums; }
 .leg-sub { font-size: var(--kpk-text-fs-meta); color: var(--kpk-ink-muted); }
 .loop { border-style: dashed; }
+.cta.ghost { background: transparent; color: var(--kpk-ink); border: var(--kpk-rule-hard) solid var(--kpk-line-strong); }
+.doc-links { display: flex; gap: 10px; flex-wrap: wrap; }
+.doc-links a { font-size: var(--kpk-text-fs-meta); padding: 4px 10px; border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-pill); text-decoration: none; }
+.doc-links a:hover { border-color: var(--kpk-line-strong); }
+.sub-h { font-size: var(--kpk-text-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--kpk-ink-muted); font-weight: 500; margin: 6px 0 -6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.pill.live-pill { background: var(--c-band-fill); color: var(--c-good); }
+.chip-s { font-size: var(--kpk-text-fs-tag); padding: 3px 8px; border-radius: var(--kpk-radius-pill); background: var(--kpk-pill); color: var(--kpk-ink); line-height: 1.4; }
+.watch-head { display: flex; gap: 10px; align-items: flex-start; }
+.wakes { margin-top: 12px; padding-top: 10px; border-top: var(--kpk-rule-soft) solid var(--kpk-line); }
+.wakes-t { font-size: var(--kpk-text-fs-tag); color: var(--kpk-ink-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.wake { font-size: var(--kpk-text-fs-meta); padding: 4px 0 4px 10px; border-left: 2px solid var(--c-band); margin-bottom: 4px; }
+.layer-tag { display: inline-block; font-size: var(--kpk-text-fs-tag); letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 9px; border-radius: var(--kpk-radius-tag); }
+.layer-tag.auto { background: var(--c-band-fill); color: var(--c-good); border: var(--kpk-rule-hard) solid var(--c-good); }
+.layer-tag.human { background: var(--kpk-pill); color: var(--kpk-ink); }
+.layer-t { font-size: 18px; font-weight: 500; margin: 10px 0 0; }
+.example { font-size: var(--kpk-text-fs-meta); background: var(--kpk-surface); border-radius: var(--kpk-radius-label); padding: 10px 12px; margin-top: 10px; line-height: 1.5; }
+.example b { font-weight: 500; }
+details.agent > summary { cursor: pointer; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+details.agent > summary::-webkit-details-marker { display: none; }
+details.agent > summary::after { content: "Show more"; font-size: var(--kpk-text-fs-tag); color: var(--kpk-ink-muted); text-decoration: underline; margin-top: 4px; }
+details.agent[open] > summary::after { content: "Show less"; }
+.agent-s { font-size: 15px; font-weight: 500; }
 .riskflow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; gap: 10px; align-items: stretch; }
 .rf-step { background: var(--kpk-surface-card); border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-card); padding: 14px 16px; }
 .rf-n { width: 22px; height: 22px; border-radius: 50%; background: var(--kpk-ink); color: var(--kpk-surface); font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; }
@@ -1291,33 +1316,84 @@ PERMISSIONS_CARD = """  <div class="card">
 """
 
 
+def chips(items):
+    return "".join(f'<span class="chip-s">{esc(x)}</span>' for x in items)
+
+
+DOCS = CONFIG["docs"]
+
+
 def risk_section():
     steps = [
-        ("Watch", "Onchain monitoring around the clock: the health factor and the BTC oracle price, borrowing cost against vault yield, and every venue the money sits in, for paused or frozen contracts, utilisation spikes and exploit signals."),
-        ("Decide", f"Rules set in advance. Inside the band, {band['repay_trigger']:.2f} to {band['borrow_trigger']:.2f}, do nothing. Outside it, bring HF back to {band['borrow_target']:.2f}. Past the hard limits, unwind."),
-        ("Act", "The agent sends the transaction itself: repay from the liquid sleeve, re-lever, or unwind the whole loan, usually confirmed within seconds."),
-        ("Bounded", "Every call passes the permissions layer: whitelisted actions only, and any change to them waits 3 days in a timelock."),
+        ("Watch", "Onchain monitoring around the clock: the position, the oracles, and every venue the money sits in."),
+        ("Decide", f"Rules set in advance. Inside the band, {band['repay_trigger']:.2f} to {band['borrow_trigger']:.2f}, do nothing. Outside it, return to {band['borrow_target']:.2f}. Past the hard limits, unwind."),
+        ("Act", "The agent sends the transaction itself, typically within one or two blocks."),
+        ("Bounded", "Every call passes the permissions layer: whitelisted actions only, any change to them waits 3 days."),
     ]
     flow = '<span class="rf-arrow" aria-hidden="true">→</span>'.join(
         f'<div class="rf-step"><div class="rf-n">{i}</div><div class="rf-t">{esc(a)}</div><div class="rf-b">{esc(b)}</div></div>' for i, (a, b) in enumerate(steps, start=1))
-    agents = [
-        ("Health-factor manager", f"Keeps HF inside the band, {band['repay_trigger']:.2f} to {band['borrow_trigger']:.2f} with a {band['borrow_target']:.2f} target. It checks every {RC['check_minutes']} minutes, and the monitoring wakes it within seconds when HF leaves the band. Below the repay trigger it pulls USDC from the liquid sleeve and repays; above the borrow trigger it borrows and deploys."),
-        ("Exit agent (emergency unwind)", f"Unwinds the whole loan in one transaction: withdraws from the vaults and repays all the debt. It fires on its own if HF falls below {RC['hf_exit_below']:.2f}, or if borrowing costs more than the vaults earn for {RC['spread_exit']}, and switches re-lever off so nothing borrows again until the team re-opens the position."),
-        ("KPK vault agents on Morpho", "The two KPK USDC vaults run their own agents: a rebalancer that moves liquidity between Morpho markets as rates and depth change, and a market-shutdown agent that pulls a vault out of a market and pauses it when that market shows trouble."),
+    watch = [
+        ("The fund's position", "aave", "Checked by the health-factor manager on every run", [
+            "health factor", "debt and collateral", "Core hub free liquidity", "the spoke's borrow cap", "reserve paused, frozen or not borrowable",
+            "hub active or halted", "withdrawable liquidity in the liquid sleeve"],
+         [f"HF outside {band['repay_trigger']:.2f} to {band['borrow_trigger']:.2f}: wakes the health-factor manager",
+          f"HF below {RC['hf_exit_below']:.2f}: full unwind by the exit agent",
+          f"borrowing costs more than the vaults earn for {RC['spread_exit']}: full unwind"]),
+        ("Collateral and accounting", "ethereum", "Watched on the BTC leg and in the fund's own contracts", [
+            "BTC price from Chainlink", "stale or irregular prices flag the NAV reading", "divergence from independent monitor feeds",
+            "settlement price more than 30% off the last one is rejected onchain"], []),
+        ("The KPK USDC vaults", "morpho", "Watched in every market the liquid sleeve lends into", [
+            "exploit, pause and Safe-compromise patterns at each collateral issuer", "the same at the venues those issuers deploy into",
+            "ownership changes on oracle feeds", "large deposits and withdrawals", "forceDeallocate griefing", "oracle liveness, staleness and sudden drops",
+            "bad debt", "vault liquidity, at two severities", "pegs and reserves", "Morpho governance events"], []),
     ]
-    cards = "".join(f'<div class="card"><div class="stat-label">{esc(a)}</div><p class="agent-b">{esc(b)}</p></div>' for a, b in agents)
+    watch_html = "".join(
+        f'<div class="card watch"><div class="watch-head">{icon(ic, 24)}<div><div class="stat-label">{esc(title)}</div><div class="stat-sub">{esc(sub)}</div></div></div>'
+        f'<div class="chips">{chips(items)}</div>'
+        + (f'<div class="wakes"><div class="wakes-t">Alerts that act on their own</div>{"".join(f"<div class=wake>{esc(w)}</div>" for w in wakes)}</div>' if wakes else "")
+        + '</div>' for title, ic, sub, items, wakes in watch)
+    respond = f"""
+  <div class="grid g2">
+    <div class="card layer">
+      <div class="layer-tag auto">Layer 1 · automated</div>
+      <div class="layer-t">Onchain within one or two blocks</div>
+      <p class="agent-b">Signals that leave no room for doubt act on their own, typically in under 30 seconds and scoped to the affected market or position, so everything else keeps earning. Exits are graded: a <b>soft shutdown</b> drains a market and can be undone after review; a <b>hard shutdown</b> also sets its caps to zero.</p>
+      <div class="example"><b>On record:</b> when Cap paused its cUSD stablecoin on 9 June 2026, the exit agent on KPK USDC Yield started draining the affected markets about <a href="{esc(DOCS['cap_example_tx'])}" target="_blank" rel="noopener">15 seconds after the alert ↗</a>. Cap confirmed a false positive minutes later, and the markets were re-enabled after review.</div>
+    </div>
+    <div class="card layer">
+      <div class="layer-tag human">Layer 2 · human-reviewed</div>
+      <div class="layer-t">The risk team, paged when it matters</div>
+      <p class="agent-b">Signals where acting automatically would cause false-positive disruption go to KPK's risk curation team, with a page for critical ones. A reviewer decides whether to force a rebalance, shut a market or do nothing. Monitoring is planned with each risk review, so the risks found on paper are the risks watched in production.</p>
+      <div class="chips">{chips(["Hypernative", "Cyvers", "Pharos Watch", "KPK's own monitors", "incident-response accounts on X"])}</div>
+    </div>
+  </div>"""
+    agents = [
+        ("Health-factor manager", f"keeps HF between {band['repay_trigger']:.2f} and {band['borrow_trigger']:.2f}",
+         f"Holds the BTC leg inside the band with a {band['borrow_target']:.2f} target. It checks every {RC['check_minutes']} minutes, and monitoring wakes it within seconds when HF leaves the band. Below the repay trigger it withdraws USDC from the liquid sleeve and repays; above the borrow trigger it borrows and deploys, split across the two vaults."),
+        ("Exit agent (emergency unwind)", "unwinds the whole loan",
+         f"Withdraws from the vaults and repays all the debt in one transaction. It fires on its own if HF falls below {RC['hf_exit_below']:.2f}, or if borrowing costs more than the vaults earn for {RC['spread_exit']}, and switches re-lever off so nothing borrows again until the team re-opens the position."),
+        ("Agents on the KPK USDC vaults", "rebalance, exit, monitoring",
+         "Each vault runs three agents through its own permissions layer. The rebalance agent reallocates across approved Morpho markets within tier and cap limits as APYs, flows and utilisation change. The exit agent de-risks a single market on a risk alert such as oracle staleness, liquidity stress, a collateral pause or price divergence. The monitoring agent detects forceDeallocate griefing and restores allocations."),
+    ]
+    agent_html = "".join(f'<details class="card agent"><summary><span class="stat-label">{esc(a)}</span><span class="agent-s">{esc(s)}</span></summary><p class="agent-b">{esc(b)}</p></details>' for a, s, b in agents)
     ev = "".join(f"<li>{x}</li>" for x in risk_evidence())
     return f"""
 <section id="risk">
   <span class="label">How we manage risk</span>
   <h2>Automated, watched around the clock, bounded onchain</h2>
-  <p class="lede">The fund's agents act on rules set in advance, within seconds, and only through onchain permissions. This is the loop they run, and what it has done on this fund so far.</p>
+  <p class="lede">KPK runs the fund with deterministic agents. They act only within tightly defined onchain permissions and do not exercise discretion: when a predefined condition is met, they execute a predefined action. They cannot introduce new strategies, expand exposure beyond approved limits, or bypass risk constraints.</p>
+  <div class="doc-links"><a href="{esc(DOCS['automation'])}" target="_blank" rel="noopener">How KPK automation works ↗</a><a href="{esc(DOCS['risk_framework'])}" target="_blank" rel="noopener">KPK Risk Framework ↗</a><a href="{esc(DOCS['investment_framework'])}" target="_blank" rel="noopener">Investment framework ↗</a></div>
   <div class="riskflow">{flow}</div>
-  <div class="grid g3">{cards}</div>
+  <div class="sub-h">What is watched</div>
+  <div class="grid g3">{watch_html}</div>
+  <div class="sub-h">How a signal is handled</div>
+  {respond}
+  <div class="sub-h">The agents</div>
+  <div class="grid g3">{agent_html}</div>
   <div class="card">
     <div class="stat-label">Measured on this fund</div>
     <ul class="notes" style="margin-top:8px">{ev}</ul>
-    <div class="stat-sub" style="margin-top:8px">Testing examples ran on a few dollars of KPK capital; the transactions are listed below. Exit thresholds as set on {esc(RC['as_of'])}.</div>
+    <div class="stat-sub" style="margin-top:8px">Testing examples ran on a few dollars of KPK capital; the transactions are listed under the automation section. Exit thresholds as set on {esc(RC['as_of'])}.</div>
   </div>
   {PERMISSIONS_CARD}
 </section>
@@ -1384,12 +1460,13 @@ page = f"""<!doctype html>
 </header>
 
 <section class="hero" id="overview">
-  <h1>BTC Carry Fund <span class="pill">live · KPK capital</span></h1>
+  <h1>BTC Carry Fund <span class="pill">live since {esc(utc(window_t0).strftime('%-d %b %Y'))}</span></h1>
   <p>BTC goes in as collateral on Aave V4. The fund borrows USDC against it and deploys that USDC in KPK's USDC vaults.
   Depositors stay fully long BTC and earn the spread on top. The unit is BTC: the share price is in WBTC.
   The fund currently holds KPK's own capital, and no performance fee is charged on it.</p>
   <div class="row">
     <a class="cta" href="{esc(app_url)}" target="_blank" rel="noopener">View the fund in the KPK app ↗</a>
+    <a class="cta ghost" href="{esc(CONFIG['docs']['fund'])}" target="_blank" rel="noopener">Read the fund docs ↗</a>
     <span class="asof-note">Deposit assets:</span> {deposit_chips}
   </div>
   <div class="scope" aria-label="Scope">{scope_cards()}</div>
@@ -1400,9 +1477,9 @@ page = f"""<!doctype html>
   <h2>What the fund earns on BTC</h2>
   <div class="headline">
     <div class="card hero-main">
-      <div class="stat-label">Carry on BTC <span class="pill">projection</span></div>
+      <div class="stat-label">Carry on BTC <span class="pill live-pill">at live rates</span></div>
       <div class="stat-value hero-value good">{carry_txt}</div>
-      <div class="stat-note">a year on the BTC held, at current rates. The fund borrows USDC at <b>{ltv * 100:.1f}%</b> LTV and earns a <b>{n(spread)} pp</b> spread on it, net of the {rebate_txt} Merkl borrow rebate and the 10% performance fee. Not a promise: rates move.</div>
+      <div class="stat-note">a year on the BTC held, at live rates. The fund borrows USDC at <b>{ltv * 100:.1f}%</b> LTV and earns a <b>{n(spread)} pp</b> spread on it, net of the {rebate_txt} Merkl borrow rebate and the 10% performance fee. <em>Not a promise: rates move.</em></div>
       <div class="stat-sub">{(f"<b>{carry / (1 - PERF_FEE):+.2f}% before the fee</b>, which is what KPK's own capital earns today. ") if carry is not None else ""}{esc(trail_line)}≈ {per_btc} a year per 1 BTC at today's price.</div>
       <div class="kv"><span>Realised</span><span class="mono">{'see below' if realised else 'from ' + (utc(realised_from).strftime('%-d %b') if realised_from else 'n/a')}</span></div>
       {realised_html}
@@ -1411,12 +1488,6 @@ page = f"""<!doctype html>
   </div>
   {math_strip}
   {f'<div class="note">{esc(nav_note)}</div>' if nav_note else ''}
-  <div class="card">
-    <div class="stat-label">Share price in WBTC since inception</div>
-    {share_chart()}
-    {share_events_list()}
-    <div class="stat-sub">{esc(CONFIG['milestones']['testing_phase']['note'][:1].upper() + CONFIG['milestones']['testing_phase']['note'][1:])} (shaded). At that size a single test deposit or redemption moves the share price by tens of parts per million: the two small dips. Deposits mint at the last settled price, and claimed rewards step NAV up once; both are marked.</div>
-  </div>
 </section>
 
 <section id="structure">
@@ -1447,6 +1518,11 @@ page = f"""<!doctype html>
       {('<div class="kv"><span class="dim">of which Merkl rewards</span><span class="mono dim">+' + n(vault_rewards_pp, 2) + '%</span></div>') if vault_rewards_pp is not None else ''}
     </div>
   </div>
+  <div class="card">
+    <div class="stat-label">Share price in WBTC since inception</div>
+    {share_chart()}
+    <div class="stat-sub">{esc(CONFIG['milestones']['testing_phase']['note'][:1].upper() + CONFIG['milestones']['testing_phase']['note'][1:])} (shaded). At that size a single test deposit or redemption moves the share price by tens of parts per million: the two small dips. Deposits mint at the last settled price, and claimed rewards step NAV up once; both are marked.</div>
+  </div>
   <div class="card loop">
     <div class="leg-kind">Loop sleeve · {'active' if loop_live else 'planned, not active'}</div>
     <div class="leg-sub" style="margin-top:6px">{esc(loop['what'][:1].upper() + loop['what'][1:])}, taking {esc(loop['share'])}. {esc(loop['limits'].replace('Leverage capped at 8x.', f"Leverage is capped at {LOOP['leverage']}x, well below the {1 / (1 - LOOP['collateral_factor']):.1f}x maximum the spoke's {LOOP['collateral_factor'] * 100:.0f}% collateral factor would allow."))}
@@ -1455,7 +1531,6 @@ page = f"""<!doctype html>
   </div>
 </section>
 
-{risk_section()}
 <section id="simulator">
   <span class="label">Carry simulator</span>
   <div class="card">
@@ -1481,10 +1556,11 @@ page = f"""<!doctype html>
       <div class="sim-cell"><div class="k">Carry per 1 BTC</div><div class="v" id="simUsd"></div></div>
       <div class="sim-cell"><div class="k">BTC drop to liquidation</div><div class="v" id="simDrop"></div></div>
     </div>
-    <div class="stat-sub" style="margin-top:12px">Projection at current rates, BTC at {usd(px)}. The spread is held fixed: borrowing more pushes hub rates up, so the low-HF end reads high.</div>
+    <div class="stat-sub" style="margin-top:12px">At live rates, BTC at {usd(px)}. The spread is held fixed: borrowing more pushes hub rates up, so the low-HF end reads high.</div>
   </div>
 </section>
 
+{risk_section()}
 <section id="automation">
   <span class="label">The automation at work</span>
   <h2>Evidence that the agents do what we say</h2>
@@ -1563,9 +1639,12 @@ page = f"""<!doctype html>
     <ul class="notes" style="margin-top:8px">
       <li><b>BTC price:</b> depositors keep full BTC exposure.</li>
       <li><b>Liquidation:</b> a fast BTC drop, larger than the automations can react to, can lead to liquidation.</li>
+      <li><b>Negative carry:</b> if the USDC borrow rate rises above the yield of the underlying vaults; the exit agent unwinds if that lasts.</li>
+      <li><b>WBTC custody and peg:</b> WBTC is a wrapped asset backed by BTC held by a custodian.</li>
+      <li><b>Vault liquidity:</b> thin liquidity in the underlying Morpho vaults can delay deleveraging and redemptions.</li>
       <li><b>Smart contracts:</b> Aave V4, Morpho, Maple, the stablecoins (USDC, USDG), the BTC wrappers (WBTC, cbBTC, later cirBTC) and the fund's own contracts.</li>
       <li class="muted-row"><b>Credit (future, once the loop sleeve is live):</b> Maple lends to institutional borrowers; a borrower default can mark syrup tokens down.</li>
-      <li><b>Oracles and pegs:</b> WBTC or USDG/USDC moving off their pegs.</li>
+      <li><b>Oracles and pegs:</b> oracle manipulation, staleness or failure, and WBTC or USDG/USDC moving off their pegs.</li>
     </ul>
   </div>
 </section>
@@ -1574,7 +1653,7 @@ page = f"""<!doctype html>
   <p><a class="cta" href="{esc(app_url)}" target="_blank" rel="noopener">View the fund in the KPK app ↗</a></p>
   <p><b>Data.</b> Live figures are read from Ethereum mainnet at block {chain['block']:,} ({esc(as_of)}) through a public RPC: the Aave V4 Bluechip spoke and Core hub, the fund's NAV calculator and shares contract, and the two KPK USDC vaults. Vault APYs come from the Morpho API as 24-hour averages, blended by the live allocation. The borrow rebate and unclaimed rewards come from the Merkl API. The BTC price is the Aave V4 oracle price, read as collateral value ÷ collateral amount.</p>
   <p><b>Agent activity.</b> From KPK's agent run records and the fund's onchain transactions, {esc(snap_label)}. Shown from the first subscription on {esc(utc(window_t0).strftime('%-d %b %Y'))}; earlier setup and small test transactions are on Etherscan. HF before and after a transaction is read onchain one block before and at its block; hourly readings fill the charts in between.</p>
-  <p><b>Reading the numbers.</b> ≈ marks a derived or rounded figure: USD values at the oracle price, WBTC equivalents of USD amounts. Projections are at current rates and are not promises. Carry = LTV × (vault yield − net borrow cost) × (1 − 10% performance fee), on the BTC held.</p>
+  <p><b>Reading the numbers.</b> ≈ marks a derived or rounded figure: USD values at the oracle price, WBTC equivalents of USD amounts. Carry figures use live rates read at each build, not a backtest, and are not promises; the loop table is a projection. Carry = LTV × (vault yield − net borrow cost) × (1 − 10% performance fee), on the BTC held.</p>
   <p><b>Updates.</b> Live figures every 4 hours; agent activity at each sync. Contracts: <a href="{ETHERSCAN}/address/{L.SHARES}" target="_blank" rel="noopener">shares</a> · <a href="{ETHERSCAN}/address/{L.SAFE}" target="_blank" rel="noopener">portfolio Safe</a> · <a href="{ETHERSCAN}/address/0x5d48084481660C97DecDEFE65482fD091d7FDe81" target="_blank" rel="noopener">Manager Safe</a> · <a href="{ETHERSCAN}/address/{L.NAV_CALC}" target="_blank" rel="noopener">NAV calculator</a>.</p>
 </footer>
 
