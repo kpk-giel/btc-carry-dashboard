@@ -446,7 +446,7 @@ def testing_shade(f):
     if b <= a:
         return ""
     return (f'<rect class="phase" x="{f.x(a):.1f}" y="{PAD_T}" width="{f.x(b) - f.x(a):.1f}" height="{f.ph}"/>'
-            f'<text class="lab" x="{f.x(a) + 6:.1f}" y="{PAD_T + 14}">testing, a few dollars of KPK capital</text>')
+            f'<text class="lab" x="{f.x(a) + 6:.1f}" y="{PAD_T + 14}">testing, a few dollars of KPK's own money</text>')
 
 
 def iso_ts(s):
@@ -714,7 +714,7 @@ def narrative():
         nr, nd = sum(t["kind"] == "relever" for t in hfm), sum(t["kind"] == "derisk" for t in hfm)
         nu = sum(t["kind"] == "unwind" for t in test_txs)
         items.append((f"{utc(test_txs[0]['t']).strftime('%-d %b')} → {utc(window_t0).strftime('%-d %b')}",
-                       f"<b>Testing.</b> On a few dollars of KPK capital the health-factor manager re-levered {nr} times and de-risked {nd} times, "
+                       f"<b>Testing.</b> On a few dollars of KPK's own money the health-factor manager re-levered {nr} times and de-risked {nd} times, "
                        f"and the exit agent unwound the position {nu} times, ending with a full exit that cleared the test debt."))
     for i, c in enumerate(cs):
         kinds = [t["kind"] for t in c["txs"]]
@@ -801,7 +801,7 @@ def tx_table():
     out = tx_rows(window_txs)
     if test_txs:
         out += (f'<details class="fold" style="margin-top:14px"><summary>Testing phase, {esc(utc(test_txs[0]["t"]).strftime("%-d %b"))} to {esc(utc(test_txs[-1]["t"]).strftime("%-d %b"))}: '
-                f'{len(test_txs)} transactions on a few dollars of KPK capital</summary>'
+                f'{len(test_txs)} transactions on a few dollars of KPK's own money</summary>'
                 '<p class="lede">The same agents, run on test positions of 0.0002 to 0.0035 WBTC while the fund was set up, including setup of the agents\' permissions. '
                 'Test amounts were sometimes below the agents\' minimum transaction size, so a few steps waited for a parameter change.</p>'
                 f'{tx_rows(test_txs)}</details>')
@@ -1393,7 +1393,7 @@ def risk_section():
   <div class="card">
     <div class="stat-label">Measured on this fund</div>
     <ul class="notes" style="margin-top:8px">{ev}</ul>
-    <div class="stat-sub" style="margin-top:8px">Testing examples ran on a few dollars of KPK capital; the transactions are listed under the automation section. Exit thresholds as set on {esc(RC['as_of'])}.</div>
+    <div class="stat-sub" style="margin-top:8px">Testing examples ran on a few dollars of KPK's own money; the transactions are listed under the automation section. Exit thresholds as set on {esc(RC['as_of'])}.</div>
   </div>
   {PERMISSIONS_CARD}
 </section>
