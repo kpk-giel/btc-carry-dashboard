@@ -34,7 +34,7 @@
       },
       {
         "stage": "~$5M",
-        "adds": "Borrow USDG on the Core hub and swap it to USDC, a deeper and cheaper source than USDC; cbBTC as a second deposit asset; borrow sizing that reads rates and hub depth before drawing; a first loop sleeve (syrupUSDG at ~8x on the Aave V4 Maple spoke, ~25% of borrowed stables)",
+        "adds": "Borrow USDG on the Core hub and swap it to USDC, a deeper source than USDC; cbBTC as a second deposit asset; borrow sizing that reads rates and hub depth before drawing; a first loop sleeve (syrupUSDG at ~8x on the Aave V4 Maple spoke, ~25% of borrowed stables)",
         "needs": "Permissions through governance and a 3-day timelock; Maple lender onboarding; NAV coverage and monitoring for the loop",
         "status": "in progress"
       },
