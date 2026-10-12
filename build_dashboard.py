@@ -446,7 +446,7 @@ def testing_shade(f):
     if b <= a:
         return ""
     return (f'<rect class="phase" x="{f.x(a):.1f}" y="{PAD_T}" width="{f.x(b) - f.x(a):.1f}" height="{f.ph}"/>'
-            f'<text class="lab" x="{f.x(a) + 6:.1f}" y="{PAD_T + 14}">testing, a few dollars of KPK's own money</text>')
+            f'<text class="lab" x="{f.x(a) + 6:.1f}" y="{PAD_T + 14}">testing, a few dollars of KPK\'s own money</text>')
 
 
 def iso_ts(s):
@@ -801,7 +801,7 @@ def tx_table():
     out = tx_rows(window_txs)
     if test_txs:
         out += (f'<details class="fold" style="margin-top:14px"><summary>Testing phase, {esc(utc(test_txs[0]["t"]).strftime("%-d %b"))} to {esc(utc(test_txs[-1]["t"]).strftime("%-d %b"))}: '
-                f'{len(test_txs)} transactions on a few dollars of KPK's own money</summary>'
+                f'{len(test_txs)} transactions on a few dollars of KPK\'s own money</summary>'
                 '<p class="lede">The same agents, run on test positions of 0.0002 to 0.0035 WBTC while the fund was set up, including setup of the agents\' permissions. '
                 'Test amounts were sometimes below the agents\' minimum transaction size, so a few steps waited for a parameter change.</p>'
                 f'{tx_rows(test_txs)}</details>')
