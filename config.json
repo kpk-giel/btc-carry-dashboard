@@ -153,7 +153,7 @@
       },
       {
         "label": "Fund contracts",
-        "value": "KPK onchain fund",
+        "value": "KPK onchain Fund",
         "detail": "Shares token, onchain NAV calculator, and a Safe that acts only through Zodiac Roles permissions.",
         "status": "live",
         "icon": "kpk"
