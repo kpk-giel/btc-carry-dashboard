@@ -1050,6 +1050,16 @@ details.agent[open] > summary::after { content: "Show less"; }
 .rf-arrow { align-self: center; color: var(--kpk-ink-muted); font-size: 20px; }
 @media (max-width: 860px) { .riskflow { grid-template-columns: 1fr; } .rf-arrow { transform: rotate(90deg); justify-self: center; } }
 .agent-b { font-size: var(--kpk-text-body-small); margin: 8px 0 0; line-height: 1.55; }
+.proofs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.proof { display: flex; flex-direction: column; gap: 4px; background: var(--kpk-surface-card); border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-card); padding: 14px 16px; color: inherit; text-decoration: none; min-width: 0; }
+.proof:hover { border-color: var(--c-line); }
+.proof-tag { display: flex; justify-content: space-between; font-size: var(--kpk-text-fs-tag); color: var(--kpk-ink-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.proof-tag.live span:first-child { color: var(--c-good); }
+.proof-v { font-size: 26px; font-weight: 500; letter-spacing: -0.02em; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.proof-k { font-size: var(--kpk-text-fs-meta); line-height: 1.4; }
+.proof-hf { font-family: var(--kpk-font-mono); font-size: var(--kpk-text-fs-tag); color: var(--kpk-ink-muted); margin-top: auto; padding-top: 6px; }
+.perm-h { display: flex; gap: 10px; align-items: center; font-weight: 500; font-size: 16px; color: var(--kpk-ink); }
+.perm-h svg { color: var(--c-good); flex: none; }
 .stage-icons { display: flex; gap: 4px; margin-top: 6px; }
 .leg { display: flex; flex-direction: column; }
 .leg-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -1317,24 +1327,24 @@ def band_changed_near(ts):
 
 
 def risk_evidence():
-    """What the agents have actually done on this fund, picked from the transactions, newest example of each kind."""
+    """What the agents have actually done on this fund, one tile per example, newest example of each kind."""
     out = []
     ex = {e["hash"].lower(): e for e in runs.get("executed", [])}
     secs = lambda t: (ex.get(t["hash"].lower()) or {}).get("secs")
+    phase = lambda t: "testing" if t["t"] < window_t0 else "live"
+    hf_move = lambda t: f"HF {hf_txt(t['hf_before'])} → {hf_txt(t['hf_after'])}"
     if first_relever:
-        s = secs(first_relever)
-        lead = (f"re-lever was switched on at {utc(relever_switch['t']).strftime('%H:%M:%S')} and the agent's borrow confirmed {dur(first_relever['t'] - relever_switch['t'])} later"
-                if relever_switch else "the agent re-levered")
-        out.append(f"<b>{esc(short(first_relever['t']))}, live:</b> {lead}" + (f", {s:.0f} s from reading the chain to confirmation" if s else "")
-                   + f". HF {hf_txt(first_relever['hf_before'])} → {hf_txt(first_relever['hf_after'])}.")
+        if relever_switch:
+            out.append((first_relever, dur(first_relever["t"] - relever_switch["t"]), "from re-lever switched on to the borrow confirmed", hf_move(first_relever)))
+        elif secs(first_relever):
+            out.append((first_relever, f"{secs(first_relever):.0f} s", "from reading the chain to the borrow confirmed", hf_move(first_relever)))
     for t in reversed(transactions):
         if t["kind"] == "relever" and (t.get("hf_before") or 0) > 3:
             dep = [d for d in transactions if d["kind"] in ("subscription", "collateral") and 0 <= t["t"] - d["t"] <= 600]
             if dep:
-                phase = "testing" if t["t"] < window_t0 else "live"
-                out.append(f"<b>{esc(short(t['t']))}, {phase}:</b> a deposit landed and the agent re-levered {dur(t['t'] - dep[0]['t'])} later, taking HF from {hf_txt(t['hf_before'])} back to {hf_txt(t['hf_after'])}.")
+                out.append((t, dur(t["t"] - dep[0]["t"]), "from a deposit landing to the agent re-levering", hf_move(t)))
                 break
-    for kind, word in (("derisk", "repaid from the liquid sleeve"), ("relever", "borrowed and deployed")):
+    for kind, word in (("derisk", "repaid"), ("relever", "borrowed")):
         cands = [t for t in transactions if t["kind"] == kind and t["actor"] == "Health-factor manager" and not band_changed_near(t["t"])
                  and (t.get("hf_before") or 0) < 3 and t is not first_relever]
         if not cands:
@@ -1342,30 +1352,27 @@ def risk_evidence():
         t = cands[-1]
         b = band_at(t["t"])
         p0, p1 = px_near(t["t"], DAY), t.get("px")
-        move = ""
+        trig = f"under the {b['repay_trigger']:.2f} repay trigger" if kind == "derisk" else f"over the {b['borrow_trigger']:.2f} borrow trigger"
         if p0 and p1:
-            move = f"BTC {'fell' if p1 < p0 else 'rose'} {abs(p1 / p0 - 1) * 100:.1f}% in a day and "
-        trig = f"below the {b['repay_trigger']:.2f} repay trigger" if kind == "derisk" else f"above the {b['borrow_trigger']:.2f} borrow trigger"
-        phase = "testing" if t["t"] < window_t0 else "live"
-        out.append(f"<b>{esc(short(t['t']))}, {phase}:</b> {move}HF moved to {hf_txt(t['hf_before'])}, {trig}; the agent {word} and brought it back to {hf_txt(t['hf_after'])}.")
+            out.append((t, f"BTC {'−' if p1 < p0 else '+'}{abs(p1 / p0 - 1) * 100:.1f}%", f"in a day, HF {trig}: the agent {word}", hf_move(t)))
+        else:
+            out.append((t, f"HF {hf_txt(t['hf_before'])}", f"{trig}: the agent {word}", f"back to {hf_txt(t['hf_after'])}"))
     u = [t for t in transactions if t["kind"] == "unwind"]
-    if u:
+    ss = [s for s in (secs(t) for t in u) if s]
+    if u and ss:
         full = [t for t in u if t["hf_after"] is None]
-        ss = [s for s in (secs(t) for t in u) if s]
-        out.append(f"<b>Exit agent:</b> {len(u)} unwinds in testing" + (f", ending with a full exit on {esc(short(full[-1]['t']))} that repaid all the test debt" if full else "")
-                   + (f"; each ran in {min(ss):.0f} to {max(ss):.0f} s from reading the chain to confirmation." if ss else "."))
-    return out
+        out.append(((full or u)[-1], f"{min(ss):.0f}–{max(ss):.0f} s", "per exit-agent unwind, from reading the chain to confirmation",
+                    f"{len(u)} unwinds" + (", the last a full exit" if full else "")))
+    return "".join(
+        f'<a class="proof" href="{ETHERSCAN}/tx/{t["hash"]}" target="_blank" rel="noopener">'
+        f'<span class="proof-tag {phase(t)}"><span>{utc(t["t"]).strftime("%-d %b")} · {phase(t)}</span><span>tx ↗</span></span>'
+        f'<span class="proof-v">{esc(v)}</span><span class="proof-k">{esc(k)}</span><span class="proof-hf">{esc(sub)}</span></a>'
+        for t, v, k, sub in out)
 
 
 RC = CONFIG["risk_controls"]
-PERMISSIONS_CARD = """  <div class="card">
-    <div class="stat-label">Onchain permissions</div>
-    <ul class="notes" style="margin-top:8px">
-      <li><b>No key can move the fund's assets directly.</b> The Safe that holds the position has a single owner, a contract that holds no key. Every action reaches it through a Zodiac Roles permissions layer.</li>
-      <li><b>Only whitelisted actions.</b> That layer allows a fixed set of calls on approved contracts, such as borrowing, repaying and supplying on the named Aave V4 spoke and depositing into the two KPK USDC vaults. Anything outside that set is rejected onchain. Each agent gets a narrower role inside that set, and so does the Manager Safe (2 of 5 signers).</li>
-      <li><b>Changes are slow and visible.</b> The outer set of permissions is owned by a timelock: KPK's Security Council proposes a change, and it waits 3 days onchain before it can take effect.</li>
-    </ul>
-  </div>
+PERMISSIONS_CARD = """  <div class="sub-h">Onchain permissions</div>
+  <div class="grid g3"><div class="card perm"><div class="perm-h"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>No key can move the assets</span></div><p class="agent-b">The Safe holding the position is owned by a contract with no key. Every action passes through a Zodiac Roles permissions layer.</p></div><div class="card perm"><div class="perm-h"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span>Whitelisted actions only</span></div><p class="agent-b">A fixed set of calls on approved contracts, such as borrowing on the Aave V4 spoke or depositing into the KPK USDC vaults. Anything else is rejected onchain. Each agent and the Manager Safe (2 of 5) get a narrower role.</p></div><div class="card perm"><div class="perm-h"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>3-day timelock on changes</span></div><p class="agent-b">KPK\'s Security Council proposes any change to the permissions, and it waits 3 days onchain before it can take effect.</p></div></div>
 """
 
 
@@ -1436,7 +1443,7 @@ def risk_section():
          "Each vault runs three agents through its own permissions layer. The rebalance agent reallocates across approved Morpho markets within tier and cap limits as APYs, flows and utilisation change. The exit agent de-risks a single market on a risk alert such as oracle staleness, liquidity stress, a collateral pause or price divergence. The monitoring agent detects forceDeallocate griefing and restores allocations."),
     ]
     agent_html = "".join(f'<details class="card agent"><summary><span class="stat-label">{esc(a)}</span><span class="agent-s">{esc(s)}</span></summary><p class="agent-b">{esc(b)}</p></details>' for a, s, b in agents)
-    ev = "".join(f"<li>{x}</li>" for x in risk_evidence())
+    ev = risk_evidence()
     return f"""
 <section id="risk">
   <span class="label">How we manage risk</span>
@@ -1446,15 +1453,14 @@ def risk_section():
   <div class="riskflow">{flow}</div>
   <div class="sub-h">What is watched</div>
   <div class="grid g3">{watch_html}</div>
+  <div class="stat-sub" style="margin-top:-6px">Thresholds as set on {esc(RC['as_of'])}.</div>
   <div class="sub-h">How a signal is handled</div>
   {respond}
   <div class="sub-h">The agents</div>
   <div class="grid g3">{agent_html}</div>
-  <div class="card">
-    <div class="stat-label">Measured on this fund</div>
-    <ul class="notes" style="margin-top:8px">{ev}</ul>
-    <div class="stat-sub" style="margin-top:8px">Testing examples ran on a few dollars of KPK's own money; the transactions are listed under the automation section. Exit thresholds as set on {esc(RC['as_of'])}.</div>
-  </div>
+  <div class="sub-h">Measured on this fund</div>
+  <div class="proofs">{ev}</div>
+  <div class="stat-sub" style="margin-top:-6px">Testing ran on a few dollars of KPK's own money. Each tile links to its transaction.</div>
   {PERMISSIONS_CARD}
 </section>
 """
@@ -1467,7 +1473,7 @@ RISKS = [
     ("Negative carry", "Borrowing costs rise above what the vaults earn.", f"The exit agent unwinds if that lasts {RC['spread_exit']}.", False),
     ("Vault liquidity", "Thin liquidity in the Morpho vaults can slow deleveraging and redemptions.", f"At least {CONFIG['liquid_floor_pct']}% of the BTC-leg debt stays in the liquid sleeve, and the vault agents rebalance as liquidity changes.", False),
     ("Oracles and pegs", "Manipulation, staleness or failure of a price feed; WBTC or a stablecoin off its peg.", "Every price is checked against independent monitor feeds, and settlement pauses on a stale or irregular price.", False),
-    ("Smart contracts", "Aave V4, Morpho, the stablecoins, the BTC wrappers (WBTC; cbBTC and cirBTC once live) and the fund's own contracts.", "Each one passes KPK's Risk Framework review: more than 150 checks across 12 risk dimensions.", False),
+    ("Smart contracts", "Aave V4, Morpho, the stablecoins, the BTC wrappers (WBTC; cbBTC and cirBTC once live) and the fund's own contracts.", "Each one passes KPK's Risk Framework review (more than 150 checks across 12 risk dimensions) and is monitored 24/7. An exploit or pause in a market the vaults lend into triggers an automated exit; other alerts go to the risk team.", False),
     ("WBTC custody", "WBTC is backed by BTC held by a custodian.", "Its price is watched like every other in the NAV; cbBTC and cirBTC are coming as further deposit assets.", False),
     ("Credit (future)", "Once the loop sleeve is live: a Maple borrower default can mark syrup tokens down.", "The loop is capped at 8x and kept to a share of the stablecoins; it is never relied on to deleverage the BTC leg.", True),
 ]
