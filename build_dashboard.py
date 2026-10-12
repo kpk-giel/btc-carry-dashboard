@@ -1346,14 +1346,18 @@ def risk_section():
         ("Collateral and accounting", "ethereum", "Watched on the BTC leg and in the fund's own contracts", [
             "BTC price from Chainlink", "stale or irregular prices flag the NAV reading", "divergence from independent monitor feeds",
             "settlement price more than 30% off the last one is rejected onchain"], []),
-        ("The KPK USDC vaults", "morpho", "Watched in every market the liquid sleeve lends into", [
-            "exploit, pause and Safe-compromise patterns at each collateral issuer", "the same at the venues those issuers deploy into",
-            "ownership changes on oracle feeds", "large deposits and withdrawals", "forceDeallocate griefing", "oracle liveness, staleness and sudden drops",
-            "bad debt", "vault liquidity, at two severities", "pegs and reserves", "Morpho governance events"], []),
+        ("The KPK USDC vaults", "morpho", "Watched in the vaults themselves and in every market they lend into", [
+            "oracle liveness, staleness and sudden drops", "bad debt", "vault liquidity, at two severities", "pegs and reserves",
+            "Morpho governance events", "manual allocator activity"],
+         ["exploit, pause or Safe-compromise patterns at a collateral issuer, or at a venue it deploys into: that issuer's markets are exited",
+          "an ownership change on an oracle feed behind a market: that market is exited",
+          "a large deposit or withdrawal: an immediate rebalance, so liquidity is rebuilt or new money deployed",
+          "forceDeallocate griefing: the penalty goes up and allocations are restored"]),
     ]
     watch_html = "".join(
         f'<div class="card watch"><div class="watch-head">{icon(ic, 24)}<div><div class="stat-label">{esc(title)}</div><div class="stat-sub">{esc(sub)}</div></div></div>'
-        f'<div class="chips">{chips(items)}</div>'
+        + (f'<div class="wakes-t" style="margin-top:12px">{"Reviewed by the risk team" if title == "The KPK USDC vaults" else "Checked"}</div>' if wakes and title == "The KPK USDC vaults" else "")
+        + f'<div class="chips">{chips(items)}</div>'
         + (f'<div class="wakes"><div class="wakes-t">Alerts that act on their own</div>{"".join(f"<div class=wake>{esc(w)}</div>" for w in wakes)}</div>' if wakes else "")
         + '</div>' for title, ic, sub, items, wakes in watch)
     respond = f"""
@@ -1597,13 +1601,17 @@ page = f"""<!doctype html>
     </details>
   </div>
   <div class="card">
-    <div class="stat-label">Every onchain action</div>
-    <p class="lede">One row per transaction. HF is read onchain one block before and at the transaction's block.</p>
-    {tx_table()}
+    <details class="fold">
+      <summary>How it works: the fund's timeline, step by step</summary>
+      <ul class="timeline">{''.join(f'<li><span class="when">{esc(w)}</span><span>{x}</span></li>' for w, x in narrative()) if snap else '<li>' + esc(snap_label.capitalize()) + '.</li>'}</ul>
+    </details>
   </div>
   <div class="card">
-    <div class="stat-label">How it works</div>
-    <ul class="timeline">{''.join(f'<li><span class="when">{esc(w)}</span><span>{x}</span></li>' for w, x in narrative()) if snap else '<li>' + esc(snap_label.capitalize()) + '.</li>'}</ul>
+    <details class="fold">
+      <summary>Every onchain action: {len(window_txs)} since the pre-pilot deposit{f", {len(test_txs)} in testing" if test_txs else ""}</summary>
+      <p class="lede">One row per transaction, each linked to Etherscan. HF is read onchain one block before and at the transaction's block.</p>
+      {tx_table()}
+    </details>
   </div>
 </section>
 
