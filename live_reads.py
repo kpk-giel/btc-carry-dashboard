@@ -34,6 +34,10 @@ VAULTS = [
     ("KPK USDC Yield", "0xD5cCe260E7a755DDf0Fb9cdF06443d593AaeaA13"),
     ("KPK USDC Yield RWA", "0x7a72bcD2c3F7F7e4D6679170a0625bAB15D7DDa1"),
 ]
+GLOBAL_DOLLAR = "0x62d63197660c080236193CA60b70E49A08E90368"
+SYRUP_USDG = "0x87b65c4aaffa76881f9e96f3e7ed945ddfc3cd7a"
+MAPLE_API = "https://api.maple.finance/v2/graphql"
+GD_USDG_ASSET = 3  # the USDG line the Maple spoke draws from on the Global Dollar hub
 RESERVE_WBTC = 1
 RESERVE_USDC_CORE = 7
 CORE_USDC_ASSET = 5
@@ -54,6 +58,7 @@ SEL = {
     "getLastSettledPrice(address)": "0xbce46c2c",
     "balanceOf(address)": "0x70a08231",
     "convertToAssets(uint256)": "0x07a2d13a",
+    "calculateInterestRate(uint256,uint256,uint256,uint256,uint256)": "0xf5fe86ee",
 }
 NO_DEBT = 2**256 - 1
 SECONDS_PER_YEAR = 365 * 24 * 3600
@@ -131,6 +136,7 @@ def _asset(words):
         "drawn_rate_ray": words[10],
         "underlying": "0x" + hex(words[12])[2:].rjust(40, "0"),
         "ir_strategy": "0x" + hex(words[13])[2:].rjust(40, "0"),
+        "deficit": words[16] // 10**27,
     }
 
 
@@ -265,7 +271,7 @@ def _read_chain_once():
 
 def read_vault_apys():
     """24-hour and 7-day average net APYs (percent) for both vaults. A vault that reports nothing is None."""
-    fields = "name netApy a1: avgNetApy(lookback: ONE_DAY) a7: avgNetApy(lookback: SEVEN_DAYS)"
+    fields = "name netApy a1: avgNetApy(lookback: ONE_DAY) a7: avgNetApy(lookback: SEVEN_DAYS) a30: avgNetApy(lookback: THIRTY_DAYS)"
     q = "query { " + " ".join(f'v{i}: vaultV2ByAddress(address: "{a}", chainId: 1) {{ {fields} }}' for i, (_, a) in enumerate(VAULTS)) + " }"
     data = _post(MORPHO, {"query": q})
     if data.get("errors"):
@@ -274,7 +280,7 @@ def read_vault_apys():
     for i, (name, addr) in enumerate(VAULTS):
         v = (data.get("data") or {}).get(f"v{i}") or {}
         pct = lambda x: None if x is None else x * 100
-        out.append({"name": name, "address": addr, "apy_24h": pct(v.get("a1")), "apy_7d": pct(v.get("a7")), "apy_now": pct(v.get("netApy"))})
+        out.append({"name": name, "address": addr, "apy_24h": pct(v.get("a1")), "apy_7d": pct(v.get("a7")), "apy_30d": pct(v.get("a30")), "apy_now": pct(v.get("netApy"))})
     return out
 
 
@@ -300,7 +306,7 @@ def read_borrow_rebate():
             raise RuntimeError("merkl rebate campaign without TVL or daily rewards")
         paid = daily * 365 / tvl
         total += min(paid, cap) if cap > 0 else paid
-        found.append({"cap_pct": cap * 100, "paid_pct": paid * 100, "ends": c.get("endTimestamp")})
+        found.append({"cap_pct": cap * 100, "paid_pct": paid * 100, "ends": c.get("endTimestamp"), "opportunity": str(c["opportunityId"])})
     return {"rebate_pct": total * 100, "campaigns": found}
 
 
@@ -323,3 +329,44 @@ def read_rewards(btc_px):
     out = [{"group": k, "claimable_usd": v["claimable"], "pending_usd": v["pending"]} for k, v in groups.items() if v["claimable"] or v["pending"]]
     usd = sum(g["claimable_usd"] + g["pending_usd"] for g in out)
     return {"groups": out, "total_usd": usd, "total_wbtc": usd / btc_px if btc_px else None, "claimable_usd": sum(g["claimable_usd"] for g in out), "pending_usd": sum(g["pending_usd"] for g in out)}
+
+
+def read_loop_inputs(draws_usdg):
+    """Inputs for the planned loop sleeve: syrupUSDG's yield (Maple API, percent) and the USDG borrow
+    rate on the Maple spoke's Global Dollar line, now and after each draw in `draws_usdg` (whole USDG),
+    priced by the hub's own rate strategy with supply held constant."""
+    q = '{ poolV2(id: "%s") { weeklyApy monthlyApy } }' % SYRUP_USDG
+    data = _post(MAPLE_API, {"query": q})
+    pool = ((data or {}).get("data") or {}).get("poolV2") or {}
+    if pool.get("weeklyApy") is None:
+        raise RuntimeError("maple: no syrupUSDG yield")
+    syrup_7d = int(pool["weeklyApy"]) / 1e28
+    syrup_30d = int(pool["monthlyApy"]) / 1e28 if pool.get("monthlyApy") is not None else None
+    res = eth_calls([(GLOBAL_DOLLAR, _data("getAsset(uint256)", GD_USDG_ASSET)), (GLOBAL_DOLLAR, _data("getAssetOwed(uint256)", GD_USDG_ASSET))])
+    a = _asset(_words(res[0]))
+    drawn = _words(res[1])[0]
+    after = {}
+    calls = []
+    for d in draws_usdg:
+        raw = int(d) * 10**6
+        if raw > a["liquidity"]:
+            continue
+        calls.append((d, (a["ir_strategy"], _data("calculateInterestRate(uint256,uint256,uint256,uint256,uint256)", GD_USDG_ASSET, a["liquidity"] - raw, drawn + raw, a["deficit"], a["swept"]))))
+    if calls:
+        out = eth_calls([c for _, c in calls])
+        for (d, _), r in zip(calls, out):
+            after[d] = apr_to_apy_pct(_words(r)[0] / 1e27)
+    return {"syrup_7d": syrup_7d, "syrup_30d": syrup_30d, "borrow_now": apr_to_apy_pct(a["drawn_rate_ray"] / 1e27), "liquidity": a["liquidity"] / 1e6, "borrow_after": after}
+
+
+def read_rebate_history(opportunities, days=31):
+    """Daily average rebate (percent) per UTC day for the Core-hub USDC borrow opportunities, summed
+    across them. A day with no record paid no rebate on this hub (it moved here on 1 Oct 2026)."""
+    since = int(time.time()) - days * 86400
+    per_day = {}
+    for opp in dict.fromkeys(opportunities):
+        rows = _get(f"{MERKL}/opportunities/{opp}/apr-records?from={since}&items=200")
+        for r in rows if isinstance(rows, list) else []:
+            day = int(r["timestamp"])
+            per_day[day] = per_day.get(day, 0.0) + float(r.get("avg") or r.get("apr") or 0)
+    return sorted(per_day.items())

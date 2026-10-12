@@ -1,11 +1,20 @@
 {
   "_readme": "Editable copy for the public page. Change wording here, not in build_dashboard.py. No dates and no client names in the scaling block. status is one of: live, in progress, planned.",
   "app_url": "https://app.kpk.io/vaults/btc-alpha-fund",
-  "performance_fee": 0.10,
+  "performance_fee": 0.1,
   "deposit_assets": [
-    {"asset": "WBTC", "status": "live"},
-    {"asset": "cbBTC", "status": "coming"},
-    {"asset": "cirBTC", "status": "coming"}
+    {
+      "asset": "WBTC",
+      "status": "live"
+    },
+    {
+      "asset": "cbBTC",
+      "status": "coming"
+    },
+    {
+      "asset": "cirBTC",
+      "status": "coming"
+    }
   ],
   "band_fallback": {
     "repay_trigger": 1.15,
@@ -21,7 +30,13 @@
     "what": "a syrupUSDG loop at about 8x on the Aave V4 Maple spoke",
     "share": "about 25% of the borrowed stablecoins at first, rising towards 50% as Aave capacity allows",
     "limits": "Leverage capped at 8x. When borrow costs rise above the loop's yield, the loop is partly unwound. The loop sleeve is never relied on to deleverage the BTC leg.",
-    "spoke": "0x774b9655413c34809c1f1b16b654465A89EBE989"
+    "spoke": "0x774b9655413c34809c1f1b16b654465A89EBE989",
+    "leverage": 8,
+    "collateral_factor": 0.92,
+    "shares": [
+      0.25,
+      0.5
+    ]
   },
   "scaling": {
     "intro": "The strategy grows in stages, sized by fund size rather than by date. Each stage adds a borrowing source or a sleeve once the capacity behind it is there.",
@@ -49,6 +64,29 @@
         "adds": "Several venues in parallel: Aave V3 Core and Morpho (syrup loops) next to Aave V4",
         "needs": "Venue integrations in the execution layer",
         "status": "planned"
+      }
+    ]
+  },
+  "milestones": {
+    "_readme": "Shown on the share-price chart. Times are UTC. The deposit, seed borrow and re-lever come from the data; these are the events the data cannot name.",
+    "testing_phase": {
+      "from": "2026-09-22T03:56:00Z",
+      "to": "2026-10-09T16:29:00Z",
+      "label": "testing phase",
+      "note": "KPK test deposits of 0.0002 to 0.0035 WBTC while the agents were set up and tested on the Prime hub"
+    },
+    "events": [
+      {
+        "t": "2026-09-22T21:04:00Z",
+        "label": "test deposits and a test redemption"
+      },
+      {
+        "t": "2026-10-08T14:51:00Z",
+        "label": "test deposit minted at the last settled price"
+      },
+      {
+        "t": "2026-10-09T16:18:00Z",
+        "label": "test debt repaid, debt moved to the Core hub"
       }
     ]
   }
