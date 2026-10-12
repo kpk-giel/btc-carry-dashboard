@@ -1461,9 +1461,8 @@ page = f"""<!doctype html>
 
 <section class="hero" id="overview">
   <h1>BTC Carry Fund <span class="pill">live since {esc(utc(window_t0).strftime('%-d %b %Y'))}</span></h1>
-  <p>BTC goes in as collateral on Aave V4. The fund borrows USDC against it and deploys that USDC in KPK's USDC vaults.
-  Depositors stay fully long BTC and earn the spread on top. The unit is BTC: the share price is in WBTC.
-  The fund currently holds KPK's own capital, and no performance fee is charged on it.</p>
+  <p>The KPK BTC Carry Fund earns a carry on BTC through collateralised lending on blue-chip DeFi protocols. Wrapped BTC is supplied as collateral on Aave V4, USDC is borrowed against it at a managed loan-to-value, and the proceeds are deployed into KPK-curated USDC vaults on Morpho. Holders stay fully exposed to BTC and earn the spread between stablecoin lending yields and borrow costs, with returns accruing in BTC.</p>
+  <p>Deposits are in WBTC today; cbBTC and cirBTC deposits will be enabled next. The fund is live and currently funded by KPK, with no performance fee charged on that capital.</p>
   <div class="row">
     <a class="cta" href="{esc(app_url)}" target="_blank" rel="noopener">View the fund in the KPK app ↗</a>
     <a class="cta ghost" href="{esc(CONFIG['docs']['fund'])}" target="_blank" rel="noopener">Read the fund docs ↗</a>
