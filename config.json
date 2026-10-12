@@ -89,5 +89,47 @@
         "label": "test debt repaid, debt moved to the Core hub"
       }
     ]
+  },
+  "scope": {
+    "_readme": "Cards under the intro, so a reader can scope the fund. status: live or planned. A card with live_if 'maple' switches to live once the fund holds a position on the Aave V4 Maple spoke.",
+    "cards": [
+      {
+        "label": "Chain",
+        "value": "Ethereum mainnet only",
+        "detail": "All positions and contracts are on Ethereum; nothing runs on other chains.",
+        "status": "live"
+      },
+      {
+        "label": "Collateral and borrow",
+        "value": "Aave V4",
+        "detail": "WBTC as collateral on the Bluechip spoke; USDC borrowed from the Core hub.",
+        "status": "live"
+      },
+      {
+        "label": "Liquid sleeve",
+        "value": "Morpho",
+        "detail": "KPK USDC Yield and KPK USDC Yield RWA, both curated by KPK.",
+        "status": "live"
+      },
+      {
+        "label": "Rewards",
+        "value": "Merkl",
+        "detail": "Pays the Aave borrow rebate and the vault rewards.",
+        "status": "live"
+      },
+      {
+        "label": "Fund contracts",
+        "value": "KPK onchain fund",
+        "detail": "Shares token, onchain NAV calculator, and a Safe that acts only through Zodiac Roles permissions.",
+        "status": "live"
+      },
+      {
+        "label": "Loop sleeve",
+        "value": "Maple",
+        "detail": "syrupUSDG, looped on the Aave V4 Maple spoke.",
+        "status": "planned",
+        "live_if": "maple"
+      }
+    ]
   }
 }

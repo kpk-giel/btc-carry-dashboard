@@ -828,6 +828,16 @@ else:
     realised_html = (f'<div class="stat-sub">Realised carry is shown once {REALISED_DAYS:.0f} days have passed since the re-lever on {esc(utc(first_relever["t"]).strftime("%-d %b")) if first_relever else "its first day"}: '
                      'twice, from NAV and including unclaimed rewards, with the USD carry P&amp;L beside it.</div>')
 
+def scope_cards():
+    out = []
+    for card in CONFIG["scope"]["cards"]:
+        live = card["status"] == "live" or (card.get("live_if") == "maple" and chain["maple_active"])
+        tag = "" if live else '<span class="pill">planned</span>'
+        out.append(f'<div class="scope-card{"" if live else " planned"}"><div class="stat-label">{esc(card["label"])} {tag}</div>'
+                   f'<div class="scope-value">{esc(card["value"])}</div><div class="stat-sub">{esc(card["detail"])}</div></div>')
+    return "".join(out)
+
+
 deposit_chips = "".join(f'<span class="chip {"live" if a["status"] == "live" else "soon"}">{esc(a["asset"])}{" · coming" if a["status"] != "live" else ""}</span>' for a in CONFIG["deposit_assets"])
 
 legs_vaults = "".join(
@@ -902,6 +912,12 @@ h2 { font-size: var(--kpk-text-fs-section); font-weight: 500; margin: 0; letter-
 .leg-amount { font-size: 22px; font-weight: 500; margin-top: 6px; font-variant-numeric: tabular-nums; }
 .leg-sub { font-size: var(--kpk-text-fs-meta); color: var(--kpk-ink-muted); }
 .loop { border-style: dashed; }
+.scope { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: var(--kpk-space-6); }
+@media (max-width: 760px) { .scope { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.scope-card { background: var(--kpk-surface-card); border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-card); padding: 12px 14px; min-width: 0; }
+.scope-card.planned { border-style: dashed; background: transparent; }
+.scope-card.planned .scope-value, .scope-card.planned .stat-sub { color: var(--kpk-ink-faint); }
+.scope-value { font-size: 17px; font-weight: 500; margin: 4px 0 2px; }
 .counters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
 @media (max-width: 900px) { .counters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .counter { background: var(--kpk-surface-card); border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-card); padding: 14px 16px; min-width: 0; }
@@ -1199,6 +1215,7 @@ page = f"""<!doctype html>
     <a class="cta" href="{esc(app_url)}" target="_blank" rel="noopener">View the fund in the KPK app ↗</a>
     <span class="asof-note">Deposit assets:</span> {deposit_chips}
   </div>
+  <div class="scope" aria-label="Scope">{scope_cards()}</div>
 </section>
 {stale_note}
 <section id="numbers">
