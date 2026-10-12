@@ -1,0 +1,161 @@
+/* KPK design tokens, copied verbatim from the design system's generated tokens.css (via the OIV harness). Do not hand-edit. */
+:root {
+  /* Colour — Brand theme (default: Ecru ground, Anthracite ink) */
+  --kpk-surface: #e8e7e5;
+  --kpk-sheet: #fafafa;
+  --kpk-surface-slide: #e8e7e5;
+  --kpk-surface-card: #f3f3f3;
+  --kpk-surface-raised: #F4F3F0;
+  --kpk-ivory: #deddd8;
+  --kpk-pill: #d7d3cd;
+  --kpk-line: #d8d5cf;
+  --kpk-line-strong: #1f1f1f;
+  --kpk-ink: #1f1f1f;
+  --kpk-ink-muted: #575757;
+  --kpk-ink-faint: #8a867e;
+  --kpk-anthracite: #1f1f1f;
+  --kpk-white: #ffffff;
+  --kpk-label-bg: var(--kpk-ink);
+  --kpk-label-ink: var(--kpk-surface);
+  --kpk-chart-focus: #1f1f1f;
+  --kpk-blue-400: #abd2ed;
+  --kpk-blue-500: #b0bae4;
+  --kpk-blue-800: #194f76;
+  --kpk-purple-400: #b5bbe3;
+  --kpk-purple-500: #9099d5;
+  --kpk-purple-800: #2b3573;
+  --kpk-green-400: #a9e3cb;
+  --kpk-green-500: #82d5b2;
+  --kpk-green-800: #206045;
+  --kpk-rose-400: #f9c5ce;
+  --kpk-rose-500: #f6b0bc;
+  --kpk-rose-800: #77001f;
+  --kpk-orange-400: #f3d490;
+  --kpk-orange-500: #efc66f;
+  --kpk-orange-800: #8e6710;
+  --kpk-seafoam-400: #b1e3e7;
+  --kpk-seafoam-500: #89d4db;
+  --kpk-seafoam-800: #22676d;
+  --kpk-terracotta-400: #f0b8a8;
+  --kpk-terracotta-500: #e8937c;
+  --kpk-terracotta-800: #792b15;
+  --kpk-chart-axis: #1f1f1fcc;
+  --kpk-grey-1: #403e3b;
+  --kpk-grey-2: #5e5c57;
+  --kpk-grey-3: #7d7973;
+  --kpk-grey-4: #999791;
+  --kpk-grey-5: #b6b4af;
+
+  /* Type */
+  --kpk-font-sans: "Lexend", "Montserrat", system-ui, -apple-system, sans-serif;
+  --kpk-font-display: "Lexend Exa", "Lexend", "Montserrat", system-ui, sans-serif;
+  --kpk-font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --kpk-text-display-hero: 84px;
+  --kpk-text-display-slide-title: 74px;
+  --kpk-text-display-h1: 46px;
+  --kpk-text-fs-title: 70px;
+  --kpk-text-fs-section: 30px;
+  --kpk-text-fs-stat: 40px;
+  --kpk-text-fs-stat-label: 14px;
+  --kpk-text-fs-body: 18px;
+  --kpk-text-fs-row: 18px;
+  --kpk-text-fs-table: 17px;
+  --kpk-text-fs-meta: 12.5px;
+  --kpk-text-fs-tag: 11px;
+  --kpk-text-fs-footer: 12px;
+  --kpk-text-slide-eyebrow: 19px;
+  --kpk-text-slide-title: 38px;
+  --kpk-text-slide-body: 24px;
+  --kpk-text-slide-card-title: 25px;
+  --kpk-text-slide-card-body: 18px;
+  --kpk-text-slide-stat: 64px;
+  --kpk-text-slide-table: 20px;
+  --kpk-text-slide-subtitle: 26px;
+  --kpk-text-slide-footer: 12px;
+  --kpk-text-chart-label: 16px;
+  --kpk-text-chart-series: 17px;
+  --kpk-text-h2: 30px;
+  --kpk-text-body: 17px;
+  --kpk-text-body-small: 14px;
+  --kpk-text-label: 11px;
+  --kpk-text-data-mono: 13px;
+  --kpk-text-print-title: 150px;
+  --kpk-text-print-sub: 58px;
+  --kpk-text-print-foot: 40px;
+
+  /* Spacing */
+  --kpk-space-1: 4px;
+  --kpk-space-2: 8px;
+  --kpk-space-3: 12px;
+  --kpk-space-4: 16px;
+  --kpk-space-6: 24px;
+  --kpk-space-8: 32px;
+  --kpk-space-12: 48px;
+  --kpk-space-16: 64px;
+  --kpk-slide-margin-top: 74px;
+  --kpk-slide-margin-side: 84px;
+  --kpk-slide-margin-bottom: 128px;
+  --kpk-logo-clear: 0.25em;
+  --kpk-chart-width: 900px;
+  --kpk-chart-height: 560px;
+  --kpk-fs-width: 1421px;
+  --kpk-fs-height: 2010px;
+  --kpk-fs-margin-side: 62px;
+  --kpk-fs-margin-y: 50px;
+  --kpk-fs-gap: 28px;
+  --kpk-fs-gutter: 40px;
+  --kpk-rollup-width: 890px;
+  --kpk-rollup-height: 2040px;
+  --kpk-rollup-bleed: 20px;
+  --kpk-rollup-pad: 34px;
+  --kpk-rollup-gap: 44px;
+  --kpk-rollup-logo: 120px;
+
+  /* Radius */
+  --kpk-radius-tag: 5px;
+  --kpk-radius-label: 8px;
+  --kpk-radius-card: 12px;
+  --kpk-radius-image: 18px;
+  --kpk-radius-pill: 999px;
+  --kpk-radius-print: 26px;
+
+  /* Stroke — KPK is built from rules: no shadows, no outlines, no elevation scale */
+  --kpk-rule-hard: 1px;
+  --kpk-rule-soft: 1px;
+  --kpk-chart-line-fs: 1.25px;
+  --kpk-chart-line-slide: 3px;
+  --kpk-donut-stroke: 64px;
+  --kpk-logo-slide: 34px;
+  --kpk-logo-slide-lg: 64px;
+  --kpk-logo-fs: 35px;
+
+  /* Print and embroidery widths, in real millimetres */
+  --kpk-mark-cap: 60;
+  --kpk-mark-tshirt-chest: 80;
+  --kpk-mark-tshirt-front: 210;
+  --kpk-mark-socks: 38;
+}
+
+/* Dark theme — inverts the ground only. Chosen, never assumed. */
+:root[data-theme="dark"],
+.dark {
+  --kpk-surface: #1f1f1f;
+  --kpk-sheet: #1a1916;
+  --kpk-surface-slide: #1a1916;
+  --kpk-surface-card: #26241f;
+  --kpk-surface-raised: #262626;
+  --kpk-ivory: #2c2c2c;
+  --kpk-pill: #33302a;
+  --kpk-line: #3a372f;
+  --kpk-line-strong: #e8e7e5;
+  --kpk-ink: #e8e7e5;
+  --kpk-ink-muted: #b9b7b2;
+  --kpk-ink-faint: #7e7c77;
+  --kpk-chart-focus: #e8e7e5;
+  --kpk-chart-axis: #e8e7e5cc;
+  --kpk-grey-1: #dad9d7;
+  --kpk-grey-2: #c0bebb;
+  --kpk-grey-3: #a6a39e;
+  --kpk-grey-4: #8b8882;
+  --kpk-grey-5: #6f6d67;
+}

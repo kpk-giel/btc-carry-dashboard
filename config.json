@@ -1,0 +1,55 @@
+{
+  "_readme": "Editable copy for the public page. Change wording here, not in build_dashboard.py. No dates and no client names in the scaling block. status is one of: live, in progress, planned.",
+  "app_url": "https://app.kpk.io/vaults/btc-alpha-fund",
+  "performance_fee": 0.10,
+  "deposit_assets": [
+    {"asset": "WBTC", "status": "live"},
+    {"asset": "cbBTC", "status": "coming"},
+    {"asset": "cirBTC", "status": "coming"}
+  ],
+  "band_fallback": {
+    "repay_trigger": 1.15,
+    "repay_target": 1.21,
+    "borrow_trigger": 1.25,
+    "borrow_target": 1.21,
+    "relever": true,
+    "as_of": "10 Oct 2026"
+  },
+  "minimum_hf": 1.12,
+  "liquid_floor_pct": 25,
+  "loop_sleeve": {
+    "what": "a syrupUSDG loop at about 8x on the Aave V4 Maple spoke",
+    "share": "about 25% of the borrowed stablecoins at first, rising towards 50% as Aave capacity allows",
+    "limits": "Leverage capped at 8x. When borrow costs rise above the loop's yield, the loop is partly unwound. The loop sleeve is never relied on to deleverage the BTC leg.",
+    "spoke": "0x774b9655413c34809c1f1b16b654465A89EBE989"
+  },
+  "scaling": {
+    "intro": "The strategy grows in stages, sized by fund size rather than by date. Each stage adds a borrowing source or a sleeve once the capacity behind it is there.",
+    "stages": [
+      {
+        "stage": "Today, ~$0.4M",
+        "adds": "WBTC on Aave V4, USDC borrowed on the Core hub with Merkl's rebate, liquid sleeve in two KPK USDC vaults",
+        "needs": "Nothing further: running now",
+        "status": "live"
+      },
+      {
+        "stage": "~$5M",
+        "adds": "Borrow USDG on the Core hub and swap it to USDC, a deeper and cheaper source than USDC; cbBTC as a second deposit asset; borrow sizing that reads rates and hub depth before drawing; a first loop sleeve (syrupUSDG at ~8x on the Aave V4 Maple spoke, ~25% of borrowed stables)",
+        "needs": "Permissions through governance and a 3-day timelock; Maple lender onboarding; NAV coverage and monitoring for the loop",
+        "status": "in progress"
+      },
+      {
+        "stage": "~$50M",
+        "adds": "Larger Aave lines (USDC depth on the Core hub, the Bluechip USDG cap, Maple spoke lines); loop share rising towards 50%; cirBTC as a deposit asset once Aave lists it",
+        "needs": "Aave capacity; a cirBTC price feed for NAV",
+        "status": "planned"
+      },
+      {
+        "stage": "~$150M",
+        "adds": "Several venues in parallel: Aave V3 Core and Morpho (syrup loops) next to Aave V4",
+        "needs": "Venue integrations in the execution layer",
+        "status": "planned"
+      }
+    ]
+  }
+}

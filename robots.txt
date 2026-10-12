@@ -1,0 +1,3 @@
+# Reachable by link, but deliberately not indexed.
+User-agent: *
+Disallow: /

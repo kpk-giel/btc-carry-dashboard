@@ -1,0 +1,1227 @@
+#!/usr/bin/env python3
+"""Builds the public BTC Carry Fund board. Stdlib only, no keys.
+
+    python3 build_dashboard.py [index.html]
+
+Three inputs, and the page never depends on the third:
+  1. live reads at the latest block (live_reads.py), shown on every build;
+  2. live_samples.jsonl, one reading appended per build, which carries the charts
+     past the last sync;
+  3. public_snapshot.json, the agent activity and history synced from KPK's tooling.
+     Without it the page still builds and the history-based parts say so.
+"""
+import html
+import json
+import math
+import os
+import re
+import sys
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import live_reads as L  # noqa: E402
+
+OUT = Path(sys.argv[1]) if len(sys.argv) > 1 else HERE / "index.html"
+CONFIG = json.loads((HERE / "config.json").read_text())
+SNAPSHOT_PATH = HERE / "public_snapshot.json"
+SAMPLES_PATH = HERE / "live_samples.jsonl"
+ASSETS = HERE / "assets"
+
+PERF_FEE = float(CONFIG["performance_fee"])
+MIN_HF = float(CONFIG["minimum_hf"])
+# Realised carry needs this many days since the re-lever; overridable only to exercise the code path.
+REALISED_DAYS = float(os.environ.get("BOARD_REALISED_DAYS", "7"))
+DAY = 86_400
+ETHERSCAN = "https://etherscan.io"
+
+# --- Formatting ---------------------------------------------------------------------
+
+
+def esc(x):
+    return html.escape(str(x), quote=True)
+
+
+def utc(ts):
+    return datetime.fromtimestamp(ts, timezone.utc)
+
+
+def stamp(ts):
+    return utc(ts).strftime("%-d %b %H:%M UTC")
+
+
+def short(ts):
+    return utc(ts).strftime("%-d %b %H:%M")
+
+
+def n(x, dp=2):
+    return "n/a" if x is None else f"{x:,.{dp}f}"
+
+
+def pct(x, dp=2, sign=False):
+    if x is None:
+        return "n/a"
+    return f"{x:+.{dp}f}%" if sign else f"{x:.{dp}f}%"
+
+
+def usd(x, dp=0):
+    return "n/a" if x is None else f"${x:,.{dp}f}"
+
+
+def musd(x):
+    if x is None:
+        return "n/a"
+    return f"${x / 1e6:,.2f}M" if abs(x) >= 1e6 else f"${x / 1e3:,.0f}k"
+
+
+def hf_txt(x):
+    return "no debt" if x is None else f"{x:.4f}"
+
+
+def dur(seconds):
+    s = int(round(seconds))
+    if s < 90:
+        return f"{s} s"
+    m = s // 60
+    if m < 90:
+        return f"{m} min"
+    h, m = divmod(m, 60)
+    if h < 48:
+        return f"{h} h {m} min"
+    d, h = divmod(h, 24)
+    return f"{d} days {h} h"
+
+
+def short_hash(h):
+    return f"{h[:8]}…{h[-4:]}"
+
+
+def safe(fn):
+    try:
+        return fn(), None
+    except Exception as exc:  # a soft source failing must not stop the page
+        return None, str(exc)[:200]
+
+
+# --- Data ---------------------------------------------------------------------------
+
+now = int(time.time())
+chain = L.read_chain()  # the one hard requirement: without the position there is no page
+apys, apys_err = safe(L.read_vault_apys)
+rebate, rebate_err = safe(L.read_borrow_rebate)
+rewards, rewards_err = safe(lambda: L.read_rewards(chain["btc_px"]))
+
+snap = None
+if SNAPSHOT_PATH.exists():
+    try:
+        snap = json.loads(SNAPSHOT_PATH.read_text())
+    except ValueError:
+        snap = None
+synced_at = int(datetime.strptime(snap["synced_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp()) if snap else None
+synced_block = snap["synced_block"] if snap else 0
+
+live_samples = []
+if SAMPLES_PATH.exists():
+    for line in SAMPLES_PATH.read_text().splitlines():
+        line = line.strip()
+        if line:
+            try:
+                live_samples.append(json.loads(line))
+            except ValueError:
+                pass
+
+# A NAV read with a stale price is not a NAV. Show the last good one, and say so.
+nav_note = ""
+if not chain["nav_healthy"]:
+    good = [s for s in live_samples + list((snap or {}).get("samples", [])) if s.get("nav")]
+    last_good = max(good, key=lambda s: s["t"], default=None)
+    if last_good:
+        nav_note = f"The NAV calculator flagged a stale price at this block; NAV shows the last good reading, {stamp(last_good['t'])}."
+        chain["nav_wbtc"] = last_good["nav"]
+        chain["nav_usd"] = last_good["nav"] * chain["btc_px"]
+        chain["share_price_wbtc"] = last_good["nav"] / last_good["sup"]
+    else:
+        nav_note = "The NAV calculator flagged a stale price at this block, so NAV is approximate until the next build."
+
+# Band: the last synced values, and every change to them in the window.
+band_hist = (snap or {}).get("band", {}).get("history") or []
+if band_hist:
+    band = band_hist[-1]
+    band_asof = f"synced {stamp(synced_at)}"
+else:
+    band = CONFIG["band_fallback"]
+    band_asof = f"as set on {band['as_of']}"
+
+
+def band_at(t):
+    if not band_hist:
+        return band
+    current = band_hist[0]
+    for b in band_hist:
+        if b["t"] <= t:
+            current = b
+    return current
+
+
+# Liquid sleeve: blend the 24h APYs by the live allocation, over the vaults that report one.
+alloc = {v["address"].lower(): v["usdc"] for v in chain["vaults"]}
+sleeve_usdc = sum(alloc.values())
+vault_rows = []
+for v in chain["vaults"]:
+    a = next((x for x in (apys or []) if x["address"].lower() == v["address"].lower()), None)
+    vault_rows.append({**v, "apy": a["apy_24h"] if a else None, "apy_7d": a["apy_7d"] if a else None, "weight": v["usdc"] / sleeve_usdc if sleeve_usdc else 0})
+reporting = [v for v in vault_rows if v["apy"] is not None and v["usdc"] > 0]
+deploy_apy = sum(v["apy"] * v["usdc"] for v in reporting) / sum(v["usdc"] for v in reporting) if reporting else None
+
+core = chain["core_usdc"]
+rp = chain["risk_premium_bps"] / 10_000
+borrow_gross = core["borrow_apy"] * (1 + rp)
+rebate_pct = rebate["rebate_pct"] if rebate else 0.0
+borrow_net = borrow_gross - rebate_pct
+ltv = chain["ltv"] or 0.0
+spread = None if deploy_apy is None else deploy_apy - borrow_net
+carry = None if spread is None else ltv * spread * (1 - PERF_FEE)
+hf_now = chain["hf"]
+cf = chain["cf"]
+px = chain["btc_px"]
+
+# Readings for the charts: synced history, then the live tail, then this build's own read.
+this_sample = {
+    "t": chain["read_at"], "b": chain["block"], "hf": round(hf_now, 5) if hf_now else None,
+    "px": round(px, 2) if px else None, "liq": round(chain["liq_px"], 2) if chain["liq_px"] else None,
+    "coll": round(chain["collateral_wbtc"], 8), "debt": round(chain["debt_usdc"], 2), "cf": round(cf, 4),
+    "nav": round(chain["nav_wbtc"], 8) if chain["nav_healthy"] else None, "sup": round(chain["supply"], 8),
+    "rew_usd": round(rewards["total_usd"], 2) if rewards else None,
+    "rew_wbtc": round(rewards["total_wbtc"], 8) if rewards and rewards["total_wbtc"] else None,
+}
+points = list((snap or {}).get("samples", []))
+points += [s for s in live_samples if s.get("b", 0) > synced_block]
+if not points or this_sample["b"] > max(p["b"] for p in points):
+    points.append(this_sample)
+points.sort(key=lambda p: (p["t"], 0 if p.get("tag") == "before" else 1))
+
+transactions = sorted((snap or {}).get("transactions", []), key=lambda r: (r["block"], r["hash"]))
+window_t0 = (snap or {}).get("window_start", {}).get("t") or (points[0]["t"] if points else now)
+runs = (snap or {}).get("runs") or {}
+
+subs = [t for t in transactions if t["kind"] in ("subscription", "collateral")]
+relevers = [t for t in transactions if t["kind"] == "relever"]
+seed = next((t for t in transactions if t["kind"] == "seed_borrow"), None)
+first_relever = relevers[0] if relevers else None
+relever_switch = next((b for i, b in enumerate(band_hist) if i > 0 and b["relever"] and not band_hist[i - 1]["relever"]), None)
+
+# Has the position moved since the snapshot? Debt accrues interest, so allow for that.
+position_changed = False
+if snap and snap.get("position_at_sync"):
+    ps = snap["position_at_sync"]
+    accrued = ps["debt_usdc"] * (1 + borrow_gross / 100 * max(0, now - ps["t"]) / (365 * DAY))
+    if abs(chain["collateral_wbtc"] - ps["collateral_wbtc"]) > 1e-8 or abs(chain["debt_usdc"] - accrued) > max(50.0, 0.002 * accrued):
+        position_changed = True
+
+# --- Derived figures ---------------------------------------------------------------------
+
+after_relever = [p for p in points if first_relever and p["t"] >= first_relever["t"] and p.get("hf")]
+closest = None
+for p in after_relever:
+    b = band_at(p["t"])
+    headroom = (1 - b["repay_trigger"] / p["hf"]) * 100
+    if closest is None or headroom < closest["headroom"]:
+        closest = {"headroom": headroom, "t": p["t"], "hf": p["hf"], "trigger": b["repay_trigger"]}
+liq_buffer = (1 - 1 / hf_now) * 100 if hf_now else None
+
+
+def share_price(p):
+    return p["nav"] / p["sup"] if p.get("nav") and p.get("sup") else None
+
+
+def avg_over(t_lo, t_hi, fn):
+    vals = [fn(p) for p in points if t_lo <= p["t"] <= t_hi and fn(p) is not None]
+    return sum(vals) / len(vals) if vals else None
+
+
+def rewards_wbtc_at(t):
+    """Unclaimed rewards in WBTC at a moment: the nearest build that read them, else zero before the first borrow."""
+    have = [s for s in live_samples if s.get("rew_wbtc") is not None]
+    near = min(have, key=lambda s: abs(s["t"] - t), default=None)
+    if near and abs(near["t"] - t) <= 6 * 3600:
+        return near["rew_wbtc"]
+    start = seed["t"] if seed else window_t0
+    if t <= start:
+        return 0.0
+    if have:  # rewards accrue roughly linearly between claims
+        first = min(have, key=lambda s: s["t"])
+        if t < first["t"]:
+            return first["rew_wbtc"] * (t - start) / max(1, first["t"] - start)
+    return None
+
+
+realised = None
+realised_from = (first_relever["t"] + REALISED_DAYS * DAY) if first_relever else None
+if first_relever and now >= realised_from:
+    end, start = now, now - REALISED_DAYS * DAY
+    sp_end = avg_over(end - DAY, end, share_price)
+    sp_start = avg_over(start, start + DAY, share_price)
+    years = REALISED_DAYS / 365
+    if sp_end and sp_start:
+        r_nav = ((sp_end / sp_start) ** (1 / years) - 1) * 100
+        rw_end, rw_start = rewards_wbtc_at(end), rewards_wbtc_at(start)
+        r_all = None
+        if rw_end is not None and rw_start is not None:
+            sup = chain["supply"]
+            r_all = (((sp_end + rw_end / sup) / (sp_start + rw_start / sup)) ** (1 / years) - 1) * 100
+
+        def stable_usd(p):  # the USDC leg's equity, in dollars: everything that is not the BTC
+            return (p["nav"] - p["coll"] - chain["idle_wbtc"]) * p["px"] if p.get("nav") and p.get("px") else None
+
+        e_end = avg_over(end - DAY, end, stable_usd)
+        e_start = avg_over(start, start + DAY, stable_usd)
+        realised = {"nav": r_nav, "all": r_all, "usd_pnl": (e_end - e_start) if e_end is not None and e_start is not None else None}
+
+# --- SVG charts ------------------------------------------------------------------------------
+
+W, H = 1000, 380
+PAD_L, PAD_R, PAD_T, PAD_B = 64, 92, 22, 34
+
+
+class Frame:
+    def __init__(self, t0, t1, y0, y1, log=False, h=H):
+        self.t0, self.t1 = t0, max(t1, t0 + 1)
+        self.y0, self.y1, self.log, self.h = y0, y1, log, h
+        self.pw, self.ph = W - PAD_L - PAD_R, h - PAD_T - PAD_B
+
+    def x(self, t):
+        return PAD_L + (t - self.t0) / (self.t1 - self.t0) * self.pw
+
+    def y(self, v):
+        if self.log:
+            f = (math.log(v) - math.log(self.y0)) / (math.log(self.y1) - math.log(self.y0))
+        else:
+            f = (v - self.y0) / (self.y1 - self.y0)
+        return PAD_T + (1 - min(1.05, max(-0.05, f))) * self.ph
+
+
+def time_ticks(f):
+    out = []
+    start = int(f.t0 // DAY + 1) * DAY
+    span_days = (f.t1 - f.t0) / DAY
+    step = DAY * max(1, int(span_days // 8) + (1 if span_days > 8 else 0))
+    for t in range(start, int(f.t1), int(step)):
+        x = f.x(t)
+        out.append(f'<line class="grid" x1="{x:.1f}" y1="{PAD_T}" x2="{x:.1f}" y2="{PAD_T + f.ph}"/>'
+                   f'<text class="tick" x="{x:.1f}" y="{f.h - 12}" text-anchor="middle">{utc(t).strftime("%-d %b")}</text>')
+    return "".join(out)
+
+
+def y_ticks(f, values, fmt):
+    out = []
+    for v in values:
+        y = f.y(v)
+        out.append(f'<line class="grid" x1="{PAD_L}" y1="{y:.1f}" x2="{PAD_L + f.pw}" y2="{y:.1f}"/>'
+                   f'<text class="tick" x="{PAD_L - 8}" y="{y + 4:.1f}" text-anchor="end">{esc(fmt(v))}</text>')
+    return "".join(out)
+
+
+def path(f, pts, key):
+    segs, cur = [], []
+    for p in pts:
+        v = p.get(key) if isinstance(p, dict) else p[1]
+        t = p["t"] if isinstance(p, dict) else p[0]
+        if v is None:
+            if cur:
+                segs.append(cur)
+            cur = []
+            continue
+        cur.append(f"{f.x(t):.1f},{f.y(v):.1f}")
+    if cur:
+        segs.append(cur)
+    return " ".join("M" + " L".join(s) for s in segs if s)
+
+
+def marker(kind, x, y, title):
+    """Shape carries the action as well as colour: up = borrow, down = repay, ring = deposit, diamond = manual."""
+    t = f"<title>{esc(title)}</title>"
+    if kind in ("relever",):
+        return f'<g class="mk relever"><path d="M{x:.1f},{y - 7:.1f} L{x + 6.5:.1f},{y + 5:.1f} L{x - 6.5:.1f},{y + 5:.1f} Z"/>{t}</g>'
+    if kind in ("derisk",):
+        return f'<g class="mk derisk"><path d="M{x:.1f},{y + 7:.1f} L{x + 6.5:.1f},{y - 5:.1f} L{x - 6.5:.1f},{y - 5:.1f} Z"/>{t}</g>'
+    if kind in ("seed_borrow",):
+        return f'<g class="mk manual"><path d="M{x:.1f},{y - 7:.1f} L{x + 7:.1f},{y:.1f} L{x:.1f},{y + 7:.1f} L{x - 7:.1f},{y:.1f} Z"/>{t}</g>'
+    return f'<g class="mk deposit"><circle cx="{x:.1f}" cy="{y:.1f}" r="5.5"/>{t}</g>'
+
+
+def hover_attr(rows):
+    return esc(json.dumps(rows, separators=(",", ":")))
+
+
+def chart_svg(cid, f, body, hover, label):
+    return (f'<div class="chart" id="{cid}"><svg viewBox="0 0 {W} {f.h}" role="img" aria-label="{esc(label)}" data-hover="{hover_attr(hover)}">'
+            f'{body}<line class="xhair" x1="0" y1="{PAD_T}" x2="0" y2="{PAD_T + f.ph}" visibility="hidden"/>'
+            f'<rect class="hit" x="{PAD_L}" y="{PAD_T}" width="{f.pw}" height="{f.ph}"/></svg>'
+            f'<div class="tip" role="status"></div></div>')
+
+
+def tx_title(t):
+    return f"{stamp(t['t'])} · {t['actor']} · {t['action']} HF {hf_txt(t['hf_before'])} → {hf_txt(t['hf_after'])}"
+
+
+def hf_chart():
+    pts = [p for p in points if p["t"] >= window_t0 and p.get("hf")]
+    if len(pts) < 2:
+        return '<p class="empty">The health-factor history appears once the position has a few readings.</p>'
+    t0, t1 = window_t0, max(now, pts[-1]["t"])
+    top = max(max(p["hf"] for p in pts) * 1.08, band["borrow_trigger"] * 1.1)
+    f = Frame(t0, t1, 0.97, top, log=True)
+    body = []
+    # The band in force at each moment, drawn from the first reading with debt.
+    edges = [b for b in band_hist if b["t"] > pts[0]["t"]]
+    starts = [pts[0]["t"]] + [b["t"] for b in edges]
+    ends = starts[1:] + [t1]
+    for s, e in zip(starts, ends):
+        b = band_at(s)
+        x0, x1 = f.x(s), f.x(e)
+        yt, yb = f.y(b["borrow_trigger"]), f.y(b["repay_trigger"])
+        body.append(f'<rect class="band" x="{x0:.1f}" y="{yt:.1f}" width="{x1 - x0:.1f}" height="{yb - yt:.1f}"/>'
+                    f'<line class="band-edge" x1="{x0:.1f}" y1="{yt:.1f}" x2="{x1:.1f}" y2="{yt:.1f}"/>'
+                    f'<line class="band-edge" x1="{x0:.1f}" y1="{yb:.1f}" x2="{x1:.1f}" y2="{yb:.1f}"/>'
+                    f'<line class="band-target" x1="{x0:.1f}" y1="{f.y(b["borrow_target"]):.1f}" x2="{x1:.1f}" y2="{f.y(b["borrow_target"]):.1f}"/>')
+    ticks = [1.0, 1.1, 1.2, 1.3, 1.5, 2.0, 2.5, 3.0]
+    body.append(y_ticks(f, [v for v in ticks if v <= top], lambda v: f"{v:.1f}"))
+    body.append(time_ticks(f))
+    yl = f.y(1.0)
+    body.append(f'<line class="liq" x1="{PAD_L}" y1="{yl:.1f}" x2="{PAD_L + f.pw}" y2="{yl:.1f}"/>'
+                f'<text class="lab liq-lab" x="{PAD_L + f.pw + 6}" y="{yl + 4:.1f}">liq. 1.00</text>')
+    b = band
+    body.append(f'<text class="lab band-lab" x="{PAD_L + f.pw + 6}" y="{f.y(b["borrow_trigger"]) + 4:.1f}">borrow {b["borrow_trigger"]:.2f}</text>'
+                f'<text class="lab band-lab" x="{PAD_L + f.pw + 6}" y="{f.y(b["repay_trigger"]) + 12:.1f}">repay {b["repay_trigger"]:.2f}</text>')
+    body.append(f'<path class="line" d="{path(f, pts, "hf")}"/>')
+    if synced_at and any(p["t"] > synced_at for p in pts):
+        xs = f.x(synced_at)
+        body.append(f'<line class="sync" x1="{xs:.1f}" y1="{PAD_T}" x2="{xs:.1f}" y2="{PAD_T + f.ph}"/><text class="lab" x="{xs + 4:.1f}" y="{PAD_T + 12}">last sync</text>')
+    for t in transactions:
+        if t["t"] < t0:
+            continue
+        if t.get("hf_after"):
+            body.append(marker(t["kind"], f.x(t["t"]), f.y(t["hf_after"]), tx_title(t)))
+        else:
+            x = f.x(t["t"])
+            body.append(f'<line class="event" x1="{x:.1f}" y1="{PAD_T}" x2="{x:.1f}" y2="{PAD_T + f.ph}"><title>{esc(tx_title(t))}</title></line>')
+    hover = []
+    for p in pts:
+        bb = band_at(p["t"])
+        hover.append({"x": round(f.x(p["t"]), 1), "l": [stamp(p["t"]), f"HF {p['hf']:.4f}", f"band {bb['repay_trigger']:.2f} to {bb['borrow_trigger']:.2f}, target {bb['borrow_target']:.2f}" + ("" if bb["relever"] else ", re-lever off"), f"debt {n(p['debt'], 0)} USDC"]})
+    return chart_svg("hfChart", f, "".join(body), hover, "Health factor over time with the band in force and a marker per transaction")
+
+
+def price_chart():
+    pts = [p for p in points if p["t"] >= window_t0 and p.get("px")]
+    if len(pts) < 2:
+        return '<p class="empty">The price history appears once the position has a few readings.</p>'
+    t0, t1 = window_t0, max(now, pts[-1]["t"])
+    with_liq = [p for p in pts if p.get("liq")]
+    lo = min([p["px"] for p in pts] + [p["liq"] for p in with_liq]) * 0.96
+    hi = max([p["px"] for p in pts] + [p["liq"] * band_at(p["t"])["borrow_trigger"] for p in with_liq]) * 1.02
+    f = Frame(t0, t1, lo, hi)
+    body = []
+    step = 10 ** math.floor(math.log10((hi - lo) / 4))
+    step = step * (5 if (hi - lo) / step > 20 else 2 if (hi - lo) / step > 8 else 1)
+    body.append(y_ticks(f, [v * step for v in range(math.ceil(lo / step), math.floor(hi / step) + 1)], lambda v: f"{v / 1000:,.0f}k"))
+    body.append(time_ticks(f))
+    # The no-action corridor: liquidation price x [repay trigger, borrow trigger], with the band in force.
+    upper = [(p["t"], p["liq"] * band_at(p["t"])["borrow_trigger"]) for p in with_liq]
+    lower = [(p["t"], p["liq"] * band_at(p["t"])["repay_trigger"]) for p in with_liq]
+    if upper:
+        poly = " ".join(f"{f.x(t):.1f},{f.y(v):.1f}" for t, v in upper) + " " + " ".join(f"{f.x(t):.1f},{f.y(v):.1f}" for t, v in reversed(lower))
+        body.append(f'<polygon class="band" points="{poly}"/>')
+        body.append(f'<path class="band-edge" d="{path(f, upper, None)}"/><path class="band-edge" d="{path(f, lower, None)}"/>')
+    body.append(f'<path class="liq" d="{path(f, with_liq, "liq")}"/>')
+    body.append(f'<path class="line" d="{path(f, pts, "px")}"/>')
+    last = pts[-1]
+    body.append(f'<text class="lab" x="{PAD_L + f.pw + 6}" y="{f.y(last["px"]) + 4:.1f}">BTC {last["px"] / 1000:,.1f}k</text>')
+    if with_liq:
+        ll = with_liq[-1]
+        body.append(f'<text class="lab liq-lab" x="{PAD_L + f.pw + 6}" y="{f.y(ll["liq"]) + 4:.1f}">liq. {ll["liq"] / 1000:,.1f}k</text>')
+    for t in transactions:
+        if t["t"] < t0 or not t.get("px"):
+            continue
+        if t["kind"] in ("subscription", "collateral"):
+            x = f.x(t["t"])
+            body.append(f'<line class="event" x1="{x:.1f}" y1="{PAD_T}" x2="{x:.1f}" y2="{PAD_T + f.ph}"><title>{esc(tx_title(t))}</title></line>')
+        else:
+            body.append(marker(t["kind"], f.x(t["t"]), f.y(t["px"]), tx_title(t)))
+    hover = []
+    for p in pts:
+        bb = band_at(p["t"])
+        rows = [stamp(p["t"]), f"BTC oracle price ${p['px']:,.0f}"]
+        if p.get("liq"):
+            rows += [f"no-action corridor ${p['liq'] * bb['repay_trigger']:,.0f} to ${p['liq'] * bb['borrow_trigger']:,.0f}", f"liquidation price ${p['liq']:,.0f}"]
+        else:
+            rows += ["no debt yet"]
+        hover.append({"x": round(f.x(p["t"]), 1), "l": rows})
+    return chart_svg("priceChart", f, "".join(body), hover, "BTC oracle price against the no-action corridor, the liquidation price and agent actions")
+
+
+def share_chart():
+    pts = []
+    for p in ((snap or {}).get("series") or {}).get("points", []):
+        if p["t"] < window_t0 and p.get("share_price_wbtc"):
+            pts.append({"t": p["t"], "sp": p["share_price_wbtc"]})
+    pts += [{"t": p["t"], "sp": share_price(p)} for p in points if p["t"] >= window_t0 and share_price(p)]
+    if len(pts) < 2:
+        return '<p class="empty">The share-price history appears after the first sync.</p>'
+    vals = [p["sp"] for p in pts]
+    pad = max((max(vals) - min(vals)) * 0.25, 0.00005)
+    f = Frame(pts[0]["t"], max(now, pts[-1]["t"]), min(vals) - pad, max(vals) + pad, h=240)
+    body = []
+    step = 10 ** math.floor(math.log10((f.y1 - f.y0) / 3))
+    body.append(y_ticks(f, [v * step for v in range(math.ceil(f.y0 / step), math.floor(f.y1 / step) + 1)][::2] or [f.y0], lambda v: f"{v:.4f}"))
+    body.append(time_ticks(f))
+    body.append(f'<path class="line" d="{path(f, pts, "sp")}"/>')
+    for t in transactions:
+        if t["kind"] in ("subscription", "claim", "redemption"):
+            x = f.x(t["t"])
+            label = {"subscription": "deposit", "claim": "rewards claimed", "redemption": "redemption"}[t["kind"]]
+            body.append(f'<line class="event" x1="{x:.1f}" y1="{PAD_T}" x2="{x:.1f}" y2="{PAD_T + f.ph}"><title>{esc(tx_title(t))}</title></line>'
+                        f'<text class="lab" x="{x + 4:.1f}" y="{PAD_T + 12}">{label}</text>')
+    body.append(f'<text class="lab" x="{PAD_L + f.pw + 6}" y="{f.y(pts[-1]["sp"]) + 4:.1f}">{pts[-1]["sp"]:.5f}</text>')
+    hover = [{"x": round(f.x(p["t"]), 1), "l": [stamp(p["t"]), f"{p['sp']:.6f} WBTC per share"]} for p in pts]
+    return chart_svg("shareChart", f, "".join(body), hover, "Share price in WBTC since inception")
+
+
+# --- The automation at work: legs, counters, narrative ------------------------------------------
+
+STATE_ORDER = ["inside the band, no action", "above the borrow trigger, re-lever switched off", "no debt to manage yet, no action"]
+
+
+def clusters():
+    """Transactions within 15 minutes of each other are one event; a re-lever switch joins the event it caused."""
+    out = []
+    for t in transactions:
+        if out and t["t"] - out[-1]["t1"] <= 900:
+            out[-1]["txs"].append(t)
+            out[-1]["t1"] = t["t"]
+        else:
+            out.append({"t": t["t"], "t1": t["t"], "txs": [t]})
+    for c in out:
+        c["switch"] = relever_switch if relever_switch and -900 <= c["t"] - relever_switch["t"] <= 900 else None
+    return out
+
+
+def states_between(a, b):
+    counts = {}
+    for h in runs.get("hourly", []):
+        if a <= h["t"] + 1800 < b:
+            for k, v in h["states"].items():
+                counts[k] = counts.get(k, 0) + v
+    return counts
+
+
+def brief(t):
+    """One transaction in a few words, for the legs table; the full sentence is in the actions table."""
+    k, a = t["kind"], t["amount"] or ""
+    if k in ("seed_borrow", "relever"):
+        return f"+{a} borrowed" + (", split across both vaults" if "deposited" in t["action"] else "")
+    if k == "derisk":
+        return f"{a} repaid"
+    if k == "subscription":
+        m = re.search(r"minted ([\d.,]+) shares", t["action"])
+        return f"{a} in" + (f", {m.group(1)} shares minted" if m else "")
+    if k == "collateral":
+        return f"{a} supplied as collateral"
+    return t["action"].rstrip(".")
+
+
+def leg_rows():
+    cs = clusters()
+    rows = []
+    badge = {"relever": ("positive", "re-lever"), "derisk": ("negative", "repay"), "seed_borrow": ("info", "manual seed borrow"), "subscription": ("info", "deposit"),
+             "collateral": ("info", "supply as collateral"), "claim": ("generic", "rewards claimed"), "redemption": ("negative", "redemption"), "requests": ("generic", "requests"), "other": ("generic", "other")}
+    for i, c in enumerate(cs):
+        last = c["txs"][-1]
+        p_after = last.get("px")
+        kinds = [t["kind"] for t in c["txs"]]
+        if "subscription" in kinds or "collateral" in kinds:
+            dep = next((t for t in c["txs"] if t["kind"] in ("subscription", "collateral")), c["txs"][0])
+            move, saw = "deposit, not price", f"{dep['amount']} deposit, no debt yet" if not last.get("hf_after") else f"{dep['amount']} deposit"
+        elif "seed_borrow" in kinds:
+            move, saw = "operator action", "no debt yet: the agent does not open a position from zero"
+        elif c["switch"]:
+            b_prev = band_hist[band_hist.index(c["switch"]) - 1]
+            move = "re-lever switched on"
+            saw = f"HF {hf_txt(c['txs'][0]['hf_before'])} above the {b_prev['borrow_trigger']:.2f} borrow trigger"
+        else:
+            first = c["txs"][0]
+            bb = band_at(first["t"])
+            saw = f"HF {hf_txt(first['hf_before'])} vs band {bb['repay_trigger']:.2f} to {bb['borrow_trigger']:.2f}"
+            move = "price"
+        resp = " ".join(f'<span class="badge {badge.get(k, badge["other"])[0]}">{badge.get(k, badge["other"])[1]}</span>' for k in dict.fromkeys(kinds))
+        detail = "; ".join(brief(t) for t in c["txs"])
+        if c["switch"]:
+            detail = f"switched on {utc(c['switch']['t']).strftime('%H:%M:%S')}, borrowed {dur(last['t'] - c['switch']['t'])} later; " + detail
+        rows.append({"win": short(c["t"]) if c["t1"] - c["t"] < 60 else f"{short(c['t'])} → {utc(c['t1']).strftime('%H:%M')}", "px": usd(p_after) if p_after else "n/a",
+                     "move": move, "saw": saw, "resp": resp, "detail": detail, "debt": n(next((p["debt"] for p in points if p["b"] == last["block"]), None), 0) if any(p["b"] == last["block"] for p in points) else "n/a", "hf": hf_txt(last.get("hf_after"))})
+        # The quiet stretch until the next event.
+        a = c["t1"] + 1
+        b_end = cs[i + 1]["t"] if i + 1 < len(cs) else max(now, points[-1]["t"] if points else now)
+        seg = [p for p in points if a <= p["t"] < b_end and p.get("px") and not p.get("tag")]
+        if len(seg) < 2:
+            continue
+        st = states_between(a, b_end)
+        nruns = sum(st.values())
+        main = max(st, key=st.get) if st else None
+        hfs = [p["hf"] for p in seg if p.get("hf")]
+        saw2 = (main or "no run data")
+        if hfs and main == "inside the band, no action":
+            low = min(seg, key=lambda p: p["hf"] or 9)
+            saw2 = f"inside the band · min HF {low['hf']:.4f} ({short(low['t'])})"
+        rows.append({"win": f"{short(seg[0]['t'])} → {short(seg[-1]['t'])}", "px": f"{seg[0]['px']:,.0f} → {seg[-1]['px']:,.0f}",
+                     "move": pct((seg[-1]["px"] / seg[0]["px"] - 1) * 100, 1, sign=True), "saw": saw2,
+                     "resp": '<span class="badge generic">no rebalance</span>',
+                     "detail": f"{nruns} agent runs" + (f" · HF {min(hfs):.4f} to {max(hfs):.4f}" if hfs else " · no debt"),
+                     "debt": n(seg[-1]["debt"], 0), "hf": hf_txt(seg[-1].get("hf"))})
+    return rows
+
+
+def narrative():
+    cs = clusters()
+    items = []
+    hourly = runs.get("hourly", [])
+    for i, c in enumerate(cs):
+        kinds = [t["kind"] for t in c["txs"]]
+        when = stamp(c["t"])
+        if "subscription" in kinds:
+            sub = next(t for t in c["txs"] if t["kind"] == "subscription")
+            col = next((t for t in c["txs"] if t["kind"] == "collateral"), None)
+            s = f"<b>Deposit, {esc(when)}.</b> The subscription and redemption approver approved and settled a subscription: {esc(sub['action'][0].lower() + sub['action'][1:])}"
+            if col:
+                s += f" The settler supplied it as collateral on the Aave V4 Bluechip spoke {dur(col['t'] - sub['t'])} later, with no debt yet."
+            items.append(s)
+        elif "seed_borrow" in kinds:
+            t = next(t for t in c["txs"] if t["kind"] == "seed_borrow")
+            items.append(f"<b>Seed borrow, {esc(when)}.</b> The {esc(t['actor'])} made the first borrow: {esc(t['action'].split(': ', 1)[-1])} HF went from no debt to <b>{hf_txt(t['hf_after'])}</b>. "
+                         "The health-factor manager does not open a position from zero debt, so the first borrow is manual by design.")
+        elif "relever" in kinds:
+            t = next(t for t in c["txs"] if t["kind"] == "relever")
+            lead = ""
+            if c["switch"]:
+                lead = f"Re-lever was switched on at {utc(c['switch']['t']).strftime('%H:%M:%S')} UTC. "
+            items.append(f"<b>Re-lever, {esc(when)}.</b> {lead}The health-factor manager read HF {hf_txt(t['hf_before'])}, above the {band_at(t['t'])['borrow_trigger']:.2f} borrow trigger, and acted: "
+                         f"{esc(t['action'].split(': ', 1)[-1])} HF landed at <b>{hf_txt(t['hf_after'])}</b> against a {t['target'] or band_at(t['t'])['borrow_target']:.2f} target"
+                         + (f", {dur(t['t'] - c['switch']['t'])} after the switch." if c["switch"] else "."))
+        elif "derisk" in kinds:
+            t = next(t for t in c["txs"] if t["kind"] == "derisk")
+            items.append(f"<b>De-risk, {esc(when)}.</b> HF {hf_txt(t['hf_before'])} fell below the {band_at(t['t'])['repay_trigger']:.2f} repay trigger. {esc(t['action'].split(': ', 1)[-1])} HF back to <b>{hf_txt(t['hf_after'])}</b>.")
+        elif "claim" in kinds:
+            t = next(t for t in c["txs"] if t["kind"] == "claim")
+            items.append(f"<b>Rewards claimed, {esc(when)}.</b> {esc(t['action'])} The claim moves them into NAV in one step.")
+        # Then what the agents did until the next event.
+        a = c["t1"] + 1
+        b_end = cs[i + 1]["t"] if i + 1 < len(cs) else now
+        st = states_between(a, b_end)
+        total = sum(st.values())
+        if total >= 3:
+            main = max(st, key=st.get)
+            seg = [p for p in points if a <= p["t"] < b_end and p.get("hf") and not p.get("tag")]
+            rng = f" HF ranged {min(p['hf'] for p in seg):.4f} to {max(p['hf'] for p in seg):.4f}." if seg else ""
+            if main == "above the borrow trigger, re-lever switched off":
+                items.append(f"<b>Held above the band on purpose, {esc(short(a))} → {esc(short(b_end))}.</b> Re-lever was switched off, so the manager ran {total} times and each run read "
+                             f"&ldquo;above the borrow trigger, re-lever switched off&rdquo;.{rng}")
+            elif main == "inside the band, no action" and i + 1 == len(cs):
+                tail = f" The closest the BTC price came to the repay trigger was {closest['headroom']:.1f}% ({esc(short(closest['t']))}, HF {closest['hf']:.4f})." if closest else ""
+                items.append(f"<b>Inside the band since.</b> {total} runs from {esc(short(a))} to the last sync, {st.get(main, 0)} of them inside the band with no action needed.{rng}{tail}")
+    if rewards:
+        items.append(f"<b>Rewards outside NAV.</b> The Aave borrow rebate and the vault rewards accrue at the fund's Safe and reach NAV only when claimed. Unclaimed at this build: {usd(rewards['total_usd'], 2)} (≈ {n(rewards['total_wbtc'], 6)} WBTC).")
+    return items
+
+
+# --- Page pieces --------------------------------------------------------------------------------
+
+as_of = stamp(chain["read_at"])
+app_url = CONFIG["app_url"]
+snap_label = f"agent activity as of {stamp(synced_at)}" if snap else "agent activity appears after the first sync"
+nav_plus = chain["nav_wbtc"] + (rewards["total_wbtc"] or 0) if rewards else None
+window_txs = [t for t in transactions if t["t"] >= window_t0]
+by_agent = runs.get("by_agent", [])
+runs_total = sum(a["runs"] for a in by_agent)
+runs_ok = sum(a["completed"] for a in by_agent)
+runs_fail = sum(a["failed"] for a in by_agent)
+agent_txs = [t for t in window_txs if t["actor"] not in ("Manager Safe (2 of 5 signers)", "Other")]
+manual_txs = [t for t in window_txs if t["actor"] == "Manager Safe (2 of 5 signers)"]
+deposit_tx = subs[0] if subs else None
+lever_time = (first_relever["t"] - deposit_tx["t"]) if first_relever and deposit_tx else None
+first_borrow_carry = None
+
+
+def counters():
+    cells = []
+    cells.append(("Agent runs", f"{runs_total:,}" if by_agent else "n/a", f"{runs_ok:,} completed · {runs_fail:,} failed" if by_agent else snap_label))
+    cells.append(("Transactions", f"{len(window_txs)}", f"{len(agent_txs)} by agents · {len(manual_txs)} by the Manager Safe"))
+    cells.append(("Closest call", pct(closest["headroom"], 1) if closest else "n/a", f"price headroom to the repay trigger, {short(closest['t'])}" if closest else "after the first re-lever"))
+    cells.append(("Liquidation buffer", pct(liq_buffer, 1), f"liquidation at {usd(chain['liq_px'])} vs {usd(px)}" if chain["liq_px"] else "no debt"))
+    sub = "deposit to fully levered"
+    if lever_time is not None and relever_switch:
+        sub = f"re-lever held off until {short(relever_switch['t'])}; borrowed {dur(first_relever['t'] - relever_switch['t'])} after the switch"
+    cells.append(("Deposit to levered", dur(lever_time) if lever_time is not None else "n/a", sub))
+    return "".join(f'<div class="counter"><div class="c-label">{esc(a)}</div><div class="c-value">{esc(b)}</div><div class="c-sub">{esc(c)}</div></div>' for a, b, c in cells)
+
+
+def tx_table():
+    if not window_txs:
+        return f'<p class="empty">No transactions yet ({esc(snap_label)}).</p>'
+    rows = []
+    for t in reversed(window_txs):
+        target = f'<br><span class="dim">target {t["target"]:.2f}</span>' if t.get("target") else ""
+        hf = "no debt" if t["hf_before"] is None and t["hf_after"] is None else f"{hf_txt(t['hf_before'])} → <b>{hf_txt(t['hf_after'])}</b>{target}"
+        rows.append(f'<tr><td class="mono nowrap">{utc(t["t"]).strftime("%-d %b %H:%M:%S")}</td><td class="mid">{esc(t["actor"])}</td><td class="wide">{esc(t["action"])}</td>'
+                    f'<td class="mono num nowrap">{esc(t["amount"] or "")}</td><td class="mono nowrap">{hf}</td>'
+                    f'<td class="mono nowrap"><a href="{ETHERSCAN}/tx/{esc(t["hash"])}" target="_blank" rel="noopener">{short_hash(t["hash"])} ↗</a></td></tr>')
+    return (f'<div class="table-scroll"><table class="data"><thead><tr><th>UTC, {utc(window_t0).year}</th><th>Actor</th><th>Action</th><th class="num">Amount</th><th>HF before → after</th><th>Transaction</th></tr></thead>'
+            f'<tbody>{"".join(rows)}</tbody></table></div>')
+
+
+def legs_table():
+    rows = leg_rows() if snap else []
+    if not rows:
+        return f'<p class="empty">{esc(snap_label.capitalize())}.</p>'
+    body = "".join(f'<tr><td class="mid">{esc(r["win"])}</td><td class="num nowrap"><span class="mono">{esc(r["px"])}</span><br><span class="dim">{esc(r["move"])}</span></td><td class="mid">{esc(r["saw"])}</td>'
+                   f'<td>{r["resp"]}</td><td class="dim mid">{esc(r["detail"])}{(" · debt " + esc(r["debt"]) + " USDC") if r["debt"] not in ("n/a", "0") else ""}</td><td class="mono num nowrap">{esc(r["hf"])}</td></tr>' for r in rows)
+    return ('<div class="table-scroll"><table class="data"><thead><tr><th>Window (UTC)</th><th class="num">BTC (USD), move</th><th>What the band saw</th><th>Response</th><th>Detail</th><th class="num">HF after</th></tr></thead>'
+            f'<tbody>{body}</tbody></table></div>')
+
+
+def scaling_rows():
+    out = []
+    for s in CONFIG["scaling"]["stages"]:
+        cls = {"live": "positive", "in progress": "info", "planned": "generic"}.get(s["status"], "generic")
+        out.append(f'<tr><td class="nowrap"><b>{esc(s["stage"])}</b></td><td>{esc(s["adds"])}</td><td>{esc(s["needs"])}</td><td class="nowrap"><span class="badge {cls}">{esc(s["status"])}</span></td></tr>')
+    return "".join(out)
+
+
+def capacity_line():
+    cu, cg = chain["core_usdc"], chain["core_usdg"]
+    past = cu["room_to_kink"] <= 0 and cu["utilisation"] is not None
+    first = (f"USDC borrow room to the kink on the Core hub: <b>{musd(cu['room_to_kink']) if cu['room_to_kink'] > 0 else '$0'}</b>"
+             + (f" (the hub runs at {cu['utilisation'] * 100:.1f}% used against a {cu['optimal_usage'] * 100:.0f}% kink, so new USDC borrowing pays a steeper rate)" if past else ""))
+    parts = [first, f"USDG room under the Bluechip spoke's cap: <b>{musd(cg['bluechip_room_under_cap'])}</b>", f"Core hub USDG liquidity: <b>{musd(cg['liquidity'])}</b> at {pct(cg['borrow_apy'])}"]
+    cap = (snap or {}).get("capacity") or {}
+    extra = ""
+    if cap.get("core_usdc_after_1m_apy") is not None:
+        extra = (f" At the last sync ({stamp(cap['t'])}), borrowing another $1M on the Core hub would have cost {pct(cap['core_usdc_after_1m_apy'])} gross in USDC"
+                 + (f" or {pct(cap['core_usdg_after_1m_apy'])} in USDG" if cap.get("core_usdg_after_1m_apy") is not None else "")
+                 + (f"; $3.5M of USDG, about what a $5M fund borrows at today's LTV, {pct(cap['core_usdg_after_3_5m_apy'])}" if cap.get("core_usdg_after_3_5m_apy") is not None else "")
+                 + ". Rates before Merkl.")
+    return "; ".join(parts) + "." + extra
+
+
+# Simulator inputs.
+sim = {
+    "cf": cf, "liveHf": hf_now or band["borrow_target"], "spread": spread if spread is not None else 0, "fee": PERF_FEE, "px": px,
+    "minHf": MIN_HF, "maxHf": 1.6, "target": band["borrow_target"], "repay": band["repay_trigger"], "borrow": band["borrow_trigger"],
+}
+
+loop_live = chain["maple_active"]
+loop = CONFIG["loop_sleeve"]
+
+stale_note = ""
+if position_changed:
+    stale_note = f'<div class="note">The position has changed since {esc(stamp(synced_at))}; detail follows at the next update.</div>'
+
+rew_rows = ""
+if rewards:
+    rew_rows = "".join(f'<div class="kv"><span>{esc(g["group"])}</span><span class="mono">{usd(g["claimable_usd"], 2)} claimable · {usd(g["pending_usd"], 2)} pending</span></div>' for g in rewards["groups"])
+
+if realised:
+    realised_html = (f'<div class="stat-value small">{pct(realised["nav"], 2, sign=True)}</div><div class="stat-sub">from NAV, last {REALISED_DAYS:.0f} days, annualised in WBTC</div>'
+                     + (f'<div class="kv"><span>including unclaimed rewards</span><span class="mono">≈ {pct(realised["all"], 2, sign=True)}</span></div>' if realised["all"] is not None else "")
+                     + (f'<div class="kv"><span>USD carry P&amp;L, same {REALISED_DAYS:.0f} days</span><span class="mono">≈ {usd(realised["usd_pnl"])}</span></div>' if realised["usd_pnl"] is not None else "")
+                     + '<div class="stat-sub">The carry accrues in USDC while the unit is BTC, so a BTC rally marks it down in BTC terms even as the USD figure climbs.</div>')
+else:
+    realised_html = (f'<div class="stat-sub">Realised carry is shown once {REALISED_DAYS:.0f} days have passed since the re-lever on {esc(utc(first_relever["t"]).strftime("%-d %b")) if first_relever else "its first day"}: '
+                     'twice, from NAV and including unclaimed rewards, with the USD carry P&amp;L beside it.</div>')
+
+deposit_chips = "".join(f'<span class="chip {"live" if a["status"] == "live" else "soon"}">{esc(a["asset"])}{" · coming" if a["status"] != "live" else ""}</span>' for a in CONFIG["deposit_assets"])
+
+legs_vaults = "".join(
+    f'<div class="kv"><span><a href="https://app.morpho.org/ethereum/vault/{esc(v["address"])}" target="_blank" rel="noopener">{esc(v["name"])} ↗</a></span>'
+    f'<span class="mono">{n(v["usdc"], 0)} USDC · {v["weight"] * 100:.0f}% · {pct(v["apy"]) if v["apy"] is not None else "APY n/a"}</span></div>' for v in vault_rows)
+
+# --- CSS and JS (plain strings: no em dashes, tokens only) ----------------------------------------
+
+tokens_css = re.sub(r"/\*[\s\S]*?\*/", "", (ASSETS / "kpk-tokens.css").read_text())
+fonts_css = re.sub(r"/\*[\s\S]*?\*/", "", (ASSETS / "kpk-fonts.css").read_text())
+dark_block = re.search(r':root\[data-theme="dark"\],\s*\.dark\s*\{([\s\S]*?)\}', tokens_css).group(1)
+logo_svg = (ASSETS / "kpk-logo.svg").read_text()
+
+CSS = """
+:root {
+  --c-line: #2E7FC1; --c-liq: #D2553A; --c-band: #2D8C6A;
+  --c-band-fill: rgba(45, 140, 106, 0.12); --c-good: #2D8C6A; --c-bad: #D2553A; --c-info: #2E7FC1;
+}
+:root[data-theme="dark"] { --c-line: #3F93D4; --c-liq: #DD6447; --c-band: #35A578; --c-band-fill: rgba(53, 165, 120, 0.16); --c-good: #35A578; --c-bad: #DD6447; --c-info: #3F93D4; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { DARK_TOKENS --c-line: #3F93D4; --c-liq: #DD6447; --c-band: #35A578; --c-band-fill: rgba(53, 165, 120, 0.16); --c-good: #35A578; --c-bad: #DD6447; --c-info: #3F93D4; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { background: var(--kpk-surface); color: var(--kpk-ink); font-family: var(--kpk-font-sans); font-weight: 400; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration-color: var(--kpk-ink-faint); text-underline-offset: 2px; }
+.page { max-width: 1040px; margin: 0 auto; padding: var(--kpk-space-6) var(--kpk-space-4) var(--kpk-space-16); display: flex; flex-direction: column; gap: var(--kpk-space-8); }
+header.top { display: flex; align-items: center; justify-content: space-between; gap: var(--kpk-space-4); flex-wrap: wrap; }
+.logo { width: 84px; color: var(--kpk-ink); }
+.logo svg { width: 100%; height: auto; display: block; }
+.meta { display: flex; gap: var(--kpk-space-3); align-items: center; flex-wrap: wrap; font-size: var(--kpk-text-fs-meta); color: var(--kpk-ink-muted); }
+.asof.stale { color: var(--c-bad); font-weight: 500; }
+.theme-btn { font: inherit; font-size: var(--kpk-text-fs-meta); color: var(--kpk-ink-muted); background: none; border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-pill); padding: 2px 10px; cursor: pointer; }
+.hero h1 { font-size: var(--kpk-text-display-h1); font-weight: 500; letter-spacing: -0.01em; margin: 0 0 var(--kpk-space-3); line-height: 1.1; }
+.hero p { font-size: var(--kpk-text-body); max-width: 70ch; margin: 0 0 var(--kpk-space-4); }
+.hero .row { display: flex; gap: var(--kpk-space-3); flex-wrap: wrap; align-items: center; }
+.cta { display: inline-flex; align-items: center; gap: 8px; background: var(--kpk-ink); color: var(--kpk-surface); text-decoration: none; padding: 10px 18px; border-radius: var(--kpk-radius-pill); font-weight: 500; font-size: var(--kpk-text-body-small); }
+.cta:hover { opacity: 0.9; }
+.chip { display: inline-block; font-size: var(--kpk-text-fs-tag); letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 9px; border-radius: var(--kpk-radius-tag); border: var(--kpk-rule-hard) solid var(--kpk-line-strong); }
+.chip.soon { border-color: var(--kpk-line); color: var(--kpk-ink-muted); }
+.pill { display: inline-block; font-size: var(--kpk-text-fs-tag); letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 9px; border-radius: var(--kpk-radius-tag); background: var(--kpk-pill); color: var(--kpk-ink); vertical-align: middle; }
+section { display: flex; flex-direction: column; gap: var(--kpk-space-4); scroll-margin-top: var(--kpk-space-4); }
+.label { align-self: flex-start; background: var(--kpk-label-bg); color: var(--kpk-label-ink); font-size: var(--kpk-text-label); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: var(--kpk-radius-tag); }
+h2 { font-size: var(--kpk-text-fs-section); font-weight: 500; margin: 0; letter-spacing: -0.01em; line-height: 1.2; }
+.lede { color: var(--kpk-ink-muted); font-size: var(--kpk-text-body-small); max-width: 80ch; margin: 0; }
+.asof-note { font-size: var(--kpk-text-fs-meta); color: var(--kpk-ink-muted); }
+.note { font-size: var(--kpk-text-body-small); border: var(--kpk-rule-hard) solid var(--c-bad); border-radius: var(--kpk-radius-label); padding: 10px 14px; }
+.card { background: var(--kpk-surface-card); border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-card); padding: var(--kpk-space-6); min-width: 0; }
+.grid { display: grid; gap: var(--kpk-space-4); }
+.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 760px) { .g3, .g2 { grid-template-columns: 1fr; } }
+.stat-label { font-size: var(--kpk-text-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--kpk-ink-muted); font-weight: 500; }
+.stat-value { font-size: var(--kpk-text-fs-stat); font-weight: 500; letter-spacing: -0.02em; line-height: 1.1; margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
+.stat-value.small { font-size: 28px; }
+.stat-value.good { color: var(--c-good); }
+.muted { color: var(--kpk-ink-muted); }
+.stat-sub { font-size: var(--kpk-text-fs-meta); color: var(--kpk-ink-muted); margin-top: 4px; }
+.kv { display: flex; justify-content: space-between; gap: 12px; font-size: var(--kpk-text-body-small); padding: 6px 0; border-top: var(--kpk-rule-soft) solid var(--kpk-line); flex-wrap: wrap; }
+.kv:first-of-type { margin-top: 8px; }
+.kv > span:last-child { margin-left: auto; text-align: right; }
+.mono { font-family: var(--kpk-font-mono); font-size: var(--kpk-text-data-mono); }
+.math { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font-size: var(--kpk-text-body-small); }
+.math .chunk { display: flex; flex-direction: column; align-items: center; }
+.math .term { font-weight: 500; font-family: var(--kpk-font-mono); font-size: 16px; }
+.math .sub { font-size: var(--kpk-text-fs-tag); color: var(--kpk-ink-muted); }
+.math .op { color: var(--kpk-ink-muted); }
+.flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 12px; align-items: stretch; }
+.flow .arrow { align-self: center; color: var(--kpk-ink-muted); font-size: 20px; }
+@media (max-width: 760px) { .flow { grid-template-columns: 1fr; } .flow .arrow { transform: rotate(90deg); justify-self: center; } }
+.leg-kind { font-size: var(--kpk-text-label); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; color: var(--kpk-ink-muted); }
+.leg-amount { font-size: 22px; font-weight: 500; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.leg-sub { font-size: var(--kpk-text-fs-meta); color: var(--kpk-ink-muted); }
+.loop { border-style: dashed; }
+.counters { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 900px) { .counters { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.counter { background: var(--kpk-surface-card); border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-card); padding: 14px 16px; min-width: 0; }
+.c-label { font-size: var(--kpk-text-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--kpk-ink-muted); font-weight: 500; }
+.c-value { font-size: 26px; font-weight: 500; margin: 4px 0 2px; font-variant-numeric: tabular-nums; }
+.c-sub { font-size: var(--kpk-text-fs-tag); color: var(--kpk-ink-muted); line-height: 1.4; }
+.chart { position: relative; }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; touch-action: pan-y; }
+.chart .grid { stroke: var(--kpk-line); stroke-width: 1; }
+.chart .tick { fill: var(--kpk-ink-muted); font-size: 12px; font-family: var(--kpk-font-sans); }
+.chart .lab { fill: var(--kpk-ink-muted); font-size: 12px; font-family: var(--kpk-font-sans); }
+.chart .line { fill: none; stroke: var(--c-line); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .liq { fill: none; stroke: var(--c-liq); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.chart .liq-lab { fill: var(--c-liq); }
+.chart .band { fill: var(--c-band-fill); stroke: none; }
+.chart .band-edge { fill: none; stroke: var(--c-band); stroke-width: 1; stroke-dasharray: 3 3; }
+.chart .band-target { stroke: var(--c-band); stroke-width: 1.5; }
+.chart .band-lab { fill: var(--c-band); }
+.chart .event, .chart .sync { stroke: var(--kpk-ink-faint); stroke-width: 1; stroke-dasharray: 2 3; }
+.chart .mk path, .chart .mk circle { stroke: var(--kpk-surface-card); stroke-width: 2; }
+.chart .mk.relever path { fill: var(--c-band); }
+.chart .mk.derisk path { fill: var(--c-liq); }
+.chart .mk.manual path { fill: var(--kpk-ink); }
+.chart .mk.deposit circle { fill: var(--kpk-surface-card); stroke: var(--kpk-ink); }
+.chart .xhair { stroke: var(--kpk-ink-muted); stroke-width: 1; }
+@media (max-width: 640px) {
+  .chart { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .chart svg { min-width: 720px; }
+  .chart .tick, .chart .lab { font-size: 17px; }
+}
+.chart .hit { fill: transparent; }
+.chart .tip { position: absolute; top: 0; pointer-events: none; visibility: hidden; background: var(--kpk-sheet); border: var(--kpk-rule-hard) solid var(--kpk-line-strong); border-radius: var(--kpk-radius-label); padding: 8px 10px; font-size: 12px; white-space: nowrap; transform: translate(-50%, 0); z-index: 3; }
+.chart .tip div:first-child { color: var(--kpk-ink-muted); }
+.legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: var(--kpk-text-fs-meta); color: var(--kpk-ink-muted); align-items: center; }
+.legend i { display: inline-block; width: 16px; height: 0; border-top: 2px solid var(--c-line); vertical-align: middle; margin-right: 6px; }
+.legend i.liq { border-top: 1.5px dashed var(--c-liq); }
+.legend i.band { height: 10px; border: 1px dashed var(--c-band); background: var(--c-band-fill); }
+.legend b { font-weight: 500; color: var(--kpk-ink); }
+.legend .shape { display: inline-block; margin-right: 6px; font-size: 13px; }
+.statrow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .statrow { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+table.data { border-collapse: collapse; width: 100%; font-size: var(--kpk-text-body-small); }
+table.data th, table.data td { text-align: left; padding: 8px 10px; border-bottom: var(--kpk-rule-soft) solid var(--kpk-line); vertical-align: top; }
+table.data th { font-size: var(--kpk-text-label); letter-spacing: 0.06em; text-transform: uppercase; color: var(--kpk-ink-muted); font-weight: 500; }
+table.data .num { text-align: right; }
+table.data td.wide { min-width: 210px; }
+table.data td.mid { min-width: 130px; }
+.nowrap { white-space: nowrap; }
+.dim { color: var(--kpk-ink-muted); }
+.badge { display: inline-block; font-size: var(--kpk-text-fs-tag); padding: 2px 8px; border-radius: var(--kpk-radius-tag); border: var(--kpk-rule-hard) solid var(--kpk-line); white-space: nowrap; }
+.badge.positive { border-color: var(--c-good); color: var(--c-good); }
+.badge.negative { border-color: var(--c-bad); color: var(--c-bad); }
+.badge.info { border-color: var(--c-info); color: var(--c-info); }
+.notes { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; font-size: var(--kpk-text-body-small); max-width: 90ch; }
+.notes b { font-weight: 500; }
+.empty { color: var(--kpk-ink-muted); font-size: var(--kpk-text-body-small); }
+.sim-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.sim-out { display: flex; align-items: baseline; gap: 10px; }
+.sim-out .big { font-size: 36px; font-weight: 500; color: var(--c-good); font-variant-numeric: tabular-nums; }
+.slider-wrap { margin-top: 18px; }
+.ends { display: flex; justify-content: space-between; font-size: var(--kpk-text-fs-tag); color: var(--kpk-ink-muted); margin-bottom: 6px; }
+.ends .hi { color: var(--c-bad); }
+input[type=range] { width: 100%; -webkit-appearance: none; appearance: none; height: 6px; border-radius: 4px; outline: none; margin: 0;
+  background: linear-gradient(to right, var(--c-good) 0%, var(--c-good) 60%, var(--kpk-orange-500) 85%, var(--c-bad) 100%); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--kpk-ink); border: 3px solid var(--kpk-surface-card); cursor: pointer; }
+input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--kpk-ink); border: 3px solid var(--kpk-surface-card); cursor: pointer; }
+.marks { position: relative; height: 80px; margin-top: 4px; }
+.marks button { position: absolute; transform: translateX(-50%); background: none; border: 0; padding: 2px 4px; font: inherit; font-size: var(--kpk-text-fs-tag); color: var(--kpk-ink-muted); cursor: pointer; white-space: nowrap; }
+.marks button::before { content: ""; display: block; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--kpk-ink-muted); margin: 0 auto 3px; }
+.marks button.on { color: var(--kpk-ink); font-weight: 500; }
+.marks button.on::before { background: var(--kpk-ink); border-color: var(--kpk-ink); }
+.sim-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 16px; }
+@media (max-width: 760px) { .sim-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.sim-cell { border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-label); padding: 10px 12px; }
+.sim-cell .k { font-size: var(--kpk-text-fs-tag); color: var(--kpk-ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.sim-cell .v { font-size: 17px; font-weight: 500; margin-top: 2px; font-variant-numeric: tabular-nums; }
+footer { border-top: var(--kpk-rule-hard) solid var(--kpk-line-strong); padding-top: var(--kpk-space-4); font-size: var(--kpk-text-fs-footer); color: var(--kpk-ink-muted); display: flex; flex-direction: column; gap: 8px; }
+footer p { margin: 0; max-width: 100ch; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--c-info); outline-offset: 2px; }
+""".replace("DARK_TOKENS", dark_block)
+
+JS = """
+(function () {
+  var root = document.documentElement;
+  try { var saved = localStorage.getItem('btc-carry-theme'); if (saved) root.setAttribute('data-theme', saved); } catch (e) {}
+  var btn = document.getElementById('themeBtn');
+  function label() { var t = root.getAttribute('data-theme'); btn.textContent = t === 'dark' ? 'Dark' : t === 'light' ? 'Light' : 'Auto'; }
+  if (btn) {
+    label();
+    btn.addEventListener('click', function () {
+      var t = root.getAttribute('data-theme'), next = t === 'light' ? 'dark' : t === 'dark' ? null : 'light';
+      if (next) root.setAttribute('data-theme', next); else root.removeAttribute('data-theme');
+      try { if (next) localStorage.setItem('btc-carry-theme', next); else localStorage.removeItem('btc-carry-theme'); } catch (e) {}
+      label();
+    });
+  }
+  var el = document.getElementById('asOf');
+  if (el) {
+    var built = parseInt(el.getAttribute('data-built'), 10), mins = Math.floor((Date.now() / 1000 - built) / 60);
+    if (mins >= 0) {
+      el.textContent += ' · ' + (mins < 60 ? mins + ' min ago' : mins < 1440 ? Math.floor(mins / 60) + ' h ago' : Math.floor(mins / 1440) + ' days ago');
+      if (mins > 300) el.classList.add('stale');
+    }
+  }
+  [].forEach.call(document.querySelectorAll('.chart'), function (box) {
+    var svg = box.querySelector('svg'), tip = box.querySelector('.tip'), xh = svg && svg.querySelector('.xhair');
+    if (!svg || !tip) return;
+    var pts = JSON.parse(svg.getAttribute('data-hover') || '[]'), vbw = svg.viewBox.baseVal.width;
+    function show(ev) {
+      if (!pts.length) return;
+      var r = svg.getBoundingClientRect(), x = (ev.clientX - r.left) / r.width * vbw, best = pts[0];
+      for (var i = 1; i < pts.length; i++) if (Math.abs(pts[i].x - x) < Math.abs(best.x - x)) best = pts[i];
+      xh.setAttribute('x1', best.x); xh.setAttribute('x2', best.x); xh.setAttribute('visibility', 'visible');
+      tip.innerHTML = '';
+      best.l.forEach(function (line) { var d = document.createElement('div'); d.textContent = line; tip.appendChild(d); });
+      var left = best.x / vbw * r.width, w = tip.offsetWidth;
+      tip.style.left = Math.max(w / 2, Math.min(r.width - w / 2, left)) + 'px';
+      tip.style.visibility = 'visible';
+    }
+    function hide() { tip.style.visibility = 'hidden'; xh.setAttribute('visibility', 'hidden'); }
+    svg.addEventListener('pointermove', show); svg.addEventListener('pointerdown', show); svg.addEventListener('pointerleave', hide);
+  });
+  var S = window.SIM, slider = document.getElementById('hfSlider');
+  if (!S || !slider) return;
+  function hfOf(v) { return S.maxHf - v / 100; }
+  function valOf(hf) { return Math.round((S.maxHf - hf) * 100); }
+  slider.min = 0; slider.max = valOf(S.minHf); slider.value = valOf(Math.min(S.maxHf, Math.max(S.minHf, S.liveHf)));
+  // Three label rows: the band's four values sit within 0.10 of each other.
+  var sameAsTarget = Math.abs(S.liveHf - S.target) < 0.006;
+  var marks = [
+    { hf: S.borrow, label: 'borrow trigger ' + S.borrow.toFixed(2), row: 0 },
+    { hf: S.target, label: sameAsTarget ? 'target ' + S.target.toFixed(2) + ' = live' : 'target ' + S.target.toFixed(2), row: 1 },
+    { hf: S.repay, label: 'repay trigger ' + S.repay.toFixed(2), row: 0 }
+  ];
+  if (!sameAsTarget) marks.push({ hf: S.liveHf, label: 'live ' + S.liveHf.toFixed(3), row: 2 });
+  var box = document.getElementById('hfMarks'), els = [];
+  marks.forEach(function (m) {
+    var b = document.createElement('button'); b.type = 'button'; b.textContent = m.label;
+    var f = valOf(m.hf) / slider.max;
+    b.style.left = 'calc(' + (f * 100) + '% + ' + ((0.5 - f) * 22) + 'px)';
+    b.style.top = (m.row * 26) + 'px';
+    if (f > 0.95) { b.style.transform = 'translateX(-100%)'; }
+    b.addEventListener('click', function () { slider.value = valOf(m.hf); render(); });
+    box.appendChild(b); els.push({ el: b, hf: m.hf });
+  });
+  function fmt(x, dp) { return x.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp }); }
+  function render() {
+    var hf = hfOf(parseFloat(slider.value)), ltv = S.cf / hf, carry = ltv * S.spread * (1 - S.fee);
+    document.getElementById('simHf').textContent = hf.toFixed(2);
+    document.getElementById('simCarry').textContent = (carry >= 0 ? '+' : '') + carry.toFixed(2) + '%';
+    document.getElementById('simLtv').textContent = (ltv * 100).toFixed(1) + '%';
+    document.getElementById('simBorrow').textContent = fmt(S.px * ltv, 0) + ' USDC';
+    document.getElementById('simUsd').textContent = '$' + fmt(S.px * ltv * S.spread / 100 * (1 - S.fee), 0) + ' a year';
+    document.getElementById('simDrop').textContent = ((1 - 1 / hf) * 100).toFixed(1) + '%';
+    els.forEach(function (m) { m.el.classList.toggle('on', Math.abs(m.hf - hf) < 0.006); });
+  }
+  slider.addEventListener('input', render);
+  render();
+})();
+"""
+
+# --- The page ---------------------------------------------------------------------------------------
+
+rebate_txt = f"{pct(rebate_pct)}" if rebate else "not read at this build"
+carry_txt = f"{carry:+.2f}%" if carry is not None else "n/a"
+net_borrow_txt = pct(borrow_net)
+math_strip = (f'<div class="math"><div class="chunk"><span class="term">{pct(deploy_apy)}</span><span class="sub">vault yield, 24h avg</span></div><span class="op">−</span>'
+              f'<div class="chunk"><span class="term">{net_borrow_txt}</span><span class="sub">borrow, net of rebate</span></div><span class="op">=</span>'
+              f'<div class="chunk"><span class="term">{n(spread)} pp</span><span class="sub">spread</span></div><span class="op">×</span>'
+              f'<div class="chunk"><span class="term">{ltv * 100:.1f}%</span><span class="sub">LTV</span></div><span class="op">×</span>'
+              f'<div class="chunk"><span class="term">0.9</span><span class="sub">after 10% fee</span></div><span class="op">=</span>'
+              f'<div class="chunk"><span class="term" style="color:var(--c-good)">{carry_txt}</span><span class="sub">carry on BTC</span></div></div>') if spread is not None else ""
+
+terms_band = f"repay below {band['repay_trigger']:.2f} back to {band['repay_target']:.2f}; re-lever above {band['borrow_trigger']:.2f} back to {band['borrow_target']:.2f}"
+drop_from_repay = (1 - 1 / band["repay_trigger"]) * 100
+drop_from_min = (1 - 1 / MIN_HF) * 100
+
+page = f"""<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>BTC Carry Fund</title>
+<meta name="description" content="KPK's BTC Carry Fund: BTC collateral on Aave V4, USDC borrowed and deployed in KPK's USDC vaults. Live position, agent activity and terms.">
+<style>{fonts_css}{tokens_css}{CSS}</style>
+</head>
+<body>
+<div class="page">
+
+<header class="top">
+  <div class="logo" aria-label="KPK">{logo_svg}</div>
+  <div class="meta">
+    <span>Ethereum mainnet</span><span aria-hidden="true">·</span>
+    <span class="asof" id="asOf" data-built="{chain['read_at']}">As of {esc(as_of)}</span>
+    <button type="button" class="theme-btn" id="themeBtn" title="Switch theme">Auto</button>
+  </div>
+</header>
+
+<section class="hero" id="overview">
+  <h1>BTC Carry Fund <span class="pill">live · KPK capital</span></h1>
+  <p>BTC goes in as collateral on Aave V4. The fund borrows USDC against it and deploys that USDC in KPK's USDC vaults.
+  Depositors stay fully long BTC and earn the spread on top. The unit is BTC: the share price is in WBTC.
+  The fund currently holds KPK's own capital, and no performance fee is charged on it.</p>
+  <div class="row">
+    <a class="cta" href="{esc(app_url)}" target="_blank" rel="noopener">View the fund in the KPK app ↗</a>
+    <span class="asof-note">Deposit assets:</span> {deposit_chips}
+  </div>
+</section>
+{stale_note}
+<section id="numbers">
+  <span class="label">Headline numbers</span>
+  <h2>What the fund earns on BTC</h2>
+  <div class="grid g3">
+    <div class="card">
+      <div class="stat-label">NAV</div>
+      <div class="stat-value">{n(chain['nav_wbtc'], 4)} <span class="muted" style="font-size:20px">WBTC</span></div>
+      <div class="stat-sub">≈ {usd(chain['nav_usd'])} · share price <b>{n(chain['share_price_wbtc'], 6)} WBTC</b> (last settled {n(chain['last_settled_wbtc'], 6)})</div>
+      <div class="kv"><span>Unclaimed rewards, not yet in NAV</span><span class="mono">{(usd(rewards['total_usd'], 2) + ' ≈ ' + n(rewards['total_wbtc'], 6) + ' WBTC') if rewards else 'not read at this build'}</span></div>
+      {rew_rows}
+      {f'<div class="kv"><span>NAV plus unclaimed rewards</span><span class="mono">≈ {n(nav_plus, 5)} WBTC</span></div>' if nav_plus else ''}
+    </div>
+    <div class="card">
+      <div class="stat-label">Health factor</div>
+      <div class="stat-value">{hf_txt(hf_now)}</div>
+      <div class="stat-sub">band: repay below {band['repay_trigger']:.2f}, re-lever above {band['borrow_trigger']:.2f}, both back to {band['borrow_target']:.2f} ({esc(band_asof)})</div>
+      <div class="kv"><span>LTV (collateral factor ÷ HF)</span><span class="mono">{ltv * 100:.1f}% = {cf * 100:.1f}% ÷ {hf_txt(hf_now)}</span></div>
+      <div class="kv"><span>BTC drop to liquidation</span><span class="mono">{pct(liq_buffer, 1)} · at {usd(chain['liq_px'])}</span></div>
+    </div>
+    <div class="card">
+      <div class="stat-label">Carry on BTC <span class="pill">projection</span></div>
+      <div class="stat-value good">{carry_txt}</div>
+      <div class="stat-sub">a year, at current rates, net of the {rebate_txt} Merkl borrow rebate and the 10% performance fee. Not a promise: rates move.</div>
+      <div class="kv"><span>Before the 10% fee</span><span class="mono">{(f'{carry / (1 - PERF_FEE):+.2f}%') if carry is not None else 'n/a'}</span></div>
+      <div class="kv"><span>Per 1 BTC, at today's price</span><span class="mono">{('≈ ' + usd(px * ltv * spread / 100 * (1 - PERF_FEE)) + ' a year') if spread is not None else 'n/a'}</span></div>
+      <div class="kv"><span>Realised</span><span class="mono">{'see below' if realised else 'from ' + (utc(realised_from).strftime('%-d %b') if realised_from else 'n/a')}</span></div>
+      {realised_html}
+    </div>
+  </div>
+  {math_strip}
+  {f'<div class="note">{esc(nav_note)}</div>' if nav_note else ''}
+  <div class="card">
+    <div class="stat-label">Share price in WBTC since inception</div>
+    {share_chart()}
+    <div class="stat-sub">Deposits mint at the last settled price, which can step the line slightly; claimed rewards step NAV up once. Both are marked.</div>
+  </div>
+</section>
+
+<section id="structure">
+  <span class="label">Position structure</span>
+  <h2>How the position is built</h2>
+  <div class="flow">
+    <div class="card">
+      <div class="leg-kind">Collateral</div>
+      <div class="leg-amount">{n(chain['collateral_wbtc'], 8)} WBTC</div>
+      <div class="leg-sub">≈ {usd(chain['collateral_usd'])} on the <a href="{ETHERSCAN}/address/{L.SPOKE}" target="_blank" rel="noopener">Aave V4 Bluechip spoke ↗</a>, collateral factor {cf * 100:.1f}%</div>
+    </div>
+    <div class="arrow" aria-hidden="true">→</div>
+    <div class="card">
+      <div class="leg-kind">Borrow</div>
+      <div class="leg-amount">{n(chain['debt_usdc'], 0)} USDC</div>
+      <div class="leg-sub">on the Aave V4 Core hub</div>
+      <div class="kv"><span>gross rate</span><span class="mono">{pct(borrow_gross)}</span></div>
+      <div class="kv"><span>Merkl rebate</span><span class="mono">−{rebate_txt}</span></div>
+      <div class="kv"><span>net rate</span><span class="mono"><b>{net_borrow_txt}</b></span></div>
+    </div>
+    <div class="arrow" aria-hidden="true">→</div>
+    <div class="card">
+      <div class="leg-kind">Liquid sleeve</div>
+      <div class="leg-amount">{n(sleeve_usdc, 0)} USDC</div>
+      <div class="leg-sub">blended {pct(deploy_apy)} (24h average, weighted by the live split)</div>
+      {legs_vaults}
+    </div>
+  </div>
+  <div class="card loop">
+    <div class="leg-kind">Loop sleeve · {'active' if loop_live else 'planned, not active'}</div>
+    <div class="leg-sub" style="margin-top:6px">{esc(loop['what'][:1].upper() + loop['what'][1:])}, taking {esc(loop['share'])}. {esc(loop['limits'])}
+    {'The fund now holds a position on that spoke.' if loop_live else 'It appears here as live once the fund holds a position on that spoke; until then all borrowed USDC sits in the liquid sleeve.'}</div>
+  </div>
+</section>
+
+<section id="simulator">
+  <span class="label">Carry simulator</span>
+  <div class="card">
+    <div class="sim-head">
+      <div><h2>Carry per 1 BTC at a target health factor</h2>
+      <p class="lede">The position is managed by health factor, so the simulator is too: HF sets LTV (collateral factor ÷ HF), LTV sets the carry. Live legs only, at today's spread of {n(spread)} pp; the loop sleeve is not included.</p></div>
+      <div class="sim-out"><span class="big" id="simCarry">{carry_txt}</span><span class="muted">a year on BTC<br>at HF <b id="simHf">{hf_txt(hf_now)}</b>, after fee</span></div>
+    </div>
+    <div class="slider-wrap">
+      <div class="ends"><span>HF 1.60, less carry</span><span class="hi">HF {MIN_HF:.2f} minimum, more carry</span></div>
+      <input type="range" id="hfSlider" step="1" aria-label="Target health factor">
+      <div class="marks" id="hfMarks"></div>
+    </div>
+    <div class="sim-grid">
+      <div class="sim-cell"><div class="k">LTV</div><div class="v" id="simLtv"></div></div>
+      <div class="sim-cell"><div class="k">Borrowed per 1 BTC</div><div class="v" id="simBorrow"></div></div>
+      <div class="sim-cell"><div class="k">Carry per 1 BTC</div><div class="v" id="simUsd"></div></div>
+      <div class="sim-cell"><div class="k">BTC drop to liquidation</div><div class="v" id="simDrop"></div></div>
+    </div>
+    <div class="stat-sub" style="margin-top:12px">Projection at current rates, BTC at {usd(px)}. The spread is held fixed: borrowing more pushes hub rates up, so the low-HF end reads high.</div>
+  </div>
+</section>
+
+<section id="automation">
+  <span class="label">The automation at work</span>
+  <h2>Evidence that the agents do what we say</h2>
+  <p class="lede">Every run of the fund's agents, including the many where the right answer was to do nothing, and every onchain transaction since the first subscription. <span class="asof-note">{esc(snap_label)}{'; live readings continue the charts after that' if snap else ''}.</span></p>
+  {'<div class="note">' + esc(runs.get('note') or '') + '</div>' if runs.get('note') else ''}
+  <div class="counters">{counters()}</div>
+  <div class="card">
+    <div class="stat-label">Health factor over time</div>
+    <div class="legend"><span><i></i>health factor (log scale)</span><span><i class="band"></i>band in force</span><span><i class="liq"></i>liquidation</span><span><span class="shape" style="color:var(--c-band)">▲</span>re-lever</span><span><span class="shape" style="color:var(--c-liq)">▼</span>repay</span><span><span class="shape">◆</span>manual borrow</span><span><span class="shape">┊</span>deposit</span></div>
+    {hf_chart()}
+  </div>
+  <div class="card">
+    <div class="stat-label">BTC oracle price against agent rebalances</div>
+    <div class="statrow">
+      <div><div class="c-label">BTC oracle price</div><div class="c-value">{usd(px)}</div><div class="c-sub">{(pct((px / next(p['px'] for p in points if p.get('px')) - 1) * 100, 1, sign=True) + ' in the window') if any(p.get('px') for p in points) else ''}</div></div>
+      <div><div class="c-label">Agent rebalances</div><div class="c-value">{len([t for t in window_txs if t['kind'] in ('relever', 'derisk')])}</div><div class="c-sub">{len([t for t in window_txs if t['kind'] == 'relever'])} re-lever · {len([t for t in window_txs if t['kind'] == 'derisk'])} repay</div></div>
+      <div><div class="c-label">Closest call</div><div class="c-value">{pct(closest['headroom'], 1) if closest else 'n/a'}</div><div class="c-sub">{('price headroom to the repay trigger, ' + short(closest['t'])) if closest else 'after the first re-lever'}</div></div>
+      <div><div class="c-label">Buffer to liquidation</div><div class="c-value">{pct(liq_buffer, 1)}</div><div class="c-sub">liquidation price {usd(chain['liq_px'])}</div></div>
+    </div>
+    <div class="legend"><span><i></i>BTC oracle price (Aave V4)</span><span><i class="band"></i>no-action corridor</span><span><i class="liq"></i>liquidation price</span></div>
+    {price_chart()}
+    <div class="stat-sub">The corridor is the liquidation price × [repay trigger, borrow trigger], using the band in force at each moment. Inside it the agent does nothing; it moves whenever the agent borrows or repays, or the band is retuned.</div>
+  </div>
+  <div class="card">
+    <div class="stat-label">Price legs and what the agent did in each</div>
+    <p class="lede">HF is the BTC price ÷ the liquidation price, so a rally lifts HF toward the borrow trigger and a sell-off pushes it toward the repay trigger.</p>
+    {legs_table()}
+  </div>
+  <div class="card">
+    <div class="stat-label">Every onchain action</div>
+    <p class="lede">One row per transaction. HF is read onchain one block before and at the transaction's block.</p>
+    {tx_table()}
+  </div>
+  <div class="card">
+    <div class="stat-label">How it works</div>
+    <ul class="notes">{''.join('<li>' + x + '</li>' for x in narrative()) if snap else '<li>' + esc(snap_label.capitalize()) + '.</li>'}</ul>
+  </div>
+</section>
+
+<section id="scaling">
+  <span class="label">How the fund scales</span>
+  <h2>Sized by fund size, not by date</h2>
+  <p class="lede">{esc(CONFIG['scaling']['intro'])}</p>
+  <div class="card"><div class="table-scroll"><table class="data">
+    <thead><tr><th>Stage (fund size)</th><th>What the strategy adds</th><th>What it needs</th><th>Status</th></tr></thead>
+    <tbody>{scaling_rows()}</tbody></table></div>
+    <div class="stat-sub" style="margin-top:12px"><b>Live capacity, block {chain['block']:,}:</b> {capacity_line()}</div>
+  </div>
+</section>
+
+<section id="terms">
+  <span class="label">Risk and liquidity terms</span>
+  <h2>How the risk is managed</h2>
+  <div class="grid g2">
+    <div class="card">
+      <div class="stat-label">Health factor</div>
+      <ul class="notes" style="margin-top:8px">
+        <li><b>The band:</b> {terms_band}. The health-factor manager checks it every 5 minutes and acts on its own. From the {band['repay_trigger']:.2f} repay trigger, BTC would have to fall {drop_from_repay:.1f}% to reach liquidation.</li>
+        <li><b>Minimum {MIN_HF:.2f}:</b> a floor, not a target. From {MIN_HF:.2f}, a {drop_from_min:.1f}% BTC drop reaches liquidation.</li>
+        <li><b>Liquid floor:</b> at least {CONFIG['liquid_floor_pct']}% of the BTC-leg debt stays in the liquid sleeve, so the position can be deleveraged quickly after a large BTC drop. Today all of it is there.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="stat-label">Liquidity and fees</div>
+      <ul class="notes" style="margin-top:8px">
+        <li><b>Redemptions:</b> instant up to what the liquid sleeve covers, paid at the next settlement cycle, normally within minutes to hours. Above that, a settlement window of up to ~3 days. Paid in the asset requested.</li>
+        <li><b>Fees:</b> a 10% performance fee on gains above a high watermark, measured in WBTC and charged when subscriptions or redemptions settle. No management fee and no redemption fee. KPK's own capital runs fee-free.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="card">
+    <div class="stat-label">Main risks</div>
+    <ul class="notes" style="margin-top:8px">
+      <li><b>BTC price:</b> depositors keep full BTC exposure.</li>
+      <li><b>Liquidation:</b> a fast BTC drop, larger than the automations can react to, can lead to liquidation.</li>
+      <li><b>Smart contracts:</b> Aave V4, Morpho, Maple, the stablecoins (USDC, USDG), the BTC wrappers (WBTC, cbBTC, later cirBTC) and the fund's own contracts.</li>
+      <li><b>Credit:</b> Maple lends to institutional borrowers; a borrower default can mark syrup tokens down. This applies once the loop sleeve is live.</li>
+      <li><b>Oracles and pegs:</b> WBTC or USDG/USDC moving off their pegs.</li>
+    </ul>
+  </div>
+</section>
+
+<footer id="method">
+  <p><a class="cta" href="{esc(app_url)}" target="_blank" rel="noopener">View the fund in the KPK app ↗</a></p>
+  <p><b>Data.</b> Live figures are read from Ethereum mainnet at block {chain['block']:,} ({esc(as_of)}) through a public RPC: the Aave V4 Bluechip spoke and Core hub, the fund's NAV calculator and shares contract, and the two KPK USDC vaults. Vault APYs come from the Morpho API as 24-hour averages, blended by the live allocation. The borrow rebate and unclaimed rewards come from the Merkl API. The BTC price is the Aave V4 oracle price, read as collateral value ÷ collateral amount.</p>
+  <p><b>Agent activity.</b> From KPK's agent run records and the fund's onchain transactions, {esc(snap_label)}. Shown from the first subscription on {esc(utc(window_t0).strftime('%-d %b %Y'))}; earlier setup and small test transactions are on Etherscan. HF before and after a transaction is read onchain one block before and at its block; hourly readings fill the charts in between.</p>
+  <p><b>Reading the numbers.</b> ≈ marks a derived or rounded figure: USD values at the oracle price, WBTC equivalents of USD amounts. Projections are at current rates and are not promises. Carry = LTV × (vault yield − net borrow cost) × (1 − 10% performance fee), on the BTC held.</p>
+  <p><b>Updates.</b> Live figures every 4 hours; agent activity at each sync. Contracts: <a href="{ETHERSCAN}/address/{L.SHARES}" target="_blank" rel="noopener">shares</a> · <a href="{ETHERSCAN}/address/{L.SAFE}" target="_blank" rel="noopener">portfolio Safe</a> · <a href="{ETHERSCAN}/address/0x5d48084481660C97DecDEFE65482fD091d7FDe81" target="_blank" rel="noopener">Manager Safe</a> · <a href="{ETHERSCAN}/address/{L.NAV_CALC}" target="_blank" rel="noopener">NAV calculator</a>.</p>
+</footer>
+
+</div>
+<script>window.SIM = {json.dumps(sim)};</script>
+<script>{JS}</script>
+</body>
+</html>
+"""
+
+OUT.write_text(page)
+
+# One reading per build, appended only after the page is written.
+if not live_samples or this_sample["b"] > max(s.get("b", 0) for s in live_samples):
+    with SAMPLES_PATH.open("a") as fh:
+        fh.write(json.dumps(this_sample, separators=(",", ":")) + "\n")
+
+soft = [x for x in (apys_err and f"vault APYs: {apys_err}", rebate_err and f"rebate: {rebate_err}", rewards_err and f"rewards: {rewards_err}") if x]
+print(json.dumps({"wrote": OUT.name, "bytes": len(page), "block": chain["block"], "hf": hf_now, "carry_pct": carry, "snapshot": bool(snap), "soft_failures": soft}))

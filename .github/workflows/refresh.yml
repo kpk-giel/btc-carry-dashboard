@@ -1,0 +1,79 @@
+name: Refresh board
+
+# Rebuilds index.html from live public data and commits it. Needs no secrets:
+# every source (a public Ethereum RPC, the Morpho API, the Merkl API) is keyless.
+on:
+  schedule:
+    # Every 4 hours at :20 (00:20, 04:20, ... UTC). GitHub may delay scheduled
+    # runs under load, and disables them after 60 days without repo activity;
+    # the commits this workflow makes count as activity.
+    - cron: '20 */4 * * *'
+  workflow_dispatch: {}
+
+# Only the commit needs write access; nothing here reads repo secrets.
+permissions:
+  contents: write
+
+concurrency:
+  # A slow run must never race a later one into the same branch.
+  group: refresh-board
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # No pip install: the build deliberately uses only the stdlib.
+      - name: Build
+        run: python3 build_dashboard.py index.html
+
+      # A build that "succeeds" but writes a truncated page must not replace a
+      # good page with a broken one.
+      - name: Sanity-check the output
+        run: |
+          bytes=$(stat -c %s index.html)
+          if [ "$bytes" -lt 100000 ]; then
+            echo "index.html only ${bytes}B (expected >100KB)" >&2
+            exit 1
+          fi
+          for id in overview numbers structure simulator automation scaling terms method hfSlider; do
+            grep -q "id=\"$id\"" index.html || { echo "section #$id missing" >&2; exit 1; }
+          done
+          # Public copy rules: none of these may appear on the page.
+          for pat in 'Ripio' 'Portal' 'Temporal' 'kpk-agents.kpk.dev' '@karpatkey' 'WBTC Carry' '__STANDBY' '—' 'kpk ' 'on-chain'; do
+            if grep -q -- "$pat" index.html; then echo "copy check failed: $pat" >&2; exit 1; fi
+          done
+          echo "ok: ${bytes}B"
+
+      - name: Commit if the data changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Compare with the "As of" stamp masked out. Every build stamps the
+          # current time, so a plain diff is always dirty. A new reading in
+          # live_samples.jsonl is a data change, so it commits on its own.
+          mask() { sed -E 's/[0-9]{1,2} [A-Z][a-z]{2} [0-9]{2}:[0-9]{2} UTC//g; s/data-built="[0-9]+"//g' "$1"; }
+          git show HEAD:index.html > /tmp/prev.html 2>/dev/null || : > /tmp/prev.html
+          # ...but commit anyway if the last one is over 6 days old, so a long
+          # flat stretch never switches the schedule off.
+          last=$(git log -1 --format=%ct -- index.html 2>/dev/null || echo 0)
+          age_days=$(( ( $(date -u +%s) - last ) / 86400 ))
+          if diff -q <(mask /tmp/prev.html) <(mask index.html) >/dev/null \
+             && git diff --quiet -- live_samples.jsonl \
+             && [ "$age_days" -lt 6 ]; then
+            echo "data unchanged (last commit ${age_days}d ago), not committing"
+            git checkout -- index.html
+            exit 0
+          fi
+
+          git add index.html live_samples.jsonl
+          git commit -m "Refresh $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
