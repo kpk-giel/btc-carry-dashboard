@@ -971,6 +971,19 @@ h2 { font-size: var(--kpk-text-fs-section); font-weight: 500; margin: 0; letter-
 .leg-amount { font-size: 22px; font-weight: 500; margin-top: 6px; font-variant-numeric: tabular-nums; }
 .leg-sub { font-size: var(--kpk-text-fs-meta); color: var(--kpk-ink-muted); }
 .loop { border-style: dashed; }
+.risk-list { display: flex; flex-direction: column; }
+.risk-row { display: grid; grid-template-columns: 160px 1fr 1.3fr; gap: 14px; padding: 10px 0; border-top: var(--kpk-rule-soft) solid var(--kpk-line); font-size: var(--kpk-text-body-small); }
+.risk-row:first-child { border-top: 0; padding-top: 0; }
+.risk-n { font-weight: 500; }
+.risk-h { color: var(--kpk-ink-muted); padding-left: 10px; border-left: 2px solid var(--c-band); }
+.risk-row.muted-row .risk-h { border-left-color: var(--kpk-line); }
+@media (max-width: 760px) { .risk-row { grid-template-columns: 1fr; gap: 4px; } }
+.redeem { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.redeem-tile { border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-label); padding: 12px 14px; }
+.redeem-tile.strong { border-color: var(--c-good); background: var(--c-band-fill); }
+.redeem-v { font-size: 22px; font-weight: 500; }
+.redeem-tile.strong .redeem-v { color: var(--c-good); }
+.redeem-k { font-size: var(--kpk-text-fs-meta); color: var(--kpk-ink-muted); margin-top: 4px; }
 .cta.ghost { background: transparent; color: var(--kpk-ink); border: var(--kpk-rule-hard) solid var(--kpk-line-strong); }
 .doc-links { display: flex; gap: 10px; flex-wrap: wrap; }
 .doc-links a { font-size: var(--kpk-text-fs-meta); padding: 4px 10px; border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-pill); text-decoration: none; }
@@ -1380,7 +1393,7 @@ def risk_section():
   </div>"""
     agents = [
         ("Health-factor manager", f"keeps HF between {band['repay_trigger']:.2f} and {band['borrow_trigger']:.2f}",
-         f"Holds the BTC leg inside the band with a {band['borrow_target']:.2f} target. It checks every {RC['check_minutes']} minutes, and monitoring wakes it within seconds when HF leaves the band. Below the repay trigger it withdraws USDC from the liquid sleeve and repays; above the borrow trigger it borrows and deploys, split across the two vaults."),
+         f"Holds the BTC leg inside the band with a {band['borrow_target']:.2f} target. Monitoring reads the health factor every block and wakes it the moment HF leaves the band; it also runs every {RC['check_minutes']} minutes as a backstop. KPK sets the band itself: tighter when markets are volatile, looser when they are calm. Below the repay trigger it withdraws USDC from the liquid sleeve and repays; above the borrow trigger it borrows and deploys, split across the two vaults."),
         ("Exit agent (emergency unwind)", "unwinds the whole loan",
          f"Withdraws from the vaults and repays all the debt in one transaction. It fires on its own if HF falls below {RC['hf_exit_below']:.2f}, or if borrowing costs more than the vaults earn for {RC['spread_exit']}, and switches re-lever off so nothing borrows again until the team re-opens the position."),
         ("Agents on the KPK USDC vaults", "rebalance, exit, monitoring",
@@ -1410,6 +1423,21 @@ def risk_section():
 </section>
 """
 
+
+RISKS = [
+    ("BTC price", "Holders keep full BTC exposure; nothing is hedged.", "This is the product: carry on top of the BTC held, not a hedge.", False),
+    ("Liquidation", "A BTC drop faster than the position can be deleveraged.",
+     f"Monitoring reads the health factor every block. The agent repays from {band['repay_trigger']:.2f}, where BTC would still have to fall {(1 - 1 / band['repay_trigger']) * 100:.0f}% to reach liquidation, and the exit agent unwinds the whole loan below {RC['hf_exit_below']:.2f}. KPK tightens the band when markets turn volatile.", False),
+    ("Negative carry", "Borrowing costs rise above what the vaults earn.", f"The exit agent unwinds if that lasts {RC['spread_exit']}.", False),
+    ("Vault liquidity", "Thin liquidity in the Morpho vaults can slow deleveraging and redemptions.", f"At least {CONFIG['liquid_floor_pct']}% of the BTC-leg debt stays in the liquid sleeve, and the vault agents rebalance as liquidity changes.", False),
+    ("Oracles and pegs", "Manipulation, staleness or failure of a price feed; WBTC or a stablecoin off its peg.", "Every price is checked against independent monitor feeds, and settlement pauses on a stale or irregular price.", False),
+    ("Smart contracts", "Aave V4, Morpho, the stablecoins, the BTC wrappers (WBTC; cbBTC and cirBTC once live) and the fund's own contracts.", "Each one passes KPK's Risk Framework review: more than 150 checks across 12 risk dimensions.", False),
+    ("WBTC custody", "WBTC is backed by BTC held by a custodian.", "Its price is watched like every other in the NAV; cbBTC and cirBTC are coming as further deposit assets.", False),
+    ("Credit (future)", "Once the loop sleeve is live: a Maple borrower default can mark syrup tokens down.", "The loop is capped at 8x and kept to a share of the stablecoins; it is never relied on to deleverage the BTC leg.", True),
+]
+RISK_ROWS = "".join(
+    f'<div class="risk-row{" muted-row" if fut else ""}"><div class="risk-n">{esc(n)}</div><div class="risk-d">{esc(d)}</div><div class="risk-h">{esc(h)}</div></div>'
+    for n, d, h, fut in RISKS)
 
 def mini(label, value, sub):
     return f'<div class="mini"><span class="m-label">{esc(label)}<em>{sub}</em></span><span class="m-value">{value}</span></div>'
@@ -1630,37 +1658,31 @@ page = f"""<!doctype html>
 </section>
 
 <section id="terms">
-  <span class="label">Risk and liquidity terms</span>
-  <h2>Terms and main risks</h2>
-  <div class="grid g2">
-    <div class="card">
-      <div class="stat-label">Health factor</div>
-      <ul class="notes" style="margin-top:8px">
-        <li><b>The band:</b> {terms_band}. The health-factor manager checks it every 5 minutes and acts on its own. From the {band['repay_trigger']:.2f} repay trigger, BTC would have to fall {drop_from_repay:.1f}% to reach liquidation.</li>
-        <li><b>Minimum {MIN_HF:.2f}:</b> a floor, not a target. From {MIN_HF:.2f}, a {drop_from_min:.1f}% BTC drop reaches liquidation.</li>
-        <li><b>Liquid floor:</b> at least {CONFIG['liquid_floor_pct']}% of the BTC-leg debt stays in the liquid sleeve, so the position can be deleveraged quickly after a large BTC drop. Today all of it is there.</li>
-      </ul>
-    </div>
-    <div class="card">
-      <div class="stat-label">Liquidity and fees</div>
-      <ul class="notes" style="margin-top:8px">
-        <li><b>Redemptions:</b> instant up to what the liquid sleeve covers, paid at the next settlement cycle, normally within minutes to hours. Above that, a settlement window of up to ~3 days. Paid in the asset requested.</li>
-        <li><b>Fees:</b> a 10% performance fee on gains above a high watermark, measured in WBTC and charged when subscriptions or redemptions settle. No management fee and no redemption fee. KPK's own capital runs fee-free.</li>
-      </ul>
+  <span class="label">Risks and terms</span>
+  <h2>Main risks, and how they are handled</h2>
+  <div class="card">
+    <div class="risk-list">
+      {RISK_ROWS}
     </div>
   </div>
-  <div class="card">
-    <div class="stat-label">Main risks</div>
-    <ul class="notes" style="margin-top:8px">
-      <li><b>BTC price:</b> depositors keep full BTC exposure.</li>
-      <li><b>Liquidation:</b> a fast BTC drop, larger than the automations can react to, can lead to liquidation.</li>
-      <li><b>Negative carry:</b> if the USDC borrow rate rises above the yield of the underlying vaults; the exit agent unwinds if that lasts.</li>
-      <li><b>WBTC custody and peg:</b> WBTC is a wrapped asset backed by BTC held by a custodian.</li>
-      <li><b>Vault liquidity:</b> thin liquidity in the underlying Morpho vaults can delay deleveraging and redemptions.</li>
-      <li><b>Smart contracts:</b> Aave V4, Morpho, Maple, the stablecoins (USDC, USDG), the BTC wrappers (WBTC, cbBTC, later cirBTC) and the fund's own contracts.</li>
-      <li class="muted-row"><b>Credit (future, once the loop sleeve is live):</b> Maple lends to institutional borrowers; a borrower default can mark syrup tokens down.</li>
-      <li><b>Oracles and pegs:</b> oracle manipulation, staleness or failure, and WBTC or USDG/USDC moving off their pegs.</li>
-    </ul>
+  <div class="grid g2">
+    <div class="card">
+      <div class="stat-label">Redemptions</div>
+      <div class="redeem">
+        <div class="redeem-tile"><div class="redeem-v">Minutes to hours</div><div class="redeem-k">for redemptions up to what the liquid sleeve covers, paid at the next settlement cycle</div></div>
+        <div class="redeem-tile strong"><div class="redeem-v">Up to ~3 days</div><div class="redeem-k">above that: the full settlement window, never longer</div></div>
+      </div>
+      <div class="stat-sub" style="margin-top:10px">Paid in the asset requested. No redemption fee.</div>
+    </div>
+    <div class="card">
+      <div class="stat-label">Limits and fees</div>
+      <div class="kv"><span>Health-factor band today</span><span class="mono">{band['repay_trigger']:.2f} · {band['borrow_target']:.2f} · {band['borrow_trigger']:.2f}</span></div>
+      <div class="kv"><span>Minimum health factor</span><span class="mono">{MIN_HF:.2f}, a floor, not a target</span></div>
+      <div class="kv"><span>Liquid floor</span><span class="mono">≥ {CONFIG['liquid_floor_pct']}% of the BTC-leg debt</span></div>
+      <div class="kv"><span>Performance fee</span><span class="mono">10% above a WBTC high watermark</span></div>
+      <div class="kv"><span>Management and redemption fees</span><span class="mono">none</span></div>
+      <div class="stat-sub" style="margin-top:8px">KPK sets the band with discretion: tighter, at a higher health factor, when markets are volatile, and looser when they are calm, never below the {MIN_HF:.2f} floor. Once the performance fee is switched on it applies to every holder, KPK included.</div>
+    </div>
   </div>
 </section>
 
