@@ -108,6 +108,15 @@ def safe(fn):
         return None, str(exc)[:200]
 
 
+LOGOS = {p.stem: "data:image/webp;base64," + base64.b64encode(p.read_bytes()).decode() for p in sorted((ASSETS / "logos").glob("*.webp"))}
+
+
+def icon(name, size=22):
+    src = LOGOS.get(name)
+    return f'<img class="logo-icon" src="{src}" width="{size}" height="{size}" alt="">' if src else ""
+
+
+
 # --- Data ---------------------------------------------------------------------------
 
 now = int(time.time())
@@ -886,7 +895,7 @@ def scope_cards():
     return "".join(out)
 
 
-deposit_chips = "".join(f'<span class="chip {"live" if a["status"] == "live" else "soon"}">{esc(a["asset"])}{" · coming" if a["status"] != "live" else ""}</span>' for a in CONFIG["deposit_assets"])
+deposit_chips = "".join(f'<span class="chip {"live" if a["status"] == "live" else "soon"}">{icon(a["asset"].lower(), 16)}{esc(a["asset"])}{" · coming" if a["status"] != "live" else ""}</span>' for a in CONFIG["deposit_assets"])
 
 legs_vaults = "".join(
     f'<div class="kv"><span><a href="https://app.morpho.org/ethereum/vault/{esc(v["address"])}" target="_blank" rel="noopener">{esc(v["name"].replace("KPK USDC ", ""))} ↗</a> <span class="dim">{v["weight"] * 100:.0f}%</span></span>'
@@ -926,6 +935,8 @@ header.top { display: flex; align-items: center; justify-content: space-between;
 .cta:hover { opacity: 0.9; }
 .chip { display: inline-block; font-size: var(--kpk-text-fs-tag); letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 9px; border-radius: var(--kpk-radius-tag); border: var(--kpk-rule-hard) solid var(--kpk-line-strong); }
 .chip.soon { border-color: var(--kpk-line); color: var(--kpk-ink-muted); }
+.chip { display: inline-flex; align-items: center; gap: 6px; }
+.chip.soon .logo-icon { opacity: 0.6; }
 .pill { display: inline-block; font-size: var(--kpk-text-fs-tag); letter-spacing: 0.04em; text-transform: uppercase; padding: 3px 9px; border-radius: var(--kpk-radius-tag); background: var(--kpk-pill); color: var(--kpk-ink); vertical-align: middle; }
 section { display: flex; flex-direction: column; gap: var(--kpk-space-4); scroll-margin-top: var(--kpk-space-4); }
 .label { align-self: flex-start; background: var(--kpk-label-bg); color: var(--kpk-label-ink); font-size: var(--kpk-text-label); font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; padding: 3px 9px; border-radius: var(--kpk-radius-tag); }
@@ -1241,14 +1252,6 @@ if seed and first_relever:
     hf_caption = (f"HF started high on purpose. The first borrow is manual and was sized below the target ({seed['amount']}, HF {hf_txt(seed['hf_after'])}); "
                   f"re-lever stayed off until {short(relever_switch['t'] if relever_switch else first_relever['t'])}, when the agent levered to the "
                   f"{first_relever['target'] or band['borrow_target']:.2f} target in one step. Since then the line sits inside the band.")
-
-
-LOGOS = {p.stem: "data:image/webp;base64," + base64.b64encode(p.read_bytes()).decode() for p in sorted((ASSETS / "logos").glob("*.webp"))}
-
-
-def icon(name, size=22):
-    src = LOGOS.get(name)
-    return f'<img class="logo-icon" src="{src}" width="{size}" height="{size}" alt="">' if src else ""
 
 
 
