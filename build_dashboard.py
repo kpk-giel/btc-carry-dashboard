@@ -175,7 +175,7 @@ sleeve_usdc = sum(alloc.values())
 vault_rows = []
 for v in chain["vaults"]:
     a = next((x for x in (apys or []) if x["address"].lower() == v["address"].lower()), None)
-    vault_rows.append({**v, "apy": a["apy_24h"] if a else None, "apy_7d": a["apy_7d"] if a else None, "weight": v["usdc"] / sleeve_usdc if sleeve_usdc else 0})
+    vault_rows.append({**v, "apy": a["apy_24h"] if a else None, "apy_7d": a["apy_7d"] if a else None, "apy_30d": a.get("apy_30d") if a else None, "weight": v["usdc"] / sleeve_usdc if sleeve_usdc else 0})
 reporting = [v for v in vault_rows if v["apy"] is not None and v["usdc"] > 0]
 deploy_apy = sum(v["apy"] * v["usdc"] for v in reporting) / sum(v["usdc"] for v in reporting) if reporting else None
 
@@ -240,7 +240,7 @@ if closest:
     lowest = {**closest, "to_liq": (1 - 1 / closest["hf"]) * 100}
 
 # Share of the health-factor manager's runs since the first re-lever that found the position inside the band.
-band_runs = [h for h in runs.get("hourly", []) if first_relever and h["t"] + 3600 > first_relever["t"]]
+band_runs = [h for h in runs.get("hourly", []) if first_relever and h["t"] >= first_relever["t"]]  # full hours after the re-lever
 inside_n = sum(h["states"].get("inside the band, no action", 0) for h in band_runs)
 band_total = sum(h["n"] for h in band_runs)
 
@@ -975,8 +975,8 @@ table.data td.mid { min-width: 130px; }
 .spread-btn[aria-current="true"] { border-color: var(--c-good); color: var(--kpk-ink); }
 .spread-btn[aria-current="true"] b { color: var(--c-good); }
 .picker-note { flex: 1 1 100%; font-size: var(--kpk-text-fs-tag); color: var(--kpk-ink-muted); }
-.hero { display: grid; grid-template-columns: 1.3fr 1fr; gap: var(--kpk-space-4); }
-@media (max-width: 760px) { .hero { grid-template-columns: 1fr; } }
+.headline { display: grid; grid-template-columns: 1.3fr 1fr; gap: var(--kpk-space-4); }
+@media (max-width: 760px) { .headline { grid-template-columns: 1fr; } }
 .hero-value { font-size: var(--kpk-text-slide-stat); margin: 10px 0 8px; }
 .stat-note { font-size: var(--kpk-text-body-small); color: var(--kpk-ink-muted); max-width: 52ch; }
 .stat-note b { color: var(--kpk-ink); font-weight: 500; }
@@ -1135,7 +1135,7 @@ def mini(label, value, sub):
     return f'<div class="mini"><span class="m-label">{esc(label)}<em>{sub}</em></span><span class="m-value">{value}</span></div>'
 
 
-rew_split = " · ".join(f"{esc(g['group'].lower())} {usd(g['claimable_usd'] + g['pending_usd'], 2)}" for g in rewards["groups"]) if rewards else ""
+rew_split = " · ".join(f"{esc(g['group'])} {usd(g['claimable_usd'] + g['pending_usd'], 2)}" for g in rewards["groups"]) if rewards else ""
 hero_side = "".join([
     mini("NAV", f"{n(chain['nav_wbtc'], 4)} WBTC", f"≈ {usd(chain['nav_usd'])}"),
     mini("Share price", f"{n(chain['share_price_wbtc'], 6)} WBTC", f"last settled {n(chain['last_settled_wbtc'], 6)}"),
@@ -1204,7 +1204,7 @@ page = f"""<!doctype html>
 <section id="numbers">
   <span class="label">Headline numbers</span>
   <h2>What the fund earns on BTC</h2>
-  <div class="hero">
+  <div class="headline">
     <div class="card hero-main">
       <div class="stat-label">Carry on BTC <span class="pill">projection</span></div>
       <div class="stat-value hero-value good">{carry_txt}</div>
