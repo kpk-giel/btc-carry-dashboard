@@ -1330,9 +1330,9 @@ DOCS = CONFIG["docs"]
 def risk_section():
     steps = [
         ("Watch", "Onchain monitoring around the clock: the position, the oracles, and every venue the money sits in."),
-        ("Decide", f"Rules set in advance. Inside the band, {band['repay_trigger']:.2f} to {band['borrow_trigger']:.2f}, do nothing. Outside it, return to {band['borrow_target']:.2f}. Past the hard limits, unwind."),
+        ("Trigger", f"Rules set in advance fire the action. Inside the band, {band['repay_trigger']:.2f} to {band['borrow_trigger']:.2f}, nothing happens. Outside it, HF goes back to {band['borrow_target']:.2f}. Past the hard limits, the position unwinds."),
         ("Act", "The agent sends the transaction itself, typically within one or two blocks."),
-        ("Bounded", "Every call passes the permissions layer: whitelisted actions only, any change to them waits 3 days."),
+        ("Bounded", "Every call passes the permissions layer: whitelisted actions only, and any change to them sits behind a 3-day timelock."),
     ]
     flow = '<span class="rf-arrow" aria-hidden="true">→</span>'.join(
         f'<div class="rf-step"><div class="rf-n">{i}</div><div class="rf-t">{esc(a)}</div><div class="rf-b">{esc(b)}</div></div>' for i, (a, b) in enumerate(steps, start=1))
