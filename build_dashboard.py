@@ -308,6 +308,12 @@ for d in (7,):  # 30d dropped (Giel, 12 Oct): most of its window predates the re
 spreads = [s for s in spreads if s["spread"] is not None]
 for s in spreads:
     s["carry"] = after_fee(ltv * s["spread"])
+# Headline on the 7-day average rates (Giel, 13 Oct), so one day's rate spike doesn't set it; today's rates sit beside it.
+HEAD = next((s for s in spreads if s["key"] == "7d"), spreads[0] if spreads else None)
+head_7d = bool(HEAD and HEAD["key"] == "7d")
+head_carry = HEAD["carry"] if HEAD else None
+# The simulator's top end: 1.60, or higher when the band or the live HF sits above it.
+SIM_MAX_HF = max(1.6, math.ceil((max(band["borrow_trigger"], hf_now or 0) + 0.1) * 10) / 10)
 
 # Loop sleeve projection. Today's only USDG line with room is too thin for the loop's own draw, so the
 # projection prices the loop at today's Core-hub USDG rate, which is what more Aave capacity would offer.
@@ -915,8 +921,8 @@ def capacity_line():
 
 # Simulator inputs.
 sim = {
-    "cf": cf, "liveHf": hf_now or band["borrow_target"], "spread": spread if spread is not None else 0, "fee": PERF_FEE, "px": px,
-    "minHf": MIN_HF, "lowHf": 1.05, "maxHf": 1.6, "target": band["borrow_target"], "repay": band["repay_trigger"], "borrow": band["borrow_trigger"],
+    "cf": cf, "liveHf": hf_now or band["borrow_target"], "spread": HEAD["spread"] if HEAD else 0, "fee": PERF_FEE, "px": px,
+    "minHf": MIN_HF, "lowHf": 1.05, "maxHf": SIM_MAX_HF, "target": band["borrow_target"], "repay": band["repay_trigger"], "borrow": band["borrow_trigger"],
 }
 
 loop_live = chain["maple_active"]
@@ -1315,15 +1321,17 @@ JS = """
 
 rebate_txt = f"{pct(rebate_pct)}" if rebate else "not read at this build"
 carry_txt = f"{carry:+.2f}%" if carry is not None else "n/a"
+head_txt = f"{head_carry:+.2f}%" if head_carry is not None else "n/a"
 net_borrow_txt = pct(borrow_net)
-good_style = ' style="color:var(--c-good)"' if carry and carry > 0 else ""
-fee_term, fee_sub = ("0.9", "after 10% fee") if carry and carry > 0 else ("1.0", "no fee on a loss")
-math_strip = (f'<div class="math"><div class="chunk"><span class="term">{pct(deploy_apy)}</span><span class="sub">vault yield, 24h avg</span></div><span class="op">−</span>'
-              f'<div class="chunk"><span class="term">{net_borrow_txt}</span><span class="sub">borrow, net of rebate</span></div><span class="op">=</span>'
-              f'<div class="chunk"><span class="term">{n(spread)} pp</span><span class="sub">spread</span></div><span class="op">×</span>'
+good_style = ' style="color:var(--c-good)"' if head_carry and head_carry > 0 else ""
+fee_term, fee_sub = ("0.9", "after 10% fee") if head_carry and head_carry > 0 else ("1.0", "no fee on a loss")
+basis = "7d avg" if head_7d else "24h avg"
+math_strip = (f'<div class="math"><div class="chunk"><span class="term">{pct(HEAD["vault"])}</span><span class="sub">vault yield, {basis}</span></div><span class="op">−</span>'
+              f'<div class="chunk"><span class="term">{pct(HEAD["borrow_net"])}</span><span class="sub">borrow, net of rebate{", 7d avg" if head_7d else ""}</span></div><span class="op">=</span>'
+              f'<div class="chunk"><span class="term">{n(HEAD["spread"])} pp</span><span class="sub">spread</span></div><span class="op">×</span>'
               f'<div class="chunk"><span class="term">{ltv * 100:.1f}%</span><span class="sub">LTV</span></div><span class="op">×</span>'
               f'<div class="chunk"><span class="term">{fee_term}</span><span class="sub">{fee_sub}</span></div><span class="op">=</span>'
-              f'<div class="chunk"><span class="term"{good_style}>{carry_txt}</span><span class="sub">carry on BTC</span></div></div>') if spread is not None else ""
+              f'<div class="chunk"><span class="term"{good_style}>{head_txt}</span><span class="sub">carry on BTC</span></div></div>') if HEAD else ""
 
 terms_band = f"repay below {band['repay_trigger']:.2f} back to {band['repay_target']:.2f}; re-lever above {band['borrow_trigger']:.2f} back to {band['borrow_target']:.2f}"
 drop_from_repay = (1 - 1 / band["repay_trigger"]) * 100
@@ -1520,13 +1528,13 @@ hero_side = "".join([
     mini("LTV", f"{ltv * 100:.1f}%", f"collateral factor {cf * 100:.1f}% ÷ HF · liquidation at {usd(chain['liq_px'])}"),
     mini("Unclaimed rewards", usd(rewards["total_usd"], 2) if rewards else "n/a", (f"≈ {n(rewards['total_wbtc'], 5)} WBTC, not yet in NAV · {rew_split}") if rewards else "not read at this build"),
 ])
-trail_bits = [f"{s['label']} {s['carry']:+.2f}%" for s in spreads if s["key"] != "live"]
-trail_line = ("On trailing rates: " + " · ".join(trail_bits) + ". ") if trail_bits else ""
-per_btc_v = px * after_fee(ltv * spread) / 100 if spread is not None else None
+trail_bits = [f"{s['label']} {s['carry']:+.2f}%" for s in spreads if s["key"] != HEAD["key"]] if HEAD else []
+trail_line = (("At today's rates: " if head_7d else "On trailing rates: ") + " · ".join(b.replace("Live ", "") for b in trail_bits) + ". ") if trail_bits else ""
+per_btc_v = px * head_carry / 100 if head_carry is not None else None
 per_btc = "n/a" if per_btc_v is None else ("−" if per_btc_v < 0 else "") + usd(abs(per_btc_v))
 
 spread_buttons = "".join(
-    f'<button type="button" class="spread-btn" data-spread="{s["spread"]:.6f}" data-vault="{s["vault"]:.4f}" data-net="{s["borrow_net"]:.4f}" aria-current="{"true" if s["key"] == "live" else "false"}">'
+    f'<button type="button" class="spread-btn" data-spread="{s["spread"]:.6f}" data-vault="{s["vault"]:.4f}" data-net="{s["borrow_net"]:.4f}" aria-current="{"true" if HEAD and s["key"] == HEAD["key"] else "false"}">'
     f'<i>{esc(s["label"])}</i><b>{s["spread"]:+.2f} pp</b></button>' for s in spreads)
 
 def share_label(s):
@@ -1585,11 +1593,11 @@ page = f"""<!doctype html>
   <h2>What the fund earns on BTC</h2>
   <div class="headline">
     <div class="card hero-main">
-      <div class="stat-label">Carry on BTC <span class="pill live-pill">at live rates</span></div>
-      <div class="stat-value hero-value{" good" if carry and carry > 0 else ""}">{carry_txt}</div>
+      <div class="stat-label">Carry on BTC <span class="pill live-pill">{"7-day average rates" if head_7d else "at live rates"}</span></div>
+      <div class="stat-value hero-value{" good" if head_carry and head_carry > 0 else ""}">{head_txt}</div>
       {status_note}
-      <div class="stat-note">a year on the BTC held, at live rates. The fund borrows USDC at <b>{ltv * 100:.1f}%</b> LTV and earns a <b>{n(spread)} pp</b> spread on it, net of the {rebate_txt} Merkl borrow rebate{' and the 10% performance fee' if carry and carry > 0 else ''}. <em>Not a promise: rates move.</em></div>
-      <div class="stat-sub">{(f"<b>{ltv * spread:+.2f}% before the fee</b>, which is what KPK's own capital earns today. " if carry > 0 else "No performance fee applies while carry is negative. ") if carry is not None else ""}{esc(trail_line)}≈ {per_btc} a year per 1 BTC at today's price.</div>
+      <div class="stat-note">a year on the BTC held, {"at the last 7 days' average rates" if head_7d else "at live rates"}. The fund borrows USDC at <b>{ltv * 100:.1f}%</b> LTV and earns a <b>{n(HEAD["spread"]) if HEAD else "n/a"} pp</b> spread on it, net of the {pct(HEAD["rebate"]) if HEAD else rebate_txt}{" average" if head_7d else ""} Merkl borrow rebate{' and the 10% performance fee' if head_carry and head_carry > 0 else ''}. <em>Not a promise: rates move.</em></div>
+      <div class="stat-sub">{(f"<b>{ltv * HEAD['spread']:+.2f}% before the fee</b>, which is what KPK's own capital earns on these rates. " if head_carry > 0 else "No performance fee applies while carry is negative. ") if head_carry is not None else ""}{esc(trail_line)}≈ {per_btc} a year per 1 BTC at today's price.</div>
       <div class="kv"><span>Realised</span><span class="mono">{'see below' if realised else 'from ' + (utc(realised_from).strftime('%-d %b') if realised_from else 'n/a')}</span></div>
       {realised_html}
     </div>
@@ -1646,7 +1654,7 @@ page = f"""<!doctype html>
     <div class="sim-head">
       <div><h2>Carry per 1 BTC at a target health factor</h2>
       <p class="lede">The position is managed by health factor, so the simulator is too: HF sets LTV (collateral factor ÷ HF), LTV sets the carry. Live legs only; the loop sleeve is not included.</p></div>
-      <div class="sim-out"><span class="big" id="simCarry">{carry_txt}</span><span class="muted">a year on BTC<br>at HF <b id="simHf">{hf_txt(hf_now)}</b>, after fee</span></div>
+      <div class="sim-out"><span class="big" id="simCarry">{head_txt}</span><span class="muted">a year on BTC<br>at HF <b id="simHf">{hf_txt(hf_now)}</b>, after fee</span></div>
     </div>
     <div class="spread-picker" role="group" aria-label="Which spread to simulate with">
       <span class="picker-label">Spread</span>
@@ -1654,7 +1662,7 @@ page = f"""<!doctype html>
       <span class="picker-note"><b>Live</b> is today's borrow rate against the vaults' 24-hour yield. The trailing options average the vault yield, the Core-hub USDC rate and the Merkl rebate over the same window, as a check on today's figure.{'' if len(spreads) > 1 else ' Trailing options appear once the rate history reaches back far enough.'}</span>
     </div>
     <div class="slider-wrap">
-      <div class="ends"><span>HF 1.60, less carry</span><span class="hi">HF 1.05, more carry</span></div>
+      <div class="ends"><span>HF {SIM_MAX_HF:.2f}, less carry</span><span class="hi">HF 1.05, more carry</span></div>
       <input type="range" id="hfSlider" step="1" aria-label="Target health factor">
       <div class="marks" id="hfMarks"></div>
     </div>
