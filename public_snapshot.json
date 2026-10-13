@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "synced_at": "2026-10-13T11:35:43Z",
- "synced_block": 26183306,
+ "synced_at": "2026-10-13T12:08:06Z",
+ "synced_block": 26183468,
  "window_start": {
   "t": 1791563351,
   "block": 26156054,
@@ -68,8 +68,8 @@
   "by_agent": [
    {
     "agent": "Health-factor manager",
-    "runs": 1093,
-    "completed": 1093,
+    "runs": 1099,
+    "completed": 1099,
     "failed": 0,
     "executed": 2
    },
@@ -1088,12 +1088,21 @@
    },
    {
     "t": 1791889200,
-    "n": 9,
-    "ok": 9,
+    "n": 14,
+    "ok": 14,
     "fail": 0,
     "states": {
-     "inside the band, no action": 8,
+     "inside the band, no action": 13,
      "below the repay trigger: repaid": 1
+    }
+   },
+   {
+    "t": 1791892800,
+    "n": 1,
+    "ok": 1,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 1
     }
    }
   ],
@@ -9348,6 +9357,15 @@
     "share_price_usd": 83175.42,
     "share_price_wbtc": 1.00026152,
     "btc_usd": 83153.67
+   },
+   {
+    "t": 1791893267,
+    "b": 26183468,
+    "nav_usd": 397443.75,
+    "nav_wbtc": 4.77990002,
+    "share_price_usd": 83170.64,
+    "share_price_wbtc": 1.00026063,
+    "btc_usd": 83148.97
    }
   ]
  },
@@ -9501,6 +9519,12 @@
    "b": 26183306,
    "borrow_apy": 9.583,
    "lend_apy": 6.185
+  },
+  {
+   "t": 1791893267,
+   "b": 26183468,
+   "borrow_apy": 9.635,
+   "lend_apy": 6.186
   }
  ],
  "core_usdc_rates": [
@@ -10436,19 +10460,19 @@
   }
  ],
  "capacity": {
-  "t": 1791891343,
-  "block": 26183306,
+  "t": 1791893286,
+  "block": 26183468,
   "core_usdc_room_to_kink": 0,
-  "core_usdc_liquidity": 2040165,
-  "core_usdc_borrow_apy": 9.583,
+  "core_usdc_liquidity": 2034051,
+  "core_usdc_borrow_apy": 9.635,
   "core_usdc_rebate_apr": 2,
-  "core_usdc_net_borrow_apy": 7.583,
-  "core_usdc_after_1m_apy": 18.435,
-  "bluechip_usdc_room_under_cap": 1122482.3381089997,
+  "core_usdc_net_borrow_apy": 7.635,
+  "core_usdc_after_1m_apy": 18.492,
+  "bluechip_usdc_room_under_cap": 1123520.3816769999,
   "core_usdg_liquidity": 9302617,
   "core_usdg_borrow_apy": 3.991,
   "core_usdg_after_1m_apy": 4.05,
   "core_usdg_after_3_5m_apy": 9.525,
-  "bluechip_usdg_room_under_cap": 2264477.804603
+  "bluechip_usdg_room_under_cap": 2264471.205306
  }
 }
