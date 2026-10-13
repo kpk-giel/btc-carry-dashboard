@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "synced_at": "2026-10-13T09:57:14Z",
- "synced_block": 26182815,
+ "synced_at": "2026-10-13T11:35:43Z",
+ "synced_block": 26183306,
  "window_start": {
   "t": 1791563351,
   "block": 26156054,
@@ -12,11 +12,11 @@
   "block": 26029303
  },
  "position_at_sync": {
-  "t": 1791882875,
-  "block": 26182603,
+  "t": 1791890087,
+  "block": 26183203,
   "collateral_wbtc": 4.77644089,
-  "debt_usdc": 275835.91,
-  "hf": 1.21792
+  "debt_usdc": 275841.93,
+  "hf": 1.21521
  },
  "band": {
   "history": [
@@ -51,6 +51,14 @@
     "borrow_trigger": 1.25,
     "borrow_target": 1.21,
     "relever": true
+   },
+   {
+    "t": 1791891105,
+    "repay_trigger": 1.3,
+    "repay_target": 1.8,
+    "borrow_trigger": 1.9,
+    "borrow_target": 1.8,
+    "relever": false
    }
   ]
  },
@@ -60,10 +68,10 @@
   "by_agent": [
    {
     "agent": "Health-factor manager",
-    "runs": 1071,
-    "completed": 1071,
+    "runs": 1093,
+    "completed": 1093,
     "failed": 0,
-    "executed": 1
+    "executed": 2
    },
    {
     "agent": "Subscription and redemption approver",
@@ -1062,11 +1070,30 @@
    },
    {
     "t": 1791882000,
-    "n": 11,
-    "ok": 11,
+    "n": 12,
+    "ok": 12,
     "fail": 0,
     "states": {
-     "inside the band, no action": 11
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1791885600,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1791889200,
+    "n": 9,
+    "ok": 9,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 8,
+     "below the repay trigger: repaid": 1
     }
    }
   ],
@@ -1270,10 +1297,32 @@
     "hash": "0xcdc9f30a8236b5f10c8a14fd0b30dd4cf08824f9faae11df2d7fc77ea1d97e03",
     "hf_read": 2.22372,
     "secs": 6.8
+   },
+   {
+    "t": 1791891134,
+    "agent": "Health-factor manager",
+    "label": "below the repay trigger: repaid",
+    "hash": "0x7e2ba461ca12d6c70977520b101ba531344ff13f4e45b72970398cb0b7b1a9da",
+    "hf_read": 1.2152,
+    "secs": 10.3
    }
   ]
  },
  "transactions": [
+  {
+   "t": 1791891143,
+   "block": 26183291,
+   "hash": "0x7e2ba461ca12d6c70977520b101ba531344ff13f4e45b72970398cb0b7b1a9da",
+   "status": "ok",
+   "actor": "Health-factor manager",
+   "kind": "derisk",
+   "action": "De-risk: withdrew 64,852.05 from KPK USDC Yield and 24,765.50 from KPK USDC Yield RWA, repaid 89,617.57 USDC on the Core hub.",
+   "amount": "89,617.57 USDC",
+   "hf_before": 1.2152,
+   "hf_after": 1.8,
+   "target": 1.8,
+   "px": 83040.34
+  },
   {
    "t": 1791640499,
    "block": 26162465,
@@ -9019,6 +9068,56 @@
    "cf": 0.845,
    "nav": 4.77993607,
    "sup": 4.77865456
+  },
+  {
+   "t": 1791886487,
+   "b": 26182903,
+   "hf": 1.22085,
+   "px": 83425.01,
+   "liq": 68333.46,
+   "coll": 4.77644089,
+   "debt": 275838.83,
+   "cf": 0.845,
+   "nav": 4.779924,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791890087,
+   "b": 26183203,
+   "hf": 1.21521,
+   "px": 83040.34,
+   "liq": 68334.23,
+   "coll": 4.77644089,
+   "debt": 275841.93,
+   "cf": 0.845,
+   "nav": 4.779909,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791891131,
+   "b": 26183290,
+   "hf": 1.2152,
+   "px": 83040.34,
+   "liq": 68334.45,
+   "coll": 4.77644089,
+   "debt": 275842.84,
+   "cf": 0.845,
+   "nav": 4.77990467,
+   "sup": 4.77865456,
+   "tag": "before"
+  },
+  {
+   "t": 1791891143,
+   "b": 26183291,
+   "hf": 1.8,
+   "px": 83040.34,
+   "liq": 46133.52,
+   "coll": 4.77644089,
+   "debt": 186225.28,
+   "cf": 0.845,
+   "nav": 4.77990462,
+   "sup": 4.77865456,
+   "tag": "after"
   }
  ],
  "series": {
@@ -9240,6 +9339,15 @@
     "share_price_usd": 83361,
     "share_price_wbtc": 1.00026653,
     "btc_usd": 83338.78
+   },
+   {
+    "t": 1791891323,
+    "b": 26183306,
+    "nav_usd": 397466.58,
+    "nav_wbtc": 4.77990428,
+    "share_price_usd": 83175.42,
+    "share_price_wbtc": 1.00026152,
+    "btc_usd": 83153.67
    }
   ]
  },
@@ -9387,6 +9495,12 @@
    "b": 26182815,
    "borrow_apy": 10.354,
    "lend_apy": 6.224
+  },
+  {
+   "t": 1791891323,
+   "b": 26183306,
+   "borrow_apy": 9.583,
+   "lend_apy": 6.185
   }
  ],
  "core_usdc_rates": [
@@ -10322,19 +10436,19 @@
   }
  ],
  "capacity": {
-  "t": 1791885433,
-  "block": 26182815,
+  "t": 1791891343,
+  "block": 26183306,
   "core_usdc_room_to_kink": 0,
-  "core_usdc_liquidity": 1949886,
-  "core_usdc_borrow_apy": 10.354,
+  "core_usdc_liquidity": 2040165,
+  "core_usdc_borrow_apy": 9.583,
   "core_usdc_rebate_apr": 2,
-  "core_usdc_net_borrow_apy": 8.354,
-  "core_usdc_after_1m_apy": 19.269,
-  "bluechip_usdc_room_under_cap": 1032956.1676310003,
-  "core_usdg_liquidity": 9302939,
+  "core_usdc_net_borrow_apy": 7.583,
+  "core_usdc_after_1m_apy": 18.435,
+  "bluechip_usdc_room_under_cap": 1122482.3381089997,
+  "core_usdg_liquidity": 9302617,
   "core_usdg_borrow_apy": 3.991,
   "core_usdg_after_1m_apy": 4.05,
-  "core_usdg_after_3_5m_apy": 9.524,
-  "bluechip_usdg_room_under_cap": 2264819.846194
+  "core_usdg_after_3_5m_apy": 9.525,
+  "bluechip_usdg_room_under_cap": 2264477.804603
  }
 }
