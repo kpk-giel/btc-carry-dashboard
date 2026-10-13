@@ -2,6 +2,11 @@
   "_readme": "Editable copy for the public page. Change wording here, not in build_dashboard.py. No dates and no client names in the scaling block. status is one of: live, in progress, planned.",
   "app_url": "https://app.kpk.io/vaults/btc-alpha-fund",
   "performance_fee": 0.1,
+  "status_note": {
+    "_readme": "Shown under the headline carry. Clear 'text' to hide it.",
+    "as_of": "13 Oct 2026",
+    "text": "The Aave V4 Core hub's USDC borrow rate rose above what the vaults earn, so carry is negative at today's rates. KPK raised the health-factor band, the agent repaid about a third of the loan (HF 1.80), and re-lever stays off until the spread recovers."
+  },
   "deposit_assets": [
     {
       "asset": "WBTC",

@@ -171,6 +171,11 @@ else:
     band_asof = f"as set on {band['as_of']}"
 
 
+def band_changed_near(ts):
+    """True within 15 minutes after a band change: what the agent does then answers KPK's retune, not the market."""
+    return any(0 <= ts - b["t"] <= 900 for b in band_hist)
+
+
 def band_at(t):
     if not band_hist:
         return band
@@ -201,7 +206,12 @@ rebate_pct = rebate["rebate_pct"] if rebate else 0.0
 borrow_net = borrow_gross - rebate_pct
 ltv = chain["ltv"] or 0.0
 spread = None if deploy_apy is None else deploy_apy - borrow_net
-carry = None if spread is None else ltv * spread * (1 - PERF_FEE)
+def after_fee(x):
+    """The performance fee is charged on gains only, so a negative carry carries no fee."""
+    return x * (1 - PERF_FEE) if x > 0 else x
+
+
+carry = None if spread is None else after_fee(ltv * spread)
 hf_now = chain["hf"]
 cf = chain["cf"]
 px = chain["btc_px"]
@@ -251,6 +261,8 @@ if snap and snap.get("position_at_sync"):
 after_relever = [p for p in points if first_relever and p["t"] >= first_relever["t"] and p.get("hf")]
 closest = None
 for p in after_relever:
+    if band_changed_near(p["t"]):
+        continue
     b = band_at(p["t"])
     headroom = (1 - b["repay_trigger"] / p["hf"]) * 100
     if closest is None or headroom < closest["headroom"]:
@@ -295,7 +307,7 @@ for d in (7,):  # 30d dropped (Giel, 12 Oct): most of its window predates the re
         spreads.append({"key": f"{d}d", "label": f"{d}d avg", **tr})
 spreads = [s for s in spreads if s["spread"] is not None]
 for s in spreads:
-    s["carry"] = ltv * s["spread"] * (1 - PERF_FEE)
+    s["carry"] = after_fee(ltv * s["spread"])
 
 # Loop sleeve projection. Today's only USDG line with room is too thin for the loop's own draw, so the
 # projection prices the loop at today's Core-hub USDG rate, which is what more Aave capacity would offer.
@@ -307,7 +319,7 @@ if spread is not None and loop_in:
     rows_ = [{"share": 0.0, "carry": carry}]
     for s_ in LOOP["shares"]:
         mix = (1 - s_) * deploy_apy + s_ * y_loop
-        rows_.append({"share": s_, "carry": ltv * (mix - borrow_net) * (1 - PERF_FEE), "today_rate": loop_in["borrow_after"].get(round(loop_draws[s_]))})
+        rows_.append({"share": s_, "carry": after_fee(ltv * (mix - borrow_net)), "today_rate": loop_in["borrow_after"].get(round(loop_draws[s_]))})
     loop_proj = {"syrup": a, "borrow": b_need, "gd_now": loop_in["borrow_now"], "gd_liq": loop_in["liquidity"], "yield": y_loop, "rows": rows_,
                  "breakeven": a * L_ / (L_ - 1), "loop_hf": LOOP["collateral_factor"] * L_ / (L_ - 1)}
 
@@ -491,7 +503,7 @@ def hf_chart():
     body.append(f'<line class="liq" x1="{PAD_L}" y1="{yl:.1f}" x2="{PAD_L + f.pw}" y2="{yl:.1f}"/>'
                 f'<text class="lab liq-lab" x="{PAD_L + f.pw + 6}" y="{yl + 4:.1f}">liq. 1.00</text>')
     b = band
-    body.append(f'<text class="lab band-lab" x="{PAD_L + f.pw + 6}" y="{f.y(b["borrow_trigger"]) + 4:.1f}">borrow {b["borrow_trigger"]:.2f}</text>'
+    body.append(f'<text class="lab band-lab" x="{PAD_L + f.pw + 6}" y="{f.y(b["borrow_trigger"]) + 4:.1f}">borrow {b["borrow_trigger"]:.2f}{"" if b["relever"] else ", off"}</text>'
                 f'<text class="lab band-lab" x="{PAD_L + f.pw + 6}" y="{f.y(b["repay_trigger"]) + 12:.1f}">repay {b["repay_trigger"]:.2f}</text>')
     body.append(f'<path class="line" d="{path(f, pts_plot, "hf_plot")}"/>')
     # Name the planned hold so a high HF after the seed borrow does not read as a fault.
@@ -524,7 +536,7 @@ def price_chart():
     # A near-empty loan has a liquidation price near zero; leave a gap there rather than a spike.
     with_liq = [p for p in pts if p.get("liq") and p["liq"] > 0.3 * p["px"]]
     lo = min([p["px"] for p in pts] + [p["liq"] for p in with_liq]) * 0.96
-    hi = max([p["px"] for p in pts] + [p["liq"] * band_at(p["t"])["borrow_trigger"] for p in with_liq]) * 1.02
+    hi = max([p["px"] for p in pts] + [p["liq"] * band_at(p["t"])["borrow_trigger"] for p in with_liq if band_at(p["t"])["relever"]]) * 1.02
     f = Frame(t0, t1, lo, hi)
     body = [testing_shade(f)]
     step = 10 ** math.floor(math.log10((hi - lo) / 4))
@@ -609,6 +621,7 @@ def share_events():
         ev.append((seed["t"], f"seed borrow of {seed['amount']} on the Core hub", "seed borrow"))
     if first_relever:
         ev.append((first_relever["t"], f"re-lever to the {first_relever['target'] or band['borrow_target']:.2f} target", "re-lever"))
+    ev += [(t["t"], f"band raised, {t['amount']} repaid", "band raised") for t in live_txs if t["kind"] == "derisk" and band_changed_near(t["t"])]
     ev += [(t["t"], f"rewards claimed, {t['amount']}", "rewards claimed") for t in live_txs if t["kind"] == "claim"]
     ev += [(t["t"], f"redemption of {t['amount']}", "redemption") for t in live_txs if t["kind"] == "redemption"]
     return sorted(ev)
@@ -777,7 +790,12 @@ def narrative():
             items.append((when, f"<b>Re-lever.</b> {lead}borrowed {esc(t['amount'])} and landed HF at {hf_txt(t['hf_after'])} (target {t['target'] or band_at(t['t'])['borrow_target']:.2f})."))
         elif "derisk" in kinds:
             t = next(t for t in c["txs"] if t["kind"] == "derisk")
-            items.append((when, f"<b>De-risk.</b> HF fell below {band_at(t['t'])['repay_trigger']:.2f}; the agent repaid {esc(t['amount'])} (HF {hf_txt(t['hf_after'])})."))
+            bb = band_at(t["t"])
+            if band_changed_near(t["t"]):
+                items.append((when, f"<b>Band raised.</b> KPK raised the band to {bb['repay_trigger']:.2f} to {bb['borrow_trigger']:.2f}" + ("" if bb["relever"] else " with re-lever off")
+                                    + f"; the agent repaid {esc(t['amount'])} (HF {hf_txt(t['hf_before'])} → {hf_txt(t['hf_after'])})."))
+            else:
+                items.append((when, f"<b>De-risk.</b> HF fell below {bb['repay_trigger']:.2f}; the agent repaid {esc(t['amount'])} (HF {hf_txt(t['hf_after'])})."))
         elif "claim" in kinds:
             t = next(t for t in c["txs"] if t["kind"] == "claim")
             items.append((when, f"<b>Rewards claimed.</b> {esc(t['amount'])} moved into NAV in one step."))
@@ -800,6 +818,8 @@ def narrative():
 # --- Page pieces --------------------------------------------------------------------------------
 
 as_of = stamp(chain["read_at"])
+SN = CONFIG.get("status_note") or {}
+status_note = f'<div class="example" style="margin:4px 0 10px"><b>{esc(SN["as_of"])}:</b> {esc(SN["text"])}</div>' if SN.get("text") else ""
 app_url = CONFIG["app_url"]
 snap_label = f"agent activity as of {stamp(synced_at)}" if snap else "agent activity appears after the first sync"
 nav_plus = chain["nav_wbtc"] + (rewards["total_wbtc"] or 0) if rewards else None
@@ -1050,7 +1070,8 @@ details.agent[open] > summary::after { content: "Show less"; }
 .rf-arrow { align-self: center; color: var(--kpk-ink-muted); font-size: 20px; }
 @media (max-width: 860px) { .riskflow { grid-template-columns: 1fr; } .rf-arrow { transform: rotate(90deg); justify-self: center; } }
 .agent-b { font-size: var(--kpk-text-body-small); margin: 8px 0 0; line-height: 1.55; }
-.proofs { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.proofs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .proofs { grid-template-columns: 1fr; } }
 .proof { display: flex; flex-direction: column; gap: 4px; background: var(--kpk-surface-card); border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-card); padding: 14px 16px; color: inherit; text-decoration: none; min-width: 0; }
 .proof:hover { border-color: var(--c-line); }
 .proof-tag { display: flex; justify-content: space-between; font-size: var(--kpk-text-fs-tag); color: var(--kpk-ink-muted); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -1266,12 +1287,12 @@ JS = """
   });
   function fmt(x, dp) { return x.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp }); }
   function render() {
-    var hf = hfOf(parseFloat(slider.value)), ltv = S.cf / hf, carry = ltv * S.spread * (1 - S.fee);
+    var hf = hfOf(parseFloat(slider.value)), ltv = S.cf / hf, gross = ltv * S.spread, carry = gross > 0 ? gross * (1 - S.fee) : gross;
     document.getElementById('simHf').textContent = hf.toFixed(2);
     document.getElementById('simCarry').textContent = (carry >= 0 ? '+' : '') + carry.toFixed(2) + '%';
     document.getElementById('simLtv').textContent = (ltv * 100).toFixed(1) + '%';
     document.getElementById('simBorrow').textContent = fmt(S.px * ltv, 0) + ' USDC';
-    document.getElementById('simUsd').textContent = '$' + fmt(S.px * ltv * S.spread / 100 * (1 - S.fee), 0) + ' a year';
+    var usdY = S.px * carry / 100; document.getElementById('simUsd').textContent = (usdY < 0 ? '−$' : '$') + fmt(Math.abs(usdY), 0) + ' a year';
     document.getElementById('simDrop').textContent = ((1 - 1 / hf) * 100).toFixed(1) + '%';
     document.getElementById('simWarn').hidden = hf >= S.minHf - 0.0001;
     els.forEach(function (m) { m.el.classList.toggle('on', Math.abs(m.hf - hf) < 0.006); });
@@ -1295,23 +1316,30 @@ JS = """
 rebate_txt = f"{pct(rebate_pct)}" if rebate else "not read at this build"
 carry_txt = f"{carry:+.2f}%" if carry is not None else "n/a"
 net_borrow_txt = pct(borrow_net)
+good_style = ' style="color:var(--c-good)"' if carry and carry > 0 else ""
+fee_term, fee_sub = ("0.9", "after 10% fee") if carry and carry > 0 else ("1.0", "no fee on a loss")
 math_strip = (f'<div class="math"><div class="chunk"><span class="term">{pct(deploy_apy)}</span><span class="sub">vault yield, 24h avg</span></div><span class="op">−</span>'
               f'<div class="chunk"><span class="term">{net_borrow_txt}</span><span class="sub">borrow, net of rebate</span></div><span class="op">=</span>'
               f'<div class="chunk"><span class="term">{n(spread)} pp</span><span class="sub">spread</span></div><span class="op">×</span>'
               f'<div class="chunk"><span class="term">{ltv * 100:.1f}%</span><span class="sub">LTV</span></div><span class="op">×</span>'
-              f'<div class="chunk"><span class="term">0.9</span><span class="sub">after 10% fee</span></div><span class="op">=</span>'
-              f'<div class="chunk"><span class="term" style="color:var(--c-good)">{carry_txt}</span><span class="sub">carry on BTC</span></div></div>') if spread is not None else ""
+              f'<div class="chunk"><span class="term">{fee_term}</span><span class="sub">{fee_sub}</span></div><span class="op">=</span>'
+              f'<div class="chunk"><span class="term"{good_style}>{carry_txt}</span><span class="sub">carry on BTC</span></div></div>') if spread is not None else ""
 
 terms_band = f"repay below {band['repay_trigger']:.2f} back to {band['repay_target']:.2f}; re-lever above {band['borrow_trigger']:.2f} back to {band['borrow_target']:.2f}"
 drop_from_repay = (1 - 1 / band["repay_trigger"]) * 100
 drop_from_min = (1 - 1 / MIN_HF) * 100
 
 
+band_raises = [t for t in live_txs if t["kind"] == "derisk" and band_changed_near(t["t"])]
 hf_caption = ""
 if seed and first_relever:
     hf_caption = (f"HF started high on purpose. The first borrow is manual and was sized below the target ({seed['amount']}, HF {hf_txt(seed['hf_after'])}); "
                   f"re-lever stayed off until {short(relever_switch['t'] if relever_switch else first_relever['t'])}, when the agent levered to the "
                   f"{first_relever['target'] or band['borrow_target']:.2f} target in one step. Since then the line sits inside the band.")
+    for t in band_raises:
+        bb = band_at(t["t"])
+        hf_caption += (f" On {utc(t['t']).strftime('%-d %b')} KPK raised the band to {bb['repay_trigger']:.2f} to {bb['borrow_trigger']:.2f}"
+                       + ("" if bb["relever"] else " with re-lever off") + f", and the agent repaid {t['amount']}, taking HF to {hf_txt(t['hf_after'])}.")
 
 
 
@@ -1320,10 +1348,6 @@ def px_near(ts, back):
     target = ts - back
     cand = [p for p in points if p.get("px") and abs(p["t"] - target) <= 3 * 3600]
     return min(cand, key=lambda p: abs(p["t"] - target))["px"] if cand else None
-
-
-def band_changed_near(ts):
-    return any(0 <= ts - b["t"] <= 900 for b in band_hist)
 
 
 def risk_evidence():
@@ -1338,6 +1362,8 @@ def risk_evidence():
             out.append((first_relever, dur(first_relever["t"] - relever_switch["t"]), "from re-lever switched on to the borrow confirmed", hf_move(first_relever)))
         elif secs(first_relever):
             out.append((first_relever, f"{secs(first_relever):.0f} s", "from reading the chain to the borrow confirmed", hf_move(first_relever)))
+    for t in [t for t in live_txs if t["kind"] == "derisk" and band_changed_near(t["t"])][-1:]:
+        out.append((t, f"{float(t['amount'].split()[0].replace(',', '')) / 1000:,.1f}k USDC", "repaid from the vaults after KPK raised the band", hf_move(t)))
     for t in reversed(transactions):
         if t["kind"] == "relever" and (t.get("hf_before") or 0) > 3:
             dep = [d for d in transactions if d["kind"] in ("subscription", "collateral") and 0 <= t["t"] - d["t"] <= 600]
@@ -1490,13 +1516,14 @@ rew_split = " · ".join(f"{esc(REW_SHORT.get(g['group'], g['group']))} {usd(g['c
 hero_side = "".join([
     mini("NAV", f"{n(chain['nav_wbtc'], 4)} WBTC", f"≈ {usd(chain['nav_usd'])}"),
     mini("Share price", f"{n(chain['share_price_wbtc'], 6)} WBTC", f"last settled {n(chain['last_settled_wbtc'], 6)}"),
-    mini("Health factor", hf_txt(hf_now), f"band {band['repay_trigger']:.2f} · {band['borrow_target']:.2f} · {band['borrow_trigger']:.2f} (repay · target · re-lever)"),
+    mini("Health factor", hf_txt(hf_now), f"band {band['repay_trigger']:.2f} · {band['borrow_target']:.2f} · {band['borrow_trigger']:.2f} (repay · target · re-lever)" + ("" if band["relever"] else ", re-lever off")),
     mini("LTV", f"{ltv * 100:.1f}%", f"collateral factor {cf * 100:.1f}% ÷ HF · liquidation at {usd(chain['liq_px'])}"),
     mini("Unclaimed rewards", usd(rewards["total_usd"], 2) if rewards else "n/a", (f"≈ {n(rewards['total_wbtc'], 5)} WBTC, not yet in NAV · {rew_split}") if rewards else "not read at this build"),
 ])
 trail_bits = [f"{s['label']} {s['carry']:+.2f}%" for s in spreads if s["key"] != "live"]
 trail_line = ("On trailing rates: " + " · ".join(trail_bits) + ". ") if trail_bits else ""
-per_btc = usd(px * ltv * spread / 100 * (1 - PERF_FEE)) if spread is not None else "n/a"
+per_btc_v = px * after_fee(ltv * spread) / 100 if spread is not None else None
+per_btc = "n/a" if per_btc_v is None else ("−" if per_btc_v < 0 else "") + usd(abs(per_btc_v))
 
 spread_buttons = "".join(
     f'<button type="button" class="spread-btn" data-spread="{s["spread"]:.6f}" data-vault="{s["vault"]:.4f}" data-net="{s["borrow_net"]:.4f}" aria-current="{"true" if s["key"] == "live" else "false"}">'
@@ -1559,9 +1586,10 @@ page = f"""<!doctype html>
   <div class="headline">
     <div class="card hero-main">
       <div class="stat-label">Carry on BTC <span class="pill live-pill">at live rates</span></div>
-      <div class="stat-value hero-value good">{carry_txt}</div>
-      <div class="stat-note">a year on the BTC held, at live rates. The fund borrows USDC at <b>{ltv * 100:.1f}%</b> LTV and earns a <b>{n(spread)} pp</b> spread on it, net of the {rebate_txt} Merkl borrow rebate and the 10% performance fee. <em>Not a promise: rates move.</em></div>
-      <div class="stat-sub">{(f"<b>{carry / (1 - PERF_FEE):+.2f}% before the fee</b>, which is what KPK's own capital earns today. ") if carry is not None else ""}{esc(trail_line)}≈ {per_btc} a year per 1 BTC at today's price.</div>
+      <div class="stat-value hero-value{" good" if carry and carry > 0 else ""}">{carry_txt}</div>
+      {status_note}
+      <div class="stat-note">a year on the BTC held, at live rates. The fund borrows USDC at <b>{ltv * 100:.1f}%</b> LTV and earns a <b>{n(spread)} pp</b> spread on it, net of the {rebate_txt} Merkl borrow rebate{' and the 10% performance fee' if carry and carry > 0 else ''}. <em>Not a promise: rates move.</em></div>
+      <div class="stat-sub">{(f"<b>{ltv * spread:+.2f}% before the fee</b>, which is what KPK's own capital earns today. " if carry > 0 else "No performance fee applies while carry is negative. ") if carry is not None else ""}{esc(trail_line)}≈ {per_btc} a year per 1 BTC at today's price.</div>
       <div class="kv"><span>Realised</span><span class="mono">{'see below' if realised else 'from ' + (utc(realised_from).strftime('%-d %b') if realised_from else 'n/a')}</span></div>
       {realised_html}
     </div>
@@ -1732,7 +1760,7 @@ page = f"""<!doctype html>
   <p><a class="cta" href="{esc(app_url)}" target="_blank" rel="noopener">View the fund in the KPK app ↗</a></p>
   <p><b>Data.</b> Live figures are read from Ethereum mainnet at block {chain['block']:,} ({esc(as_of)}) through a public RPC: the Aave V4 Bluechip spoke and Core hub, the fund's NAV calculator and shares contract, and the two KPK USDC vaults. Vault APYs come from the Morpho API as 24-hour averages, blended by the live allocation. The borrow rebate and unclaimed rewards come from the Merkl API. The BTC price is the Aave V4 oracle price, read as collateral value ÷ collateral amount.</p>
   <p><b>Agent activity.</b> From KPK's agent run records and the fund's onchain transactions, {esc(snap_label)}. Shown from the first subscription on {esc(utc(window_t0).strftime('%-d %b %Y'))}; earlier setup and small test transactions are on Etherscan. HF before and after a transaction is read onchain one block before and at its block; hourly readings fill the charts in between.</p>
-  <p><b>Reading the numbers.</b> ≈ marks a derived or rounded figure: USD values at the oracle price, WBTC equivalents of USD amounts. Carry figures use live rates read at each build, not a backtest, and are not promises; the loop table is a projection. Carry = LTV × (vault yield − net borrow cost) × (1 − 10% performance fee), on the BTC held.</p>
+  <p><b>Reading the numbers.</b> ≈ marks a derived or rounded figure: USD values at the oracle price, WBTC equivalents of USD amounts. Carry figures use live rates read at each build, not a backtest, and are not promises; the loop table is a projection. Carry = LTV × (vault yield − net borrow cost) × (1 − 10% performance fee), on the BTC held; the fee applies to gains only.</p>
   <p><b>Updates.</b> Live figures every hour; agent activity at each sync. Contracts: <a href="{ETHERSCAN}/address/{L.SHARES}" target="_blank" rel="noopener">shares</a> · <a href="{ETHERSCAN}/address/{L.SAFE}" target="_blank" rel="noopener">portfolio Safe</a> · <a href="{ETHERSCAN}/address/0x5d48084481660C97DecDEFE65482fD091d7FDe81" target="_blank" rel="noopener">Manager Safe</a> · <a href="{ETHERSCAN}/address/{L.NAV_CALC}" target="_blank" rel="noopener">NAV calculator</a>.</p>
 </footer>
 
