@@ -1002,11 +1002,11 @@ else:
     if len(so_far) >= 2 and so_far[-1]["t"] - so_far[0]["t"] >= DAY:
         r_ = share_price(so_far[-1]) / share_price(so_far[0]) - 1
         days_ = (so_far[-1]["t"] - so_far[0]["t"]) / DAY
-        sofar_html = (f'<div class="kv"><span>So far, since the {esc(utc(window_t0).strftime("%-d %b"))} deposit</span><span class="mono">{r_ * 100:+.3f}% in {days_:.1f} days (≈ {((1 + r_) ** (365 / days_) - 1) * 100:+.1f}% a year)</span></div>'
-                      '<div class="stat-sub">Share price in WBTC, claimed rewards included.</div>')
+        sofar_html = (f'<div class="kv"><span>Realised so far, since {esc(utc(window_t0).strftime("%-d %b"))}</span><span class="mono">{r_ * 100:+.3f}% in {days_:.1f} days (≈ {((1 + r_) ** (365 / days_) - 1) * 100:+.1f}% a year)</span></div>'
+                      f'<div class="stat-sub">From the share price in WBTC; the {REALISED_DAYS:.0f}-day figure from NAV starts on {esc(utc(realised_from).strftime("%-d %b")) if realised_from else "day seven"}.</div>')
     if head_realised:
         sofar_html = ""
-    realised_html = sofar_html + ((f'<div class="stat-sub">Then: realised carry over a full {REALISED_DAYS:.0f} days, from NAV, with and without unclaimed rewards, and the USD carry P&amp;L.</div>') if head_realised and realised_from else "") + ("" if head_realised else f'<div class="stat-sub">The full {REALISED_DAYS:.0f}-day realised carry, from NAV, follows on {esc(utc(realised_from).strftime("%-d %b")) if realised_from else "its seventh day"}.</div>' )
+    realised_html = sofar_html + ((f'<div class="stat-sub">Then: realised carry over a full {REALISED_DAYS:.0f} days, from NAV, with and without unclaimed rewards, and the USD carry P&amp;L.</div>') if head_realised and realised_from else "") + ("" if head_realised or sofar_html else f'<div class="stat-sub">The full {REALISED_DAYS:.0f}-day realised carry, from NAV, follows on {esc(utc(realised_from).strftime("%-d %b")) if realised_from else "its seventh day"}.</div>' )
 
 def routes_card():
     """What each borrow line would pay today for the target loan, after the fund's own draw, against the vaults' yield."""
@@ -1657,10 +1657,8 @@ trail_line = (("At today's rates: " if head_7d else "On trailing rates: ") + " �
 per_btc_v = px * head_carry / 100 if head_carry is not None else None
 per_btc = "n/a" if per_btc_v is None else ("−" if per_btc_v < 0 else "") + usd(abs(per_btc_v))
 _pbl = px * carry / 100 if carry is not None else None
-note_live = (f"a year on the BTC held, at live rates. The fund borrows USDC at <b>{ltv * 100:.1f}%</b> LTV and earns a <b>{sgn(spread)} pp</b> spread on it, "
-             f"net of the {rebate_txt} Merkl borrow rebate{' and the 10% performance fee' if carry and carry > 0 else ''}.") if spread is not None else ""
-sub_live = ((f"<b>{sgn(ltv * spread)}% before the fee</b>, which is what KPK's own capital earns today. " if carry and carry > 0 else "No performance fee applies while carry is negative. ")
-            + f"At 7-day average rates and LTV: {head_txt}. ≈ {'n/a' if _pbl is None else ('−' if _pbl < 0 else '') + usd(abs(_pbl))} a year per 1 BTC at today's price.") if spread is not None else ""
+note_live = ("a year on the BTC held, after the 10% performance fee." if carry and carry > 0 else "a year on the BTC held; no performance fee applies to a loss.") if spread is not None else ""
+sub_live = f"≈ {'n/a' if _pbl is None else ('−' if _pbl < 0 else '') + usd(abs(_pbl))} a year per 1 BTC at today's price." if spread is not None else ""
 view_toggle = ('<span class="view-toggle" role="group" aria-label="Rates shown"><button type="button" data-set-view="live" aria-pressed="true">Live</button>'
                '<button type="button" data-set-view="7d" aria-pressed="false">7-day average</button></span>')
 
@@ -1726,9 +1724,9 @@ page = f"""<!doctype html>
     <div class="card hero-main">
       <div class="stat-label">{"Return on BTC" if head_realised else "Carry on BTC"} {view_toggle if two_views else f'<span class="pill live-pill">{"realised so far" if head_realised else ("7-day average rates" if head_7d else "at live rates")}</span>'}</div>
       {vw(f'<div class="stat-value hero-value{" good" if carry and carry > 0 else ""}">{carry_txt}</div>', f'<div class="stat-value hero-value{" good" if (head_realised and sofar["ann_all"] > 0) or (head_carry and head_carry > 0 and not not_borrowing) else ""}">{head_txt}</div>', "div")}
-      <div class="stat-note">{vw(note_live, (f"a year on the BTC held, realised since the {utc(window_t0).strftime('%-d %b')} deposit and annualised: the share price in WBTC ({sofar['ret']:+.3f}% in {sofar['days']:.1f} days) plus {usd(sofar['rew_usd'], 2)} of unclaimed Merkl rewards. Most of it is Merkl's borrow rebate; without it, carry was about flat. A short window, so it moves a lot. The borrow routes below show what the fund would earn at today's rates.") if head_realised else (f"a year on the BTC held. The fund is not borrowing right now, so it earns no carry. At the last 7 days' average rates, borrowing USDC and deploying it would earn a <b>{n(HEAD['spread']) if HEAD else 'n/a'} pp</b> spread, net of the Merkl borrow rebate.") if not_borrowing else (f"a year on the BTC held, {'at the last 7 days&#x27; average rates' if head_7d else 'at live rates'}. The fund borrows USDC at <b>{hl_ltv * 100:.1f}%</b> LTV ({avg_label}) and earns a <b>{n(HEAD['spread']) if HEAD else 'n/a'} pp</b> spread on it, net of the {pct(HEAD['rebate']) if HEAD else rebate_txt}{' average' if head_7d else ''} Merkl borrow rebate{' and the 10% performance fee' if head_carry and head_carry > 0 else ''}."))} <em>Not a promise: rates move.</em></div>
-      <div class="stat-sub">{vw(sub_live, "" if not_borrowing else ((f"<b>{sgn(hl_ltv * HEAD['spread'])}% before the fee</b>, which is what KPK's own capital earns on these rates. " if head_carry > 0 else "No performance fee applies while carry is negative. ") if head_carry is not None else "") + esc(trail_line) + f"≈ {per_btc} a year per 1 BTC at today's price.")}</div>
-      <div class="kv"><span>Realised</span><span class="mono">{'see below' if realised else 'from ' + (utc(realised_from).strftime('%-d %b') if realised_from else 'n/a')}</span></div>
+      <div class="stat-note">{vw(note_live, (f"a year on the BTC held, realised since the {utc(window_t0).strftime('%-d %b')} deposit and annualised: the share price in WBTC ({sofar['ret']:+.3f}% in {sofar['days']:.1f} days) plus {usd(sofar['rew_usd'], 2)} of unclaimed Merkl rewards. Most of it is Merkl's borrow rebate; without it, carry was about flat. A short window, so it moves a lot. The borrow routes below show what the fund would earn at today's rates.") if head_realised else (f"a year on the BTC held. The fund is not borrowing right now, so it earns no carry. At the last 7 days' average rates, borrowing USDC and deploying it would earn a <b>{n(HEAD['spread']) if HEAD else 'n/a'} pp</b> spread, net of the Merkl borrow rebate.") if not_borrowing else (f"a year on the BTC held, at the last 7 days&#x27; average rates and LTV, after the 10% performance fee." if head_carry and head_carry > 0 else "a year on the BTC held, at the last 7 days&#x27; average rates and LTV."))} <em>Not a promise: rates move.</em></div>
+      <div class="stat-sub">{vw(sub_live, "" if not_borrowing else f"≈ {per_btc} a year per 1 BTC at today's price.")}</div>
+      {'' if (not realised and 'Realised so far' in realised_html) else f"""<div class="kv"><span>Realised</span><span class="mono">{'see below' if realised else 'from ' + (utc(realised_from).strftime('%-d %b') if realised_from else 'n/a')}</span></div>"""}
       {realised_html}
     </div>
     <div class="side-stats">{hero_side}</div>
