@@ -7,6 +7,10 @@
     "as_of": "14 Oct 2026",
     "text": "The fund is not borrowing for now. On 13 Oct the Aave V4 Core hub's USDC borrow rate rose above what the vaults earn, so KPK unwound the loan. The WBTC stays supplied as collateral, and borrowing resumes once the spread is reliably positive."
   },
+  "strategy_target_hf": {
+    "_readme": "The health factor the strategy runs at in normal markets (the band's target before any de-risk). The borrow routes card and, while the fund isn't borrowing, the loop table are priced at it.",
+    "value": 1.21
+  },
   "deposit_assets": [
     {
       "asset": "WBTC",
@@ -126,7 +130,7 @@
     ]
   },
   "scope": {
-    "_readme": "Cards under the intro, so a reader can scope the fund. status: live or planned. A card with live_if 'maple' switches to live once the fund holds a position on the Aave V4 Maple spoke.",
+    "_readme": "Cards under the intro, so a reader can scope the fund. status: live, planned or fallback. A card with live_if 'maple' switches to live once the fund holds a position on the Aave V4 Maple spoke.",
     "cards": [
       {
         "label": "Chain",
@@ -138,9 +142,23 @@
       {
         "label": "Collateral and borrow",
         "value": "Aave V4",
-        "detail": "WBTC as collateral on the Bluechip spoke; USDC borrowed from the Core hub.",
+        "detail": "WBTC as collateral on the Bluechip spoke; stablecoins borrowed from the Core hub (USDC so far, USDG planned).",
         "status": "live",
         "icon": "aave"
+      },
+      {
+        "label": "Borrow",
+        "value": "Aave V3",
+        "detail": "Aave V3 Core: USDC borrowed against WBTC when Aave V4 is too thin or too expensive.",
+        "status": "fallback",
+        "icon": "aave"
+      },
+      {
+        "label": "Borrow",
+        "value": "Spark",
+        "detail": "SparkLend: USDC borrowed against WBTC or cbBTC, in the same fallback role.",
+        "status": "fallback",
+        "icon": "spark"
       },
       {
         "label": "Liquid sleeve",

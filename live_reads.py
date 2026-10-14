@@ -44,6 +44,8 @@ CORE_USDC_ASSET = 5
 CORE_USDG_ASSET = 8
 PRIME = "0x943827DCA022D0F354a8a8c332dA1e5Eb9f9F931"
 PRIME_USDC_ASSET = 4
+AAVE_V3_POOL = "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2"
+SPARK_POOL = "0xC13e21B648A5Ee794902342038FF3aDAB66BE987"
 
 SEL = {
     "getUserAccountData(address)": "0xbf92857c",
@@ -61,6 +63,7 @@ SEL = {
     "balanceOf(address)": "0x70a08231",
     "convertToAssets(uint256)": "0x07a2d13a",
     "calculateInterestRate(uint256,uint256,uint256,uint256,uint256)": "0xf5fe86ee",
+    "getReserveData(address)": "0x35ea6a75",
 }
 NO_DEBT = 2**256 - 1
 SECONDS_PER_YEAR = 365 * 24 * 3600
@@ -386,6 +389,26 @@ def read_borrow_lines(draws):
     if calls:
         for (key, _), r in zip(calls, eth_calls([c for _, c in calls])):
             out[key]["after"] = apr_to_apy_pct(_words(r)[0] / 1e27)
+    return out
+
+
+
+def read_v3_lines():
+    """USDC borrow APY (percent) on the Aave V3 Core and Spark pools, the WBTC liquidation threshold
+    each applies, and its USDC supply (whole tokens), for the fallback borrow routes."""
+    pools = [("usdc_aave_v3", AAVE_V3_POOL), ("usdc_spark", SPARK_POOL)]
+    reads = []
+    for _, pool in pools:
+        reads += [(pool, _data("getReserveData(address)", USDC)), (pool, _data("getReserveData(address)", WBTC))]
+    res = eth_calls(reads)
+    out, tokens = {}, []
+    for i, (key, _) in enumerate(pools):
+        u, w = _words(res[2 * i]), _words(res[2 * i + 1])
+        out[key] = {"now": apr_to_apy_pct(u[4] / 1e27), "lt_wbtc": ((w[0] >> 16) & 0xFFFF) / 10_000}
+        tokens.append((key, "0x" + hex(u[8])[2:].rjust(40, "0")))
+    sup = eth_calls([(a, _data("totalSupply()")) for _, a in tokens])
+    for (key, _), r in zip(tokens, sup):
+        out[key]["supplied"] = _words(r)[0] / 1e6
     return out
 
 
