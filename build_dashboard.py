@@ -260,6 +260,11 @@ relever_switch = next((b for i, b in enumerate(band_hist) if i > 0 and b["releve
 position_changed = False
 if snap and snap.get("position_at_sync"):
     ps = snap["position_at_sync"]
+    # The sync records its last hourly sample; a transaction after it (with its own after-state sample) is newer.
+    _sp = [p for p in snap.get("samples", []) if p.get("coll") is not None and p.get("debt") is not None]
+    _last = max(_sp, key=lambda p: p["t"]) if _sp else None
+    if _last and _last["t"] > ps["t"]:
+        ps = {"t": _last["t"], "collateral_wbtc": _last["coll"], "debt_usdc": _last["debt"]}
     accrued = ps["debt_usdc"] * (1 + borrow_gross / 100 * max(0, now - ps["t"]) / (365 * DAY))
     if abs(chain["collateral_wbtc"] - ps["collateral_wbtc"]) > 1e-8 or abs(chain["debt_usdc"] - accrued) > max(50.0, 0.002 * accrued):
         position_changed = True
