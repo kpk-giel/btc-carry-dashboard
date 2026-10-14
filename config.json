@@ -5,11 +5,16 @@
   "status_note": {
     "_readme": "Shown under the headline carry. Clear 'text' to hide it.",
     "as_of": "14 Oct 2026",
-    "text": "The fund is not borrowing for now. On 13 Oct the Aave V4 Core hub's USDC borrow rate rose above what the vaults earn, so KPK unwound the loan. The WBTC stays supplied as collateral, and borrowing resumes once the spread is reliably positive."
+    "text": "The fund is not borrowing for now. On 13 Oct the Aave V4 Core hub's USDC borrow rate rose above what the vaults earn, so KPK unwound the loan. The WBTC stays supplied as collateral, and borrowing resumes once a venue pays a reliably positive spread."
   },
   "strategy_target_hf": {
-    "_readme": "The health factor the strategy runs at in normal markets (the band's target before any de-risk). The borrow routes card and, while the fund isn't borrowing, the loop table are priced at it.",
-    "value": 1.21
+    "_readme": "The health factor and band the strategy runs at in normal markets (before any de-risk). The borrow routes card, the risk wording and, while the fund isn't borrowing, the loop table and the simulator use them.",
+    "value": 1.21,
+    "band": {
+      "repay_trigger": 1.15,
+      "target": 1.21,
+      "borrow_trigger": 1.25
+    }
   },
   "deposit_assets": [
     {
@@ -52,8 +57,8 @@
     "stages": [
       {
         "stage": "Today, ~$0.4M",
-        "adds": "WBTC on Aave V4, USDC borrowed on the Core hub with Merkl's rebate, liquid sleeve in two KPK USDC vaults",
-        "needs": "Nothing further: running now",
+        "adds": "WBTC collateral on Aave V4 and the two KPK USDC vaults as the liquid sleeve; USDC was borrowed on the Core hub until 13 Oct, when its rate spiked",
+        "needs": "Borrowing resumes once a venue pays a positive spread",
         "status": "live",
         "icons": [
           "aave",
@@ -63,27 +68,28 @@
       },
       {
         "stage": "~$5M",
-        "adds": "Borrow USDG on the Core hub and swap it to USDC, a deeper source than USDC; cbBTC as a second deposit asset; borrow sizing that reads rates and hub depth before drawing; a first loop sleeve (syrupUSDG at ~8x on the Aave V4 Maple spoke, ~25% of borrowed stables)",
-        "needs": "Permissions through governance and a 3-day timelock; Maple lender onboarding; NAV coverage and monitoring for the loop",
+        "adds": "Borrowing on the best-priced venue: Spark or Aave V3 Core (deep USDC markets), or USDG on the Aave V4 Core hub swapped to USDC; cbBTC as a second deposit asset; borrow sizing that reads rates and depth before drawing",
+        "needs": "Permissions through the Security Council's 3-day timelock (in progress); the agent update that routes borrowing across venues",
         "status": "in progress",
         "icons": [
-          "aave",
-          "maple"
+          "spark",
+          "aave"
         ]
       },
       {
         "stage": "~$50M",
-        "adds": "Larger Aave lines (USDC depth on the Core hub, the Bluechip USDG cap, Maple spoke lines); loop share rising towards 50%; cirBTC as a deposit asset once Aave lists it",
-        "needs": "Aave capacity; a cirBTC price feed for NAV",
+        "adds": "Larger lines across Aave and Spark; an optional syrupUSDG loop on the Aave V4 Maple spoke (about 25% of borrowed stables), only after depositors have run plain BTC deposits and redemptions; cirBTC as a deposit asset once Aave lists it",
+        "needs": "Venue capacity; Maple lender onboarding and NAV coverage for the loop; a cirBTC price feed for NAV",
         "status": "planned",
         "icons": [
           "aave",
+          "spark",
           "maple"
         ]
       },
       {
         "stage": "~$150M",
-        "adds": "Several venues in parallel: Aave V3 Core and Morpho (syrup loops) next to Aave V4",
+        "adds": "Morpho markets as another borrow venue, next to Aave and Spark",
         "needs": "Venue integrations in the execution layer",
         "status": "planned",
         "icons": [
@@ -94,7 +100,7 @@
     ],
     "backup": {
       "label": "Backup borrow venues",
-      "text": "Aave V3 Core, Spark (strong for cbBTC) and Morpho. Their permissions are part of the next governance batch, so the fund can move or spread its borrowing when one venue runs short of depth or turns expensive.",
+      "text": "Aave V3 Core, Spark (strong for cbBTC) and Morpho. Their permissions are in the Security Council's 3-day timelock, so the fund can move or spread its borrowing when one venue runs short of depth or turns expensive.",
       "icons": [
         "aave",
         "spark",
@@ -130,7 +136,7 @@
     ]
   },
   "scope": {
-    "_readme": "Cards under the intro, so a reader can scope the fund. status: live, planned or fallback. A card with live_if 'maple' switches to live once the fund holds a position on the Aave V4 Maple spoke.",
+    "_readme": "Cards under the intro, so a reader can scope the fund. status: live, next, planned or optional. A card with live_if 'maple' switches to live once the fund holds a position on the Aave V4 Maple spoke.",
     "cards": [
       {
         "label": "Chain",
@@ -149,15 +155,15 @@
       {
         "label": "Borrow",
         "value": "Aave V3",
-        "detail": "Aave V3 Core: USDC borrowed against WBTC when Aave V4 is too thin or too expensive.",
-        "status": "fallback",
+        "detail": "Aave V3 Core: USDC borrowed against WBTC once its permissions clear the timelock.",
+        "status": "next",
         "icon": "aave"
       },
       {
         "label": "Borrow",
         "value": "Spark",
-        "detail": "SparkLend: USDC borrowed against WBTC or cbBTC, in the same fallback role.",
-        "status": "fallback",
+        "detail": "SparkLend: USDC borrowed against WBTC or cbBTC, once its permissions clear the timelock.",
+        "status": "next",
         "icon": "spark"
       },
       {

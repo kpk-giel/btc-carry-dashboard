@@ -61,10 +61,14 @@ def n(x, dp=2):
     return "n/a" if x is None else f"{x:,.{dp}f}"
 
 
+def sgn(x, dp=2):
+    return f"{x:+.{dp}f}".replace("-", "−")
+
+
 def pct(x, dp=2, sign=False):
     if x is None:
         return "n/a"
-    return f"{x:+.{dp}f}%" if sign else f"{x:.{dp}f}%"
+    return (sgn(x, dp) + "%") if sign else f"{x:.{dp}f}%"
 
 
 def usd(x, dp=0):
@@ -233,6 +237,10 @@ if not points or this_sample["b"] > max(p["b"] for p in points):
 points.sort(key=lambda p: (p["t"], 0 if p.get("tag") == "before" else 1))
 
 transactions = sorted((snap or {}).get("transactions", []), key=lambda r: (r["block"], r["hash"]))
+# A redemption of a few satoshis burns less than 0.0001 shares; older syncs printed that as 0.0000.
+for _t in transactions:
+    if "burned 0.0000 shares" in (_t.get("action") or ""):
+        _t["action"] = _t["action"].replace("burned 0.0000 shares", "burned under 0.0001 shares")
 window_t0 = (snap or {}).get("window_start", {}).get("t") or (points[0]["t"] if points else now)
 runs = (snap or {}).get("runs") or {}
 
@@ -276,6 +284,7 @@ if closest:
 band_runs = [h for h in runs.get("hourly", []) if first_relever and h["t"] >= first_relever["t"]]  # full hours after the re-lever
 inside_n = sum(h["states"].get("inside the band, no action", 0) for h in band_runs)
 band_total = sum(h["n"] for h in band_runs)
+acted_n = sum(v for h in band_runs for k, v in h["states"].items() if ": repaid" in k or ": borrowed" in k)
 
 
 def trailing_spread(days):
@@ -332,6 +341,7 @@ not_borrowing = chain["debt_usdc"] < 1000
 loop_head_note = f" at the {float(CONFIG['strategy_target_hf']['value']):.2f} target health factor" if not_borrowing else ""
 # While it isn't borrowing, the loop, the borrow routes and the simulator are priced at the band's target loan.
 STRAT_HF = float(CONFIG["strategy_target_hf"]["value"])
+SB = CONFIG["strategy_target_hf"]["band"]
 ref_ltv = cf / STRAT_HF if not_borrowing else ltv
 ref_debt = chain["collateral_usd"] * ref_ltv
 route_debt = chain["collateral_usd"] * cf / STRAT_HF
@@ -345,14 +355,14 @@ SIM_MAX_HF = min(3.0, max(1.6, math.ceil((max(band["borrow_trigger"], hf_now or 
 # Loop sleeve projection. Today's only USDG line with room is too thin for the loop's own draw, so the
 # projection prices the loop at today's Core-hub USDG rate, which is what more Aave capacity would offer.
 loop_proj = None
-if spread is not None and loop_in:
+if HEAD and loop_in:
     a, L_ = loop_in["syrup_7d"], LOOP["leverage"]
     b_need = chain["core_usdg"]["borrow_apy"]
     y_loop = a * L_ - b_need * (L_ - 1)
-    rows_ = [{"share": 0.0, "carry": after_fee(ref_ltv * spread)}]
+    rows_ = [{"share": 0.0, "carry": after_fee(ref_ltv * HEAD["spread"])}]
     for s_ in LOOP["shares"]:
         mix = (1 - s_) * deploy_apy + s_ * y_loop
-        rows_.append({"share": s_, "carry": after_fee(ref_ltv * (mix - borrow_net)), "today_rate": loop_in["borrow_after"].get(round(loop_draws[s_]))})
+        rows_.append({"share": s_, "carry": after_fee(ref_ltv * (mix - HEAD["borrow_net"])), "today_rate": loop_in["borrow_after"].get(round(loop_draws[s_]))})
     loop_proj = {"syrup": a, "borrow": b_need, "gd_now": loop_in["borrow_now"], "gd_liq": loop_in["liquidity"], "yield": y_loop, "rows": rows_,
                  "breakeven": a * L_ / (L_ - 1), "loop_hf": LOOP["collateral_factor"] * L_ / (L_ - 1)}
 
@@ -620,7 +630,7 @@ def price_chart():
     body.append(f'<path class="line" d="{path(f, pts, "px")}"/>')
     last = pts[-1]
     body.append(f'<text class="lab" x="{PAD_L + f.pw + 6}" y="{f.y(last["px"]) + 4:.1f}">BTC {last["px"] / 1000:,.1f}k</text>')
-    if with_liq:
+    if with_liq and with_liq[-1] is pts[-1]:
         ll = with_liq[-1]
         body.append(f'<text class="lab liq-lab" x="{PAD_L + f.pw + 6}" y="{f.y(ll["liq"]) + 4:.1f}">liq. {ll["liq"] / 1000:,.1f}k</text>')
     for t in transactions:
@@ -649,7 +659,7 @@ def share_events():
     """What moved the strategy, oldest first: the config names what the data cannot, the data names the rest."""
     ev = [(iso_ts(x["t"]), x["label"], x.get("short", x["label"])) for x in CONFIG["milestones"]["events"]]
     if deposit_tx:
-        ev.append((deposit_tx["t"], f"pre-pilot deposit of {deposit_tx['amount']}", "pre-pilot deposit"))
+        ev.append((deposit_tx["t"], f"first deposit of {deposit_tx['amount']}", "first deposit"))
     if seed:
         ev.append((seed["t"], f"seed borrow of {seed['amount']} on the Core hub", "seed borrow"))
     if first_relever:
@@ -749,7 +759,7 @@ def leg_rows():
     cs = clusters()
     rows = []
     badge = {"relever": ("positive", "re-lever"), "derisk": ("negative", "repay"), "seed_borrow": ("info", "manual seed borrow"), "subscription": ("info", "deposit"),
-             "collateral": ("info", "supply as collateral"), "claim": ("generic", "rewards claimed"), "redemption": ("negative", "redemption"), "requests": ("generic", "requests"), "other": ("generic", "other")}
+             "collateral": ("info", "supply as collateral"), "claim": ("generic", "rewards claimed"), "redemption": ("negative", "redemption"), "requests": ("generic", "requests"), "unwind": ("negative", "loan unwound"), "other": ("generic", "other")}
     for i, c in enumerate(cs):
         last = c["txs"][-1]
         p_after = last.get("px")
@@ -767,7 +777,8 @@ def leg_rows():
             first = c["txs"][0]
             bb = band_at(first["t"])
             saw = f"HF {hf_txt(first['hf_before'])} vs band {bb['repay_trigger']:.2f} to {bb['borrow_trigger']:.2f}"
-            move = "price"
+            move = ("KPK triggered the exit" if "unwind" in kinds and first["t"] >= window_t0 else "KPK claimed rewards" if "claim" in kinds
+                    else "KPK raised the band" if band_changed_near(first["t"]) else "price")
         resp = " ".join(f'<span class="badge {badge.get(k, badge["other"])[0]}">{badge.get(k, badge["other"])[1]}</span>' for k in dict.fromkeys(kinds))
         detail = "; ".join(brief(t) for t in c["txs"])
         if c["switch"]:
@@ -791,7 +802,7 @@ def leg_rows():
         rows.append({"win": f"{short(seg[0]['t'])} → {short(seg[-1]['t'])}", "px": f"{seg[0]['px']:,.0f} → {seg[-1]['px']:,.0f}",
                      "move": pct((seg[-1]["px"] / seg[0]["px"] - 1) * 100, 1, sign=True), "saw": saw2,
                      "resp": '<span class="badge generic">no rebalance</span>',
-                     "detail": f"{nruns} agent runs" + (f" · HF {min(hfs):.4f} to {max(hfs):.4f}" if hfs else " · no debt"),
+                     "detail": f"{nruns} agent runs" + ((" · HF above 100 (almost no debt)" if min(hfs) > 100 else f" · HF {min(hfs):.4f} to {hf_txt(max(hfs))}") if hfs else " · no debt"),
                      "debt": n(seg[-1]["debt"], 0), "hf": hf_txt(seg[-1].get("hf"))})
     return rows
 
@@ -832,7 +843,8 @@ def narrative():
                 items.append((when, f"<b>De-risk.</b> HF fell below {bb['repay_trigger']:.2f}; the agent repaid {esc(t['amount'])} (HF {hf_txt(t['hf_after'])})."))
         elif "unwind" in kinds:
             t = max((t for t in c["txs"] if t["kind"] == "unwind"), key=lambda t: float(t['amount'].split()[0].replace(',', '')))
-            items.append((when, f"<b>Loan unwound.</b> With borrowing costing more than the vaults earned, KPK triggered the exit agent, which repaid {esc(t['amount'])} from the vaults in one transaction (HF {hf_txt(t['hf_before'])} → {hf_txt(t['hf_after'])})."))
+            items.append((when, f"<b>Loan unwound.</b> With borrowing costing more than the vaults earned, KPK paused the automatic negative-carry exit to see whether the spike would pass, then triggered the exit itself: the exit agent repaid {esc(t['amount'])} from the vaults in one transaction (HF {hf_txt(t['hf_before'])} → {hf_txt(t['hf_after'])})"
+                                + (", and a second run minutes later swept the last cents." if len([x for x in c["txs"] if x["kind"] == "unwind"]) > 1 else ".")))
         elif "claim" in kinds:
             t = next(t for t in c["txs"] if t["kind"] == "claim")
             items.append((when, f"<b>Rewards claimed.</b> {esc(t['amount'])} moved into NAV in one step."))
@@ -877,10 +889,10 @@ def counters():
     cells.append(("Agent runs", f"{runs_total:,}" if by_agent else "n/a", f"{runs_ok:,} completed · {runs_fail:,} failed" if by_agent else snap_label))
     cells.append(("Transactions", f"{len(window_txs)}", f"{len(agent_txs)} by agents · {len(manual_txs)} by the Manager Safe" + (f" · {len(test_txs)} more in testing" if test_txs else "")))
     cells.append(("Lowest HF", f"{lowest['hf']:.4f}" if lowest else "n/a",
-                  f"{short(lowest['t'])}; the agent repays only below {lowest['trigger']:.2f}, liquidation is at 1.00" if lowest else "after the first re-lever"))
-    cells.append(("Liquidation buffer", pct(liq_buffer, 1), f"BTC would have to fall this far; liquidation at {usd(chain['liq_px'])}" if chain["liq_px"] else "no debt"))
+                  f"{short(lowest['t'])}; the repay trigger then was {lowest['trigger']:.2f}, liquidation is at 1.00" if lowest else "after the first re-lever"))
+    cells.append(("Liquidation buffer", "no loan" if not_borrowing else pct(liq_buffer, 1), "nothing to liquidate" if not_borrowing else f"BTC would have to fall this far; liquidation at {usd(chain['liq_px'])}" if chain["liq_px"] else "no debt"))
     cells.append(("Inside the band", f"{inside_n / band_total * 100:.0f}%" if band_total else "n/a",
-                  f"{inside_n:,} of {band_total:,} checks since the re-lever needed no action" if band_total else "after the first re-lever"))
+                  f"{inside_n:,} of {band_total:,} checks since the re-lever found HF inside the band; {acted_n} led to a repay or a borrow" if band_total else "after the first re-lever"))
     return "".join(f'<div class="counter"><div class="c-label">{esc(a)}</div><div class="c-value">{esc(b)}</div><div class="c-sub">{esc(c)}</div></div>' for a, b, c in cells)
 
 
@@ -945,7 +957,7 @@ def capacity_line():
     if cap.get("core_usdc_after_1m_apy") is not None:
         extra = (f" At the last sync ({stamp(cap['t'])}), borrowing another $1M on the Core hub would have cost {pct(cap['core_usdc_after_1m_apy'])} gross in USDC"
                  + (f" or {pct(cap['core_usdg_after_1m_apy'])} in USDG" if cap.get("core_usdg_after_1m_apy") is not None else "")
-                 + (f"; $3.5M of USDG, about what a $5M fund borrows at today's LTV, {pct(cap['core_usdg_after_3_5m_apy'])}" if cap.get("core_usdg_after_3_5m_apy") is not None else "")
+                 + (f"; $3.5M of USDG, about what a $5M fund borrows at the 1.21 target, {pct(cap['core_usdg_after_3_5m_apy'])}" if cap.get("core_usdg_after_3_5m_apy") is not None else "")
                  + ". Rates before Merkl.")
     return "; ".join(parts) + "." + extra
 
@@ -1002,13 +1014,14 @@ def routes_card():
     vault = HEAD["vault"]
     basis_txt = "7-day average" if head_7d else "24-hour"
     v4_ltv = cf / STRAT_HF
-    spec = [("usdg_core", "USDG, Aave V4 Core hub", "planned", 0.0, v4_ltv, lines.get("usdg_core")),
-            ("usdc_core", "USDC, Aave V4 Core hub", "previous line" if not_borrowing else "current line", rebate_pct, v4_ltv, lines.get("usdc_core")),
-            ("usdc_prime", "USDC, Aave V4 Prime hub", "alternative", 0.0, v4_ltv, lines.get("usdc_prime"))]
-    for key, name in (("usdc_aave_v3", "USDC, Aave V3 Core"), ("usdc_spark", "USDC, Spark")):
+    spec = []
+    for key, name in (("usdc_spark", "USDC, Spark"), ("usdc_aave_v3", "USDC, Aave V3 Core")):
         ln = (v3_lines or {}).get(key)
         if ln:
-            spec.append((key, name, "fallback", 0.0, ln["lt_wbtc"] / STRAT_HF, {"now": ln["now"], "after": ln["now"]}))
+            spec.append((key, name, "next", 0.0, ln["lt_wbtc"] / STRAT_HF, {"now": ln["now"], "after": ln["now"]}))
+    spec += [("usdg_core", "USDG, Aave V4 Core hub", "planned", 0.0, v4_ltv, lines.get("usdg_core")),
+             ("usdc_core", "USDC, Aave V4 Core hub", "previous line" if not_borrowing else "current line", rebate_pct, v4_ltv, lines.get("usdc_core")),
+             ("usdc_prime", "USDC, Aave V4 Prime hub", "alternative", 0.0, v4_ltv, lines.get("usdc_prime"))]
     rows = []
     for key, name, tag, reb, row_ltv, ln in spec:
         if not ln:
@@ -1019,11 +1032,11 @@ def routes_card():
         net = ln["after"] * (1 + rp) - reb
         sp = vault - net
         rows.append(f'<tr><td>{esc(name)} <span class="pill">{esc(tag)}</span></td><td class="num">{row_ltv * 100:.1f}%</td><td class="num">{pct(ln["now"])}</td><td class="num">{pct(ln["after"])}</td>'
-                    f'<td class="num">{("−" + pct(reb)) if reb else "none"}</td><td class="num">{sp:+.2f} pp</td><td class="num"><b>{after_fee(row_ltv * sp):+.2f}%</b></td></tr>')
+                    f'<td class="num">{("−" + pct(reb)) if reb else "none"}</td><td class="num">{sgn(sp)} pp</td><td class="num"><b>{sgn(after_fee(row_ltv * sp))}%</b></td></tr>')
     return (f'<div class="card" style="margin-top:16px"><div class="stat-label">Borrow routes at today&#x27;s rates</div>'
-            f'<div class="stat-sub" style="margin:6px 0 10px">At the strategy&#x27;s {STRAT_HF:.2f} target health factor on today&#x27;s collateral (about {usd(route_debt)} borrowed on Aave V4), deployed at the vaults&#x27; {basis_txt} yield of {pct(vault)}. The LTV differs by venue because each lends a different share against WBTC. Aave V4 rates include the fund&#x27;s own draw; on Aave V3 and Spark the loan is under 1% of their USDC supply, so today&#x27;s rate stands.</div>'
+            f'<div class="stat-sub" style="margin:6px 0 10px">At the strategy&#x27;s {STRAT_HF:.2f} target health factor (its normal band is {SB["repay_trigger"]:.2f} to {SB["borrow_trigger"]:.2f}; today&#x27;s {band["repay_trigger"]:.2f} to {band["borrow_trigger"]:.2f} is a defensive setting) on today&#x27;s collateral (about {usd(route_debt)} borrowed on Aave V4), deployed at the vaults&#x27; {basis_txt} yield of {pct(vault)}. The LTV differs by venue because each lends a different share against WBTC. Aave V4 rates include the fund&#x27;s own draw; on Aave V3 and Spark the loan is under 1% of their USDC supply, so today&#x27;s rate stands.</div>'
             f'<table class="data compact" style="width:100%;max-width:none"><thead><tr><th>Route</th><th class="num">LTV</th><th class="num">Borrow now</th><th class="num">After the fund&#x27;s draw</th><th class="num">Merkl rebate</th><th class="num">Spread</th><th class="num">Carry on BTC</th></tr></thead><tbody>{"".join(rows)}</tbody></table>'
-            '<div class="stat-sub" style="margin-top:8px">USDG is the planned route and is not live yet: it is borrowed and swapped to USDC (about 0.01%), and needs new permissions, now in their 3-day timelock, plus a swap step in the agent. Aave V3 and Spark are fallback venues the new permissions also cover; the health-factor agent manages Aave V4 positions only today. Carry is after the 10% performance fee, which applies to gains only. <em>Not a promise: rates move.</em></div></div>')
+            '<div class="stat-sub" style="margin-top:8px">Spark and Aave V3 are next: their permissions are in the Security Council&#x27;s 3-day timelock, and the agent that manages the loan is getting the update that routes borrowing across venues. USDG on Aave V4 is planned and also needs a USDG to USDC swap step (about 0.01%). Carry is after the 10% performance fee, which applies to gains only and is not charged yet. <em>Not a promise: rates move.</em></div></div>')
 
 
 def scope_cards():
@@ -1402,10 +1415,10 @@ JS = """
 # --- The page ---------------------------------------------------------------------------------------
 
 rebate_txt = f"{pct(rebate_pct)}" if rebate else "not read at this build"
-carry_txt = f"{carry:+.2f}%" if carry is not None else "n/a"
-head_txt = f"{sofar['ann_all']:+.2f}%" if head_realised else ("0.00%" if not_borrowing else (f"{head_carry:+.2f}%" if head_carry is not None else "n/a"))
+carry_txt = (sgn(carry) + "%") if carry is not None else "n/a"
+head_txt = (sgn(sofar['ann_all']) + "%") if head_realised else ("0.00%" if not_borrowing else ((sgn(head_carry) + "%") if head_carry is not None else "n/a"))
 net_borrow_txt = pct(borrow_net)
-strip_txt = f"{head_carry:+.2f}%" if head_carry is not None else "n/a"
+strip_txt = (sgn(head_carry) + "%") if head_carry is not None else "n/a"
 good_style = ' style="color:var(--c-good)"' if head_carry and head_carry > 0 else ""
 fee_term, fee_sub = ("0.9", "after 10% fee") if head_carry and head_carry > 0 else ("1.0", "no fee on a loss")
 basis = "7d avg" if head_7d else "24h avg"
@@ -1427,6 +1440,8 @@ if seed and first_relever:
     hf_caption = (f"HF started high on purpose. The first borrow is manual and was sized below the target ({seed['amount']}, HF {hf_txt(seed['hf_after'])}); "
                   f"re-lever stayed off until {short(relever_switch['t'] if relever_switch else first_relever['t'])}, when the agent levered to the "
                   f"{first_relever['target'] or band['borrow_target']:.2f} target in one step. Since then the line sits inside the band.")
+    for t in [t for t in live_txs if t["kind"] == "unwind" and float(t['amount'].split()[0].replace(',', '')) > 1][-1:]:
+        hf_caption += f" On {utc(t['t']).strftime('%-d %b')} KPK triggered the exit agent, which repaid {t['amount']}" + ("; the fund has not borrowed since." if not_borrowing else ".")
     for t in band_raises:
         bb = band_at(t["t"])
         hf_caption += (f" On {utc(t['t']).strftime('%-d %b')} KPK raised the band to {bb['repay_trigger']:.2f} to {bb['borrow_trigger']:.2f}"
@@ -1491,7 +1506,7 @@ def risk_evidence():
 
 RC = CONFIG["risk_controls"]
 PERMISSIONS_CARD = """  <div class="sub-h">Onchain permissions</div>
-  <div class="grid g3"><div class="card perm"><div class="perm-h"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>No key can move the assets</span></div><p class="agent-b">The Safe holding the position is owned by a contract with no key. Every action passes through a Zodiac Roles permissions layer.</p></div><div class="card perm"><div class="perm-h"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span>Whitelisted actions only</span></div><p class="agent-b">A fixed set of calls on approved contracts, such as borrowing on the Aave V4 spoke or depositing into the KPK USDC vaults. Anything else is rejected onchain. Each agent and the Manager Safe (2 of 5) get a narrower role.</p></div><div class="card perm"><div class="perm-h"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>3-day timelock on changes</span></div><p class="agent-b">KPK\'s Security Council proposes any change to the permissions, and it waits 3 days onchain before it can take effect.</p></div></div>
+  <div class="grid g3"><div class="card perm"><div class="perm-h"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>No key can move the assets</span></div><p class="agent-b">The Safe holding the position is owned by a contract with no key. Every action passes through a Zodiac Roles permissions layer.</p></div><div class="card perm"><div class="perm-h"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg><span>Whitelisted actions only</span></div><p class="agent-b">A fixed set of calls on approved contracts, such as borrowing on the Aave V4 spoke or depositing into the KPK USDC vaults. Anything else is rejected onchain. Each agent and the Manager Safe (2 of 5) get a narrower role.</p></div><div class="card perm"><div class="perm-h"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span>3-day timelock on changes</span></div><p class="agent-b">KPK\'s Security Council proposes any change to the permissions, and it waits 3 days onchain before it can take effect. The timelock has owned them since 28 Sep 2026; before that, the Manager Safe set them up during testing.</p></div></div>
 """
 
 
@@ -1505,7 +1520,7 @@ DOCS = CONFIG["docs"]
 def risk_section():
     steps = [
         ("Watch", "Onchain monitoring around the clock: the position, the oracles, and every venue the money sits in."),
-        ("Trigger", f"Rules set in advance fire the action. Inside the band, {band['repay_trigger']:.2f} to {band['borrow_trigger']:.2f}, nothing happens. Outside it, HF goes back to {band['borrow_target']:.2f}. Past the hard limits, the position unwinds."),
+        ("Trigger", f"Rules set in advance fire the action. Inside the band, normally {SB['repay_trigger']:.2f} to {SB['borrow_trigger']:.2f}, nothing happens. Outside it, HF goes back to the {SB['target']:.2f} target. Past the hard limits, the position unwinds."),
         ("Act", "The agent sends the transaction itself, typically within one or two blocks."),
         ("Bounded", "Every call passes the permissions layer: whitelisted actions only, and any change to them sits behind a 3-day timelock."),
     ]
@@ -1554,8 +1569,8 @@ def risk_section():
     </div>
   </div>"""
     agents = [
-        ("Health-factor manager", f"keeps HF between {band['repay_trigger']:.2f} and {band['borrow_trigger']:.2f}",
-         f"Holds the BTC leg inside the band with a {band['borrow_target']:.2f} target. Monitoring reads the health factor every block and wakes it the moment HF leaves the band; it also runs every {RC['check_minutes']} minutes as a backstop. KPK sets the band itself: tighter when markets are volatile, looser when they are calm. Below the repay trigger it withdraws USDC from the liquid sleeve and repays; above the borrow trigger it borrows and deploys, split across the two vaults."),
+        ("Health-factor manager", f"keeps HF between {SB['repay_trigger']:.2f} and {SB['borrow_trigger']:.2f}",
+         f"Holds the BTC leg inside its band, normally {SB['repay_trigger']:.2f} to {SB['borrow_trigger']:.2f} with a {SB['target']:.2f} target (today {band['repay_trigger']:.2f} to {band['borrow_trigger']:.2f}, a defensive setting). Monitoring reads the health factor every block and wakes it the moment HF leaves the band; it also runs every {RC['check_minutes']} minutes as a backstop. KPK sets the band itself: tighter when markets are volatile, looser when they are calm. Below the repay trigger it withdraws USDC from the liquid sleeve and repays; above the borrow trigger it borrows and deploys, split across the two vaults."),
         ("Exit agent (emergency unwind)", "unwinds the whole loan",
          f"Withdraws from the vaults and repays all the debt in one transaction. It fires on its own if HF falls below {RC['hf_exit_below']:.2f}, or if borrowing costs more than the vaults earn for {RC['spread_exit']}, and switches re-lever off so nothing borrows again until the team re-opens the position."),
         ("Agents on the KPK USDC vaults", "rebalance, exit, monitoring",
@@ -1567,12 +1582,12 @@ def risk_section():
 <section id="risk">
   <span class="label">How we manage risk</span>
   <h2>Automated, watched around the clock, bounded onchain</h2>
-  <p class="lede">KPK runs the fund with deterministic agents. They act only within tightly defined onchain permissions and do not exercise discretion: when a predefined condition is met, they execute a predefined action. They cannot introduce new strategies, expand exposure beyond approved limits, or bypass risk constraints.</p>
+  <p class="lede">KPK runs the fund with deterministic agents. They act only within tightly defined onchain permissions and the band and limits KPK sets: when a predefined condition is met, they execute a predefined action. KPK sets the band, tighter in volatile markets, and can trigger an exit itself, as it did on 13 Oct. The agents cannot introduce new strategies, expand exposure beyond approved limits, or bypass risk constraints.</p>
   <div class="doc-links"><a href="{esc(DOCS['automation'])}" target="_blank" rel="noopener">How KPK automation works ↗</a><a href="{esc(DOCS['risk_framework'])}" target="_blank" rel="noopener">KPK Risk Framework ↗</a><a href="{esc(DOCS['investment_framework'])}" target="_blank" rel="noopener">Investment framework ↗</a></div>
   <div class="riskflow">{flow}</div>
   <div class="sub-h">What is watched</div>
   <div class="grid g3">{watch_html}</div>
-  <div class="stat-sub" style="margin-top:-6px">Thresholds as set on {esc(RC['as_of'])}.</div>
+  <div class="stat-sub" style="margin-top:-6px">Exit thresholds as set on {esc(RC['as_of'])}.</div>
   <div class="sub-h">How a signal is handled</div>
   {respond}
   <div class="sub-h">The agents</div>
@@ -1588,11 +1603,11 @@ def risk_section():
 RISKS = [
     ("BTC price", "Holders keep full BTC exposure; nothing is hedged.", "This is the product: carry on top of the BTC held, not a hedge.", False),
     ("Liquidation", "A BTC drop faster than the position can be deleveraged.",
-     f"Monitoring reads the health factor every block. The agent repays from {band['repay_trigger']:.2f}, where BTC would still have to fall {(1 - 1 / band['repay_trigger']) * 100:.0f}% to reach liquidation, and the exit agent unwinds the whole loan below {RC['hf_exit_below']:.2f}. KPK tightens the band when markets turn volatile.", False),
+     f"Monitoring reads the health factor every block. In the normal band the agent repays from {SB['repay_trigger']:.2f}, where BTC would still have to fall {(1 - 1 / SB['repay_trigger']) * 100:.0f}% to reach liquidation (from {band['repay_trigger']:.2f} today, a {(1 - 1 / band['repay_trigger']) * 100:.0f}% fall), and the exit agent unwinds the whole loan below {RC['hf_exit_below']:.2f}. KPK tightens the band when markets turn volatile.", False),
     ("Negative carry", "Borrowing costs rise above what the vaults earn.", f"The exit agent unwinds if that lasts {RC['spread_exit']}.", False),
     ("Vault liquidity", "Thin liquidity in the Morpho vaults can slow deleveraging and redemptions.", f"At least {CONFIG['liquid_floor_pct']}% of the BTC-leg debt stays in the liquid sleeve, and the vault agents rebalance as liquidity changes.", False),
     ("Oracles and pegs", "Manipulation, staleness or failure of a price feed; WBTC or a stablecoin off its peg.", "Every price is checked against independent monitor feeds, and settlement pauses on a stale or irregular price.", False),
-    ("Smart contracts", "Aave V4, Morpho, the stablecoins, the BTC wrappers (WBTC; cbBTC and cirBTC once live) and the fund's own contracts.", "Each one passes KPK's Risk Framework review (more than 150 checks across 12 risk dimensions) and is monitored 24/7. An exploit or pause in a market the vaults lend into triggers an automated exit; other alerts go to the risk team.", False),
+    ("Smart contracts", "Aave V4 (Aave V3 and Spark once used), Morpho, the stablecoins, the BTC wrappers (WBTC; cbBTC and cirBTC once live) and the fund's own contracts.", "Each one passes KPK's Risk Framework review (more than 150 checks across 12 risk dimensions) and is monitored 24/7. An exploit or pause in a market the vaults lend into triggers an automated exit; other alerts go to the risk team.", False),
     ("WBTC custody", "WBTC is backed by BTC held by a custodian.", "Its price is watched like every other in the NAV; cbBTC and cirBTC are coming as further deposit assets.", False),
     ("Credit (optional loop)", "Only if the optional loop sleeve is switched on: a Maple borrower default can mark syrup tokens down.", "The loop is capped at 8x and kept to a share of the stablecoins; it is never relied on to deleverage the BTC leg.", True),
 ]
@@ -1609,7 +1624,7 @@ rew_split = " · ".join(f"{esc(REW_SHORT.get(g['group'], g['group']))} {usd(g['c
 hero_side = "".join([
     mini("NAV", f"{n(chain['nav_wbtc'], 4)} WBTC", f"≈ {usd(chain['nav_usd'])}"),
     mini("Share price", f"{n(chain['share_price_wbtc'], 6)} WBTC", f"last settled {n(chain['last_settled_wbtc'], 6)}"),
-    mini("Health factor", hf_txt(avg_hf) if avg_hf else hf_txt(hf_now), f"{avg_label}{'' if not_borrowing else ' · today ' + hf_txt(hf_now)} · band {band['repay_trigger']:.2f} · {band['borrow_target']:.2f} · {band['borrow_trigger']:.2f}" + ("" if band["relever"] else ", re-lever off")),
+    mini("Health factor", hf_txt(avg_hf) if avg_hf else hf_txt(hf_now), f"{avg_label}, from the average LTV{'' if not_borrowing else ' · today ' + hf_txt(hf_now)} · band {band['repay_trigger']:.2f} · {band['borrow_target']:.2f} · {band['borrow_trigger']:.2f}" + ("" if band["relever"] else ", re-lever off")),
     mini("LTV", f"{hl_ltv * 100:.1f}%", f"{avg_label} · today {ltv * 100:.1f}%" + ("" if not_borrowing else f", liquidation at {usd(chain['liq_px'])}")),
     mini("Unclaimed rewards", usd(rewards["total_usd"], 2) if rewards else "n/a", (f"≈ {n(rewards['total_wbtc'], 5)} WBTC, not yet in NAV · {rew_split}") if rewards else "not read at this build"),
 ])
@@ -1663,8 +1678,8 @@ page = f"""<!doctype html>
 
 <section class="hero" id="overview">
   <h1>BTC Carry Fund <span class="pill">live since {esc(utc(window_t0).strftime('%-d %b %Y'))}</span></h1>
-  <p>The KPK BTC Carry Fund earns a carry on BTC through collateralised lending on blue-chip DeFi protocols. Wrapped BTC is supplied as collateral on Aave V4, USDC is borrowed against it at an automatically managed loan-to-value, and the proceeds are deployed into KPK-curated USDC vaults on Morpho. Aave V4 is the main venue; Aave V3 and Spark are being added as fallback borrow venues. Holders stay fully exposed to BTC and earn the spread between stablecoin lending yields and borrow costs, with returns accruing in BTC.</p>
-  <p>Deposits are in WBTC today; cbBTC and cirBTC deposits will be enabled next. The fund is live and currently funded by KPK, with no performance fee charged yet.</p>
+  <p>The KPK BTC Carry Fund earns a carry on BTC through collateralised lending on blue-chip DeFi protocols. Wrapped BTC is supplied as collateral on Aave V4, USDC is borrowed against it at an automatically managed loan-to-value, and the proceeds are deployed into KPK-curated USDC vaults on Morpho. The fund borrows where the net rate is best: Aave V4 so far, with Spark and Aave V3 being added. Holders stay fully exposed to BTC and earn the spread between stablecoin lending yields and borrow costs, with returns accruing in BTC.</p>
+  <p>Deposits are in WBTC today; cbBTC is next, and cirBTC follows once Aave lists it. The fund is live and currently funded by KPK, with no performance fee charged yet.</p>
   <div class="row">
     <a class="cta" href="{esc(app_url)}" target="_blank" rel="noopener">View the fund in the KPK app ↗</a>
     <a class="cta ghost" href="{esc(CONFIG['docs']['fund'])}" target="_blank" rel="noopener">Read the fund docs ↗</a>
@@ -1681,7 +1696,7 @@ page = f"""<!doctype html>
       <div class="stat-label">{"Return on BTC" if head_realised else "Carry on BTC"} <span class="pill live-pill">{"realised so far" if head_realised else ("7-day average rates" if head_7d else "at live rates")}</span></div>
       <div class="stat-value hero-value{" good" if (head_realised and sofar["ann_all"] > 0) or (head_carry and head_carry > 0 and not not_borrowing) else ""}">{head_txt}</div>
       {status_note}
-      <div class="stat-note">{(f"a year on the BTC held, realised since the {utc(window_t0).strftime('%-d %b')} deposit and annualised: the share price in WBTC ({sofar['ret']:+.3f}% in {sofar['days']:.1f} days) plus {usd(sofar['rew_usd'], 2)} of unclaimed Merkl rewards. A short window, so it moves a lot. The borrow routes below show what the fund would earn at today's rates.") if head_realised else (f"a year on the BTC held. The fund is not borrowing right now, so it earns no carry. At the last 7 days' average rates, borrowing USDC and deploying it would earn a <b>{n(HEAD['spread']) if HEAD else 'n/a'} pp</b> spread, net of the Merkl borrow rebate.") if not_borrowing else (f"a year on the BTC held, {'at the last 7 days&#x27; average rates' if head_7d else 'at live rates'}. The fund borrows USDC at <b>{hl_ltv * 100:.1f}%</b> LTV ({avg_label}) and earns a <b>{n(HEAD['spread']) if HEAD else 'n/a'} pp</b> spread on it, net of the {pct(HEAD['rebate']) if HEAD else rebate_txt}{' average' if head_7d else ''} Merkl borrow rebate{' and the 10% performance fee' if head_carry and head_carry > 0 else ''}.")} <em>Not a promise: rates move.</em></div>
+      <div class="stat-note">{(f"a year on the BTC held, realised since the {utc(window_t0).strftime('%-d %b')} deposit and annualised: the share price in WBTC ({sofar['ret']:+.3f}% in {sofar['days']:.1f} days) plus {usd(sofar['rew_usd'], 2)} of unclaimed Merkl rewards. Most of it is Merkl's borrow rebate; without it, carry was about flat. A short window, so it moves a lot. The borrow routes below show what the fund would earn at today's rates.") if head_realised else (f"a year on the BTC held. The fund is not borrowing right now, so it earns no carry. At the last 7 days' average rates, borrowing USDC and deploying it would earn a <b>{n(HEAD['spread']) if HEAD else 'n/a'} pp</b> spread, net of the Merkl borrow rebate.") if not_borrowing else (f"a year on the BTC held, {'at the last 7 days&#x27; average rates' if head_7d else 'at live rates'}. The fund borrows USDC at <b>{hl_ltv * 100:.1f}%</b> LTV ({avg_label}) and earns a <b>{n(HEAD['spread']) if HEAD else 'n/a'} pp</b> spread on it, net of the {pct(HEAD['rebate']) if HEAD else rebate_txt}{' average' if head_7d else ''} Merkl borrow rebate{' and the 10% performance fee' if head_carry and head_carry > 0 else ''}.")} <em>Not a promise: rates move.</em></div>
       <div class="stat-sub">{"" if not_borrowing else ((f"<b>{ltv * HEAD['spread']:+.2f}% before the fee</b>, which is what KPK's own capital earns on these rates. " if head_carry > 0 else "No performance fee applies while carry is negative. ") if head_carry is not None else "") + esc(trail_line) + f"≈ {per_btc} a year per 1 BTC at today's price."}</div>
       <div class="kv"><span>Realised</span><span class="mono">{'see below' if realised else 'from ' + (utc(realised_from).strftime('%-d %b') if realised_from else 'n/a')}</span></div>
       {realised_html}
@@ -1717,7 +1732,7 @@ page = f"""<!doctype html>
       <div class="leg-head"><span class="leg-kind">Liquid sleeve · Morpho</span>{icon("morpho")}</div>
       <div class="leg-amount">{n(sleeve_usdc, 0)} USDC</div>
       {legs_vaults}
-      <div class="kv"><span><b>blended, 24h avg</b></span><span class="mono"><b>{pct(deploy_apy)}</b></span></div>
+      <div class="kv"><span><b>blended, 24h avg{", equal weights while empty" if sleeve_usdc <= 0 else ""}</b></span><span class="mono"><b>{pct(deploy_apy)}</b></span></div>
       {('<div class="kv"><span class="dim">of which Merkl rewards</span><span class="mono dim">+' + n(vault_rewards_pp, 2) + '%</span></div>') if vault_rewards_pp is not None else ''}
     </div>
   </div>
@@ -1728,7 +1743,7 @@ page = f"""<!doctype html>
   </div>
   <div class="card loop">
     <details{' open' if loop_live else ''}><summary><span class="leg-kind">Loop sleeve · {'active' if loop_live else 'optional, not active'}</span></summary>
-    <div class="leg-sub" style="margin-top:6px">{esc(loop['what'][:1].upper() + loop['what'][1:])}, taking {esc(loop['share'])}. {esc(loop['limits'].replace('Leverage capped at 8x.', f"Leverage is capped at {LOOP['leverage']}x, well below the {1 / (1 - LOOP['collateral_factor']):.1f}x maximum the spoke's {LOOP['collateral_factor'] * 100:.0f}% collateral factor would allow."))}
+    <div class="leg-sub" style="margin-top:6px">{esc(loop['what'][:1].upper() + loop['what'][1:])}, taking {esc(loop['share'])}. {esc(loop['limits'])} It would only start after depositors have run plain BTC deposits and redemptions.
     {'The fund now holds a position on that spoke.' if loop_live else 'It appears here as live once the fund holds a position on that spoke; until then all borrowed USDC sits in the liquid sleeve.'}</div>
     {loop_html}
     </details>
@@ -1780,7 +1795,7 @@ page = f"""<!doctype html>
   <div class="card">
     <div class="stat-label">BTC oracle price against agent rebalances</div>
     <div class="statrow">
-      <div><div class="c-label">BTC oracle price</div><div class="c-value">{usd(px)}</div><div class="c-sub">{(pct((px / next(p['px'] for p in points if p.get('px') and p['t'] >= window_t0) - 1) * 100, 1, sign=True) + ' since the pre-pilot deposit') if any(p.get('px') and p['t'] >= window_t0 for p in points) else ''}</div></div>
+      <div><div class="c-label">BTC oracle price</div><div class="c-value">{usd(px)}</div><div class="c-sub">{(pct((px / next(p['px'] for p in points if p.get('px') and p['t'] >= window_t0) - 1) * 100, 1, sign=True) + ' since the 9 Oct deposit') if any(p.get('px') and p['t'] >= window_t0 for p in points) else ''}</div></div>
       <div><div class="c-label">Agent rebalances</div><div class="c-value">{len([t for t in window_txs if t['kind'] in ('relever', 'derisk')])}</div><div class="c-sub">{len([t for t in window_txs if t['kind'] == 'relever'])} re-lever · {len([t for t in window_txs if t['kind'] == 'derisk'])} repay · plus {len([t for t in test_txs if t['kind'] in ('relever', 'derisk')])} in testing</div></div>
       <div><div class="c-label">Lowest HF</div><div class="c-value">{f"{lowest['hf']:.4f}" if lowest else 'n/a'}</div><div class="c-sub">{(short(lowest['t']) + f": BTC was {lowest['headroom']:.1f}% above the level where the agent starts repaying, {lowest['to_liq']:.1f}% above liquidation") if lowest else 'after the first re-lever'}</div></div>
       <div><div class="c-label">Buffer to liquidation</div><div class="c-value">{pct(liq_buffer, 1)}</div><div class="c-sub">liquidation price {usd(chain['liq_px'])}</div></div>
@@ -1804,7 +1819,7 @@ page = f"""<!doctype html>
   </div>
   <div class="card">
     <details class="fold">
-      <summary>Every onchain action: {len(window_txs)} since the pre-pilot deposit{f", {len(test_txs)} in testing" if test_txs else ""}</summary>
+      <summary>Every onchain action: {len(window_txs)} since the {utc(window_t0).strftime('%-d %b')} deposit{f", {len(test_txs)} in testing" if test_txs else ""}</summary>
       <p class="lede">One row per transaction, each linked to Etherscan. HF is read onchain one block before and at the transaction's block.</p>
       {tx_table()}
     </details>
@@ -1835,13 +1850,14 @@ page = f"""<!doctype html>
       <div class="stat-label">Redemptions</div>
       <div class="redeem">
         <div class="redeem-tile"><div class="redeem-v">Minutes to hours</div><div class="redeem-k">for redemptions up to what the liquid sleeve covers, paid at the next settlement cycle</div></div>
-        <div class="redeem-tile strong"><div class="redeem-v">Up to ~3 days</div><div class="redeem-k">above that: the full settlement window, never longer</div></div>
+        <div class="redeem-tile strong"><div class="redeem-v">Up to ~3 days</div><div class="redeem-k">above that: the full settlement window, in normal conditions</div></div>
       </div>
-      <div class="stat-sub" style="margin-top:10px">Paid in the asset requested. No redemption fee.</div>
+      <div class="stat-sub" style="margin-top:10px">Paid in the asset requested. No redemption fee. KPK curates the two Morpho vaults the borrowed USDC sits in and keeps their instant exit liquidity at the level redemptions need. A redemption waits longer only while a price feed is stale or the NAV check disagrees (settlement pauses until it clears), or while paying it would take the loan below a {RC['redemption_min_hf']:.2f} health factor, until debt is repaid first.</div>
     </div>
     <div class="card">
       <div class="stat-label">Limits and fees</div>
       <div class="kv"><span>Health-factor band today</span><span class="mono">{band['repay_trigger']:.2f} · {band['borrow_target']:.2f} · {band['borrow_trigger']:.2f}</span></div>
+      <div class="kv"><span>Normal band</span><span class="mono">{SB['repay_trigger']:.2f} · {SB['target']:.2f} · {SB['borrow_trigger']:.2f}</span></div>
       <div class="kv"><span>Minimum health factor</span><span class="mono">{MIN_HF:.2f}, a floor, not a target</span></div>
       <div class="kv"><span>Liquid floor</span><span class="mono">≥ {CONFIG['liquid_floor_pct']}% of the BTC-leg debt</span></div>
       <div class="kv"><span>Performance fee</span><span class="mono">10% above a WBTC high watermark</span></div>
