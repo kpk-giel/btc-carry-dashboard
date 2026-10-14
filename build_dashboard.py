@@ -311,7 +311,22 @@ for s in spreads:
 # Headline on the 7-day average rates (Giel, 13 Oct), so one day's rate spike doesn't set it; today's rates sit beside it.
 HEAD = next((s for s in spreads if s["key"] == "7d"), spreads[0] if spreads else None)
 head_7d = bool(HEAD and HEAD["key"] == "7d")
-head_carry = HEAD["carry"] if HEAD else None
+_lw = [p for p in points if p["t"] >= max(now - 7 * DAY, window_t0) and p.get("px") and p.get("coll")]
+avg_ltv = None
+avg_label = "7-day average"
+if len(_lw) >= 2:
+    _acc, _tot = 0.0, 0.0
+    for _a, _b in zip(_lw, _lw[1:]):
+        _acc = _acc + ((_a.get("debt") or 0) / (_a["coll"] * _a["px"])) * (_b["t"] - _a["t"])
+        _tot = _tot + (_b["t"] - _a["t"])
+    if _tot > 0:
+        avg_ltv = _acc / _tot
+        if _tot < 6.5 * DAY:
+            avg_label = f"average since {utc(_lw[0]['t']).strftime('%-d %b')}"
+hl_ltv = avg_ltv if avg_ltv is not None else ltv
+avg_hf = cf / hl_ltv if hl_ltv > 0 else None
+# Headline numbers are 7-day figures: average rates on the average LTV (Giel, 14 Oct).
+head_carry = after_fee(hl_ltv * HEAD["spread"]) if HEAD else None
 # Effectively no loan (after an exit only a few dollars of debt remain): say so rather than show a spread at 0% LTV.
 not_borrowing = chain["debt_usdc"] < 1000
 loop_head_note = f" at the {float(CONFIG['strategy_target_hf']['value']):.2f} target health factor" if not_borrowing else ""
@@ -937,7 +952,7 @@ def capacity_line():
 
 # Simulator inputs.
 sim = {
-    "cf": cf, "liveHf": band["borrow_target"] if not_borrowing or not hf_now else hf_now, "notBorrowing": not_borrowing, "spread": HEAD["spread"] if HEAD else 0, "fee": PERF_FEE, "px": px,
+    "cf": cf, "liveHf": STRAT_HF if not_borrowing else (hf_now or band["borrow_target"]), "notBorrowing": not_borrowing, "spread": HEAD["spread"] if HEAD else 0, "fee": PERF_FEE, "px": px,
     "minHf": MIN_HF, "lowHf": 1.05, "maxHf": SIM_MAX_HF, "target": band["borrow_target"], "repay": band["repay_trigger"], "borrow": band["borrow_trigger"],
 }
 
@@ -1388,15 +1403,16 @@ if len(_sf) >= 2 and _sf[-1]["t"] - _sf[0]["t"] >= DAY:
 head_realised = bool(not_borrowing and sofar)
 head_txt = f"{sofar['ann_all']:+.2f}%" if head_realised else ("0.00%" if not_borrowing else (f"{head_carry:+.2f}%" if head_carry is not None else "n/a"))
 net_borrow_txt = pct(borrow_net)
-good_style = ' style="color:var(--c-good)"' if head_carry and head_carry > 0 and not not_borrowing else ""
+strip_txt = f"{head_carry:+.2f}%" if head_carry is not None else "n/a"
+good_style = ' style="color:var(--c-good)"' if head_carry and head_carry > 0 else ""
 fee_term, fee_sub = ("0.9", "after 10% fee") if head_carry and head_carry > 0 else ("1.0", "no fee on a loss")
 basis = "7d avg" if head_7d else "24h avg"
 math_strip = (f'<div class="math"><div class="chunk"><span class="term">{pct(HEAD["vault"])}</span><span class="sub">vault yield, {basis}</span></div><span class="op">−</span>'
               f'<div class="chunk"><span class="term">{pct(HEAD["borrow_net"])}</span><span class="sub">borrow, net of rebate{", 7d avg" if head_7d else ""}</span></div><span class="op">=</span>'
               f'<div class="chunk"><span class="term">{n(HEAD["spread"])} pp</span><span class="sub">spread</span></div><span class="op">×</span>'
-              f'<div class="chunk"><span class="term">{ltv * 100:.1f}%</span><span class="sub">LTV</span></div><span class="op">×</span>'
+              f'<div class="chunk"><span class="term">{hl_ltv * 100:.1f}%</span><span class="sub">LTV, {"7d avg" if avg_label == "7-day average" else avg_label.replace("average", "avg")}</span></div><span class="op">×</span>'
               f'<div class="chunk"><span class="term">{fee_term}</span><span class="sub">{fee_sub}</span></div><span class="op">=</span>'
-              f'<div class="chunk"><span class="term"{good_style}>{head_txt}</span><span class="sub">carry on BTC</span></div></div>') if HEAD else ""
+              f'<div class="chunk"><span class="term"{good_style}>{strip_txt}</span><span class="sub">carry on BTC{", at these averages" if head_realised else ""}</span></div></div>') if HEAD else ""
 
 terms_band = f"repay below {band['repay_trigger']:.2f} back to {band['repay_target']:.2f}; re-lever above {band['borrow_trigger']:.2f} back to {band['borrow_target']:.2f}"
 drop_from_repay = (1 - 1 / band["repay_trigger"]) * 100
@@ -1576,7 +1592,7 @@ RISKS = [
     ("Oracles and pegs", "Manipulation, staleness or failure of a price feed; WBTC or a stablecoin off its peg.", "Every price is checked against independent monitor feeds, and settlement pauses on a stale or irregular price.", False),
     ("Smart contracts", "Aave V4, Morpho, the stablecoins, the BTC wrappers (WBTC; cbBTC and cirBTC once live) and the fund's own contracts.", "Each one passes KPK's Risk Framework review (more than 150 checks across 12 risk dimensions) and is monitored 24/7. An exploit or pause in a market the vaults lend into triggers an automated exit; other alerts go to the risk team.", False),
     ("WBTC custody", "WBTC is backed by BTC held by a custodian.", "Its price is watched like every other in the NAV; cbBTC and cirBTC are coming as further deposit assets.", False),
-    ("Credit (future)", "Once the loop sleeve is live: a Maple borrower default can mark syrup tokens down.", "The loop is capped at 8x and kept to a share of the stablecoins; it is never relied on to deleverage the BTC leg.", True),
+    ("Credit (optional loop)", "Only if the optional loop sleeve is switched on: a Maple borrower default can mark syrup tokens down.", "The loop is capped at 8x and kept to a share of the stablecoins; it is never relied on to deleverage the BTC leg.", True),
 ]
 RISK_ROWS = "".join(
     f'<div class="risk-row{" muted-row" if fut else ""}"><div class="risk-n">{esc(n)}</div><div class="risk-d">{esc(d)}</div><div class="risk-h">{esc(h)}</div></div>'
@@ -1591,8 +1607,8 @@ rew_split = " · ".join(f"{esc(REW_SHORT.get(g['group'], g['group']))} {usd(g['c
 hero_side = "".join([
     mini("NAV", f"{n(chain['nav_wbtc'], 4)} WBTC", f"≈ {usd(chain['nav_usd'])}"),
     mini("Share price", f"{n(chain['share_price_wbtc'], 6)} WBTC", f"last settled {n(chain['last_settled_wbtc'], 6)}"),
-    mini("Health factor", hf_txt(hf_now), f"band {band['repay_trigger']:.2f} · {band['borrow_target']:.2f} · {band['borrow_trigger']:.2f} (repay · target · re-lever)" + ("" if band["relever"] else ", re-lever off")),
-    mini("LTV", f"{ltv * 100:.1f}%", f"collateral factor {cf * 100:.1f}% · not borrowing right now" if not_borrowing else f"collateral factor {cf * 100:.1f}% ÷ HF · liquidation at {usd(chain['liq_px'])}"),
+    mini("Health factor", hf_txt(avg_hf) if avg_hf else hf_txt(hf_now), f"{avg_label} · today {'not borrowing' if not_borrowing else hf_txt(hf_now)} · band {band['repay_trigger']:.2f} · {band['borrow_target']:.2f} · {band['borrow_trigger']:.2f}" + ("" if band["relever"] else ", re-lever off")),
+    mini("LTV", f"{hl_ltv * 100:.1f}%", f"{avg_label} · today {ltv * 100:.1f}%" + (", not borrowing" if not_borrowing else f", liquidation at {usd(chain['liq_px'])}")),
     mini("Unclaimed rewards", usd(rewards["total_usd"], 2) if rewards else "n/a", (f"≈ {n(rewards['total_wbtc'], 5)} WBTC, not yet in NAV · {rew_split}") if rewards else "not read at this build"),
 ])
 trail_bits = [f"{s['label']} {s['carry']:+.2f}%" for s in spreads if s["key"] != HEAD["key"]] if HEAD else []
@@ -1663,14 +1679,14 @@ page = f"""<!doctype html>
       <div class="stat-label">{"Return on BTC" if head_realised else "Carry on BTC"} <span class="pill live-pill">{"realised so far" if head_realised else ("7-day average rates" if head_7d else "at live rates")}</span></div>
       <div class="stat-value hero-value{" good" if (head_realised and sofar["ann_all"] > 0) or (head_carry and head_carry > 0 and not not_borrowing) else ""}">{head_txt}</div>
       {status_note}
-      <div class="stat-note">{(f"a year on the BTC held, realised since the {utc(window_t0).strftime('%-d %b')} deposit and annualised: the share price in WBTC, plus {usd(sofar['rew_usd'], 2)} of unclaimed Merkl rewards. A short window ({sofar['days']:.1f} days), so it moves a lot. The fund is not borrowing right now; the borrow routes below show what it would earn at today's rates.") if head_realised else (f"a year on the BTC held. The fund is not borrowing right now, so it earns no carry. At the last 7 days' average rates, borrowing USDC and deploying it would earn a <b>{n(HEAD['spread']) if HEAD else 'n/a'} pp</b> spread, net of the Merkl borrow rebate.") if not_borrowing else (f"a year on the BTC held, {'at the last 7 days&#x27; average rates' if head_7d else 'at live rates'}. The fund borrows USDC at <b>{ltv * 100:.1f}%</b> LTV and earns a <b>{n(HEAD['spread']) if HEAD else 'n/a'} pp</b> spread on it, net of the {pct(HEAD['rebate']) if HEAD else rebate_txt}{' average' if head_7d else ''} Merkl borrow rebate{' and the 10% performance fee' if head_carry and head_carry > 0 else ''}.")} <em>Not a promise: rates move.</em></div>
+      <div class="stat-note">{(f"a year on the BTC held, realised since the {utc(window_t0).strftime('%-d %b')} deposit and annualised: the share price in WBTC, plus {usd(sofar['rew_usd'], 2)} of unclaimed Merkl rewards. A short window ({sofar['days']:.1f} days), so it moves a lot. The fund is not borrowing right now; the borrow routes below show what it would earn at today's rates.") if head_realised else (f"a year on the BTC held. The fund is not borrowing right now, so it earns no carry. At the last 7 days' average rates, borrowing USDC and deploying it would earn a <b>{n(HEAD['spread']) if HEAD else 'n/a'} pp</b> spread, net of the Merkl borrow rebate.") if not_borrowing else (f"a year on the BTC held, {'at the last 7 days&#x27; average rates' if head_7d else 'at live rates'}. The fund borrows USDC at <b>{hl_ltv * 100:.1f}%</b> LTV ({avg_label}) and earns a <b>{n(HEAD['spread']) if HEAD else 'n/a'} pp</b> spread on it, net of the {pct(HEAD['rebate']) if HEAD else rebate_txt}{' average' if head_7d else ''} Merkl borrow rebate{' and the 10% performance fee' if head_carry and head_carry > 0 else ''}.")} <em>Not a promise: rates move.</em></div>
       <div class="stat-sub">{"" if not_borrowing else ((f"<b>{ltv * HEAD['spread']:+.2f}% before the fee</b>, which is what KPK's own capital earns on these rates. " if head_carry > 0 else "No performance fee applies while carry is negative. ") if head_carry is not None else "") + esc(trail_line) + f"≈ {per_btc} a year per 1 BTC at today's price."}</div>
       <div class="kv"><span>Realised</span><span class="mono">{'see below' if realised else 'from ' + (utc(realised_from).strftime('%-d %b') if realised_from else 'n/a')}</span></div>
       {realised_html}
     </div>
     <div class="side-stats">{hero_side}</div>
   </div>
-  {"" if not_borrowing else math_strip}
+  {math_strip}
   {routes_card()}
   {f'<div class="note">{esc(nav_note)}</div>' if nav_note else ''}
 </section>
@@ -1709,10 +1725,11 @@ page = f"""<!doctype html>
     <div class="stat-sub">{esc(CONFIG['milestones']['testing_phase']['note'][:1].upper() + CONFIG['milestones']['testing_phase']['note'][1:])} (shaded). At that size a single test deposit or redemption moves the share price by tens of parts per million: the two small dips. Deposits mint at the last settled price, and claimed rewards step NAV up once; both are marked.</div>
   </div>
   <div class="card loop">
-    <div class="leg-kind">Loop sleeve · {'active' if loop_live else 'planned, not active'}</div>
+    <details{' open' if loop_live else ''}><summary><span class="leg-kind">Loop sleeve · {'active' if loop_live else 'optional, not active'}</span></summary>
     <div class="leg-sub" style="margin-top:6px">{esc(loop['what'][:1].upper() + loop['what'][1:])}, taking {esc(loop['share'])}. {esc(loop['limits'].replace('Leverage capped at 8x.', f"Leverage is capped at {LOOP['leverage']}x, well below the {1 / (1 - LOOP['collateral_factor']):.1f}x maximum the spoke's {LOOP['collateral_factor'] * 100:.0f}% collateral factor would allow."))}
     {'The fund now holds a position on that spoke.' if loop_live else 'It appears here as live once the fund holds a position on that spoke; until then all borrowed USDC sits in the liquid sleeve.'}</div>
     {loop_html}
+    </details>
   </div>
 </section>
 

@@ -36,8 +36,8 @@
   "minimum_hf": 1.12,
   "liquid_floor_pct": 25,
   "loop_sleeve": {
-    "what": "a future syrupUSDG loop at about 8x on the Aave V4 Maple spoke",
-    "share": "about 25% of the borrowed stablecoins at first, rising towards 50% as Aave capacity allows",
+    "what": "an optional syrupUSDG loop at up to 8x on the Aave V4 Maple spoke",
+    "share": "a capped share of the borrowed stablecoins (25% to 50%) if it is switched on",
     "limits": "Leverage capped at 8x. When borrow costs rise above the loop's yield, the loop is partly unwound. The loop sleeve is never relied on to deleverage the BTC leg.",
     "spoke": "0x774b9655413c34809c1f1b16b654465A89EBE989",
     "leverage": 8,
@@ -184,8 +184,8 @@
       {
         "label": "Loop sleeve",
         "value": "Maple",
-        "detail": "syrupUSDG, looped on the Aave V4 Maple spoke.",
-        "status": "planned",
+        "detail": "Optional: a syrupUSDG loop on the Aave V4 Maple spoke. Not active; the fund runs without it.",
+        "status": "optional",
         "live_if": "maple",
         "icon": "maple"
       }
