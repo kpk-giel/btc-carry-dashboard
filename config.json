@@ -4,8 +4,8 @@
   "performance_fee": 0.1,
   "status_note": {
     "_readme": "Shown under the headline carry. Clear 'text' to hide it.",
-    "as_of": "13 Oct 2026",
-    "text": "The Aave V4 Core hub's USDC borrow rate rose above what the vaults earn, so carry is negative at today's rates. KPK raised the health-factor band, the agent repaid about a third of the loan (HF 1.80), and re-lever stays off until the spread recovers."
+    "as_of": "14 Oct 2026",
+    "text": "The fund is not borrowing for now. On 13 Oct the Aave V4 Core hub's USDC borrow rate rose above what the vaults earn, so KPK unwound the loan. The WBTC stays supplied as collateral, and borrowing resumes once the spread is reliably positive."
   },
   "deposit_assets": [
     {

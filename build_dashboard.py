@@ -193,11 +193,13 @@ vault_rows = []
 for v in chain["vaults"]:
     a = next((x for x in (apys or []) if x["address"].lower() == v["address"].lower()), None)
     vault_rows.append({**v, "apy": a["apy_24h"] if a else None, "apy_7d": a["apy_7d"] if a else None, "apy_30d": a.get("apy_30d") if a else None, "apy_ex": a.get("apy_24h_ex_rewards") if a else None, "weight": v["usdc"] / sleeve_usdc if sleeve_usdc else 0})
-reporting = [v for v in vault_rows if v["apy"] is not None and v["usdc"] > 0]
-deploy_apy = sum(v["apy"] * v["usdc"] for v in reporting) / sum(v["usdc"] for v in reporting) if reporting else None
+# With the sleeve empty (no loan) the vaults are weighted equally, so the spread still reads.
+wt = (lambda v: v["usdc"]) if sleeve_usdc > 0 else (lambda v: 1.0)
+reporting = [v for v in vault_rows if v["apy"] is not None and wt(v) > 0]
+deploy_apy = sum(v["apy"] * wt(v) for v in reporting) / sum(wt(v) for v in reporting) if reporting else None
 # Morpho's average net APY already counts the Merkl rewards the vaults pass on; this is their share of it.
 with_ex = [v for v in reporting if v.get("apy_ex") is not None]
-vault_rewards_pp = sum((v["apy"] - v["apy_ex"]) * v["usdc"] for v in with_ex) / sum(v["usdc"] for v in with_ex) if with_ex else None
+vault_rewards_pp = sum((v["apy"] - v["apy_ex"]) * wt(v) for v in with_ex) / sum(wt(v) for v in with_ex) if with_ex else None
 
 core = chain["core_usdc"]
 rp = chain["risk_premium_bps"] / 10_000
@@ -282,10 +284,10 @@ def trailing_spread(days):
     """Vault yield, gross borrow, rebate and spread averaged over the last `days`, or None without the history."""
     t_lo = now - days * DAY
     key = {7: "apy_7d", 30: "apy_30d"}[days]
-    vs = [v for v in vault_rows if v.get(key) is not None and v["usdc"] > 0]
+    vs = [v for v in vault_rows if v.get(key) is not None and wt(v) > 0]
     if not vs:
         return None
-    vault = sum(v[key] * v["usdc"] for v in vs) / sum(v["usdc"] for v in vs)
+    vault = sum(v[key] * wt(v) for v in vs) / sum(wt(v) for v in vs)
     hist = [(r["t"], r["apy"]) for r in (snap or {}).get("core_usdc_rates", []) if r["t"] >= t_lo]
     last_t = hist[-1][0] if hist else 0
     hist += [(s["t"], s["core_borrow"]) for s in live_samples if s.get("core_borrow") and s["t"] > last_t and s["t"] >= t_lo]
@@ -312,6 +314,8 @@ for s in spreads:
 HEAD = next((s for s in spreads if s["key"] == "7d"), spreads[0] if spreads else None)
 head_7d = bool(HEAD and HEAD["key"] == "7d")
 head_carry = HEAD["carry"] if HEAD else None
+# Effectively no loan (after an exit only a few dollars of debt remain): say so rather than show a spread at 0% LTV.
+not_borrowing = chain["debt_usdc"] < 1000
 # The simulator's top end: 1.60, or higher when the band or the live HF sits above it.
 SIM_MAX_HF = max(1.6, math.ceil((max(band["borrow_trigger"], hf_now or 0) + 0.1) * 10) / 10)
 
@@ -1321,9 +1325,9 @@ JS = """
 
 rebate_txt = f"{pct(rebate_pct)}" if rebate else "not read at this build"
 carry_txt = f"{carry:+.2f}%" if carry is not None else "n/a"
-head_txt = f"{head_carry:+.2f}%" if head_carry is not None else "n/a"
+head_txt = "0.00%" if not_borrowing else (f"{head_carry:+.2f}%" if head_carry is not None else "n/a")
 net_borrow_txt = pct(borrow_net)
-good_style = ' style="color:var(--c-good)"' if head_carry and head_carry > 0 else ""
+good_style = ' style="color:var(--c-good)"' if head_carry and head_carry > 0 and not not_borrowing else ""
 fee_term, fee_sub = ("0.9", "after 10% fee") if head_carry and head_carry > 0 else ("1.0", "no fee on a loss")
 basis = "7d avg" if head_7d else "24h avg"
 math_strip = (f'<div class="math"><div class="chunk"><span class="term">{pct(HEAD["vault"])}</span><span class="sub">vault yield, {basis}</span></div><span class="op">−</span>'
@@ -1525,7 +1529,7 @@ hero_side = "".join([
     mini("NAV", f"{n(chain['nav_wbtc'], 4)} WBTC", f"≈ {usd(chain['nav_usd'])}"),
     mini("Share price", f"{n(chain['share_price_wbtc'], 6)} WBTC", f"last settled {n(chain['last_settled_wbtc'], 6)}"),
     mini("Health factor", hf_txt(hf_now), f"band {band['repay_trigger']:.2f} · {band['borrow_target']:.2f} · {band['borrow_trigger']:.2f} (repay · target · re-lever)" + ("" if band["relever"] else ", re-lever off")),
-    mini("LTV", f"{ltv * 100:.1f}%", f"collateral factor {cf * 100:.1f}% ÷ HF · liquidation at {usd(chain['liq_px'])}"),
+    mini("LTV", f"{ltv * 100:.1f}%", f"collateral factor {cf * 100:.1f}% · not borrowing right now" if not_borrowing else f"collateral factor {cf * 100:.1f}% ÷ HF · liquidation at {usd(chain['liq_px'])}"),
     mini("Unclaimed rewards", usd(rewards["total_usd"], 2) if rewards else "n/a", (f"≈ {n(rewards['total_wbtc'], 5)} WBTC, not yet in NAV · {rew_split}") if rewards else "not read at this build"),
 ])
 trail_bits = [f"{s['label']} {s['carry']:+.2f}%" for s in spreads if s["key"] != HEAD["key"]] if HEAD else []
@@ -1594,10 +1598,10 @@ page = f"""<!doctype html>
   <div class="headline">
     <div class="card hero-main">
       <div class="stat-label">Carry on BTC <span class="pill live-pill">{"7-day average rates" if head_7d else "at live rates"}</span></div>
-      <div class="stat-value hero-value{" good" if head_carry and head_carry > 0 else ""}">{head_txt}</div>
+      <div class="stat-value hero-value{" good" if head_carry and head_carry > 0 and not not_borrowing else ""}">{head_txt}</div>
       {status_note}
-      <div class="stat-note">a year on the BTC held, {"at the last 7 days' average rates" if head_7d else "at live rates"}. The fund borrows USDC at <b>{ltv * 100:.1f}%</b> LTV and earns a <b>{n(HEAD["spread"]) if HEAD else "n/a"} pp</b> spread on it, net of the {pct(HEAD["rebate"]) if HEAD else rebate_txt}{" average" if head_7d else ""} Merkl borrow rebate{' and the 10% performance fee' if head_carry and head_carry > 0 else ''}. <em>Not a promise: rates move.</em></div>
-      <div class="stat-sub">{(f"<b>{ltv * HEAD['spread']:+.2f}% before the fee</b>, which is what KPK's own capital earns on these rates. " if head_carry > 0 else "No performance fee applies while carry is negative. ") if head_carry is not None else ""}{esc(trail_line)}≈ {per_btc} a year per 1 BTC at today's price.</div>
+      <div class="stat-note">{(f"a year on the BTC held. The fund is not borrowing right now, so it earns no carry. At the last 7 days' average rates, borrowing USDC and deploying it would earn a <b>{n(HEAD['spread']) if HEAD else 'n/a'} pp</b> spread, net of the Merkl borrow rebate.") if not_borrowing else (f"a year on the BTC held, {'at the last 7 days&#x27; average rates' if head_7d else 'at live rates'}. The fund borrows USDC at <b>{ltv * 100:.1f}%</b> LTV and earns a <b>{n(HEAD['spread']) if HEAD else 'n/a'} pp</b> spread on it, net of the {pct(HEAD['rebate']) if HEAD else rebate_txt}{' average' if head_7d else ''} Merkl borrow rebate{' and the 10% performance fee' if head_carry and head_carry > 0 else ''}.")} <em>Not a promise: rates move.</em></div>
+      <div class="stat-sub">{"" if not_borrowing else ((f"<b>{ltv * HEAD['spread']:+.2f}% before the fee</b>, which is what KPK's own capital earns on these rates. " if head_carry > 0 else "No performance fee applies while carry is negative. ") if head_carry is not None else "") + esc(trail_line) + f"≈ {per_btc} a year per 1 BTC at today's price."}</div>
       <div class="kv"><span>Realised</span><span class="mono">{'see below' if realised else 'from ' + (utc(realised_from).strftime('%-d %b') if realised_from else 'n/a')}</span></div>
       {realised_html}
     </div>
