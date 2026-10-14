@@ -524,60 +524,6 @@ def iso_ts(s):
     return int(datetime.strptime(s, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp())
 
 
-def hf_chart():
-    pts = [p for p in points if p["t"] >= charts_t0 and p.get("hf")]
-    if len(pts) < 2:
-        return '<p class="empty">The health-factor history appears once the position has a few readings.</p>'
-    t0, t1 = charts_t0, max(now, pts[-1]["t"])
-    # Capped: after a near-full unwind HF reads in the tens of thousands, which would flatten the band.
-    top = min(max(max(p["hf"] for p in pts) * 1.08, band["borrow_trigger"] * 1.1), 3.0)
-    f = Frame(t0, t1, 0.97, top, log=True)
-    body = [testing_shade(f)]
-    pts_plot = [{**p, "hf_plot": min(p["hf"], top)} for p in pts]
-    # The band in force at each moment, drawn from the first reading with debt.
-    edges = [b for b in band_hist if b["t"] > pts[0]["t"]]
-    starts = [pts[0]["t"]] + [b["t"] for b in edges]
-    ends = starts[1:] + [t1]
-    for s, e in zip(starts, ends):
-        b = band_at(s)
-        x0, x1 = f.x(s), f.x(e)
-        yt, yb = f.y(b["borrow_trigger"]), f.y(b["repay_trigger"])
-        body.append(f'<rect class="band" x="{x0:.1f}" y="{yt:.1f}" width="{x1 - x0:.1f}" height="{yb - yt:.1f}"/>'
-                    f'<line class="band-edge" x1="{x0:.1f}" y1="{yt:.1f}" x2="{x1:.1f}" y2="{yt:.1f}"/>'
-                    f'<line class="band-edge" x1="{x0:.1f}" y1="{yb:.1f}" x2="{x1:.1f}" y2="{yb:.1f}"/>'
-                    f'<line class="band-target" x1="{x0:.1f}" y1="{f.y(b["borrow_target"]):.1f}" x2="{x1:.1f}" y2="{f.y(b["borrow_target"]):.1f}"/>')
-    ticks = [1.0, 1.1, 1.2, 1.3, 1.5, 2.0, 2.5, 3.0]
-    body.append(y_ticks(f, [v for v in ticks if v <= top], lambda v: f"{v:.1f}"))
-    body.append(time_ticks(f))
-    yl = f.y(1.0)
-    body.append(f'<line class="liq" x1="{PAD_L}" y1="{yl:.1f}" x2="{PAD_L + f.pw}" y2="{yl:.1f}"/>'
-                f'<text class="lab liq-lab" x="{PAD_L + f.pw + 6}" y="{yl + 4:.1f}">liq. 1.00</text>')
-    b = band
-    body.append(f'<text class="lab band-lab" x="{PAD_L + f.pw + 6}" y="{f.y(b["borrow_trigger"]) + 4:.1f}">borrow {b["borrow_trigger"]:.2f}{"" if b["relever"] else ", off"}</text>'
-                f'<text class="lab band-lab" x="{PAD_L + f.pw + 6}" y="{f.y(b["repay_trigger"]) + 12:.1f}">repay {b["repay_trigger"]:.2f}</text>')
-    body.append(f'<path class="line" d="{path(f, pts_plot, "hf_plot")}"/>')
-    # Name the planned hold so a high HF after the seed borrow does not read as a fault.
-    if seed and first_relever and seed.get("hf_after"):
-        body.append(f'<text class="lab" x="{f.x(seed["t"]) - 10:.1f}" y="{f.y(min(seed["hf_after"], top)) + 4:.1f}" text-anchor="end">seed borrow, then a planned hold</text>')
-        body.append(f'<text class="lab" x="{f.x(first_relever["t"]) + 8:.1f}" y="{f.y(first_relever["hf_after"] or 1.21) - 22:.1f}">re-lever on: levered to target</text>')
-    if synced_at and any(p["t"] > synced_at for p in pts):
-        xs = f.x(synced_at)
-        body.append(f'<line class="sync" x1="{xs:.1f}" y1="{PAD_T}" x2="{xs:.1f}" y2="{PAD_T + f.ph}"/><text class="lab" x="{xs + 4:.1f}" y="{PAD_T + 12}">last sync</text>')
-    for t in transactions:
-        if t["t"] < t0:
-            continue
-        if t.get("hf_after") and t["kind"] in ("relever", "derisk", "seed_borrow", "unwind"):
-            body.append(marker(t["kind"], f.x(t["t"]), f.y(min(t["hf_after"], top)), tx_title(t)))
-        else:
-            x = f.x(t["t"])
-            body.append(f'<line class="event" x1="{x:.1f}" y1="{PAD_T}" x2="{x:.1f}" y2="{PAD_T + f.ph}"><title>{esc(tx_title(t))}</title></line>')
-    hover = []
-    for p in pts:
-        bb = band_at(p["t"])
-        hover.append({"x": round(f.x(p["t"]), 1), "l": [stamp(p["t"]) + (" · testing" if p["t"] < window_t0 else ""), f"HF {hf_txt(p['hf'])}", f"band {bb['repay_trigger']:.2f} to {bb['borrow_trigger']:.2f}, target {bb['borrow_target']:.2f}" + ("" if bb["relever"] else ", re-lever off"), f"debt {n(p['debt'], 0)} USDC"]})
-    return chart_svg("hfChart", f, "".join(body), hover, "Health factor over time with the band in force and a marker per transaction")
-
-
 def price_chart():
     pts = [p for p in points if p["t"] >= charts_t0 and p.get("px")]
     if len(pts) < 2:
@@ -1463,19 +1409,6 @@ drop_from_repay = (1 - 1 / band["repay_trigger"]) * 100
 drop_from_min = (1 - 1 / MIN_HF) * 100
 
 
-band_raises = [t for t in live_txs if t["kind"] == "derisk" and band_changed_near(t["t"])]
-hf_caption = ""
-if seed and first_relever:
-    hf_caption = (f"HF started high on purpose. The first borrow is manual and was sized below the target ({seed['amount']}, HF {hf_txt(seed['hf_after'])}); "
-                  f"re-lever stayed off until {short(relever_switch['t'] if relever_switch else first_relever['t'])}, when the agent levered to the "
-                  f"{first_relever['target'] or band['borrow_target']:.2f} target in one step. Since then the line sits inside the band.")
-    for t in [t for t in live_txs if t["kind"] == "unwind" and float(t['amount'].split()[0].replace(',', '')) > 1][-1:]:
-        hf_caption += f" On {utc(t['t']).strftime('%-d %b')} KPK triggered the exit agent, which repaid {t['amount']}" + ("; the fund has not borrowed since." if not_borrowing else ".")
-    for t in band_raises:
-        bb = band_at(t["t"])
-        hf_caption += (f" On {utc(t['t']).strftime('%-d %b')} KPK raised the band to {bb['repay_trigger']:.2f} to {bb['borrow_trigger']:.2f}"
-                       + ("" if bb["relever"] else " with re-lever off") + f", and the agent repaid {t['amount']}, taking HF to {hf_txt(t['hf_after'])}.")
-
 
 
 def px_near(ts, back):
@@ -1821,13 +1754,6 @@ page = f"""<!doctype html>
   {'<div class="note">' + esc(runs.get('note') or '') + '</div>' if runs.get('note') else ''}
   <div class="counters">{counters()}</div>
   <div class="card">
-    <div class="stat-label">Health factor over time</div>
-    <div class="legend"><span><i></i>health factor (log scale)</span><span><i class="band"></i>band in force</span><span><i class="liq"></i>liquidation</span><span><span class="shape" style="color:var(--c-band)">▲</span>re-lever</span><span><span class="shape" style="color:var(--c-liq)">▼</span>repay</span><span><span class="shape">◆</span>manual borrow</span><span><span class="shape">┊</span>deposit</span></div>
-    {hf_chart()}
-    <div class="stat-sub">{hf_caption}</div>
-    {status_note}
-  </div>
-  <div class="card">
     <div class="stat-label">BTC oracle price against agent rebalances</div>
     <div class="statrow">
       <div><div class="c-label">BTC oracle price</div><div class="c-value">{usd(px)}</div><div class="c-sub">{(pct((px / next(p['px'] for p in points if p.get('px') and p['t'] >= window_t0) - 1) * 100, 1, sign=True) + ' since the 9 Oct deposit') if any(p.get('px') and p['t'] >= window_t0 for p in points) else ''}</div></div>
@@ -1835,9 +1761,10 @@ page = f"""<!doctype html>
       <div><div class="c-label">Lowest HF</div><div class="c-value">{f"{lowest['hf']:.4f}" if lowest else 'n/a'}</div><div class="c-sub">{(short(lowest['t']) + f": BTC was {lowest['headroom']:.1f}% above the level where the agent starts repaying, {lowest['to_liq']:.1f}% above liquidation") if lowest else 'after the first re-lever'}</div></div>
       <div><div class="c-label">Buffer to liquidation</div><div class="c-value">{pct(liq_buffer, 1)}</div><div class="c-sub">liquidation price {usd(chain['liq_px'])}</div></div>
     </div>
-    <div class="legend"><span><i></i>BTC oracle price (Aave V4)</span><span><i class="band"></i>no-action corridor</span><span><i class="liq"></i>liquidation price</span></div>
+    <div class="legend"><span><i></i>BTC oracle price (Aave V4)</span><span><i class="band"></i>no-action corridor</span><span><i class="liq"></i>liquidation price</span><span><span class="shape" style="color:var(--c-band)">▲</span>re-lever</span><span><span class="shape" style="color:var(--c-liq)">▼</span>automated repay</span><span><span class="shape" style="color:var(--kpk-ink-muted)">▼</span>exit</span><span><span class="shape">◆</span>manual borrow</span><span><span class="shape">○</span>other action</span><span><span class="shape">┊</span>deposit</span></div>
     {price_chart()}
     <div class="stat-sub">The corridor is the liquidation price × [repay trigger, borrow trigger], using the band in force at each moment. Inside it the agent does nothing; it moves whenever the agent borrows or repays, or the band is retuned. While re-lever is off the agent only repays, so the corridor has no upper edge.</div>
+    {status_note}
   </div>
   <div class="card">
     <details class="fold">
