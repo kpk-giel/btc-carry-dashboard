@@ -126,8 +126,6 @@ rebate, rebate_err = safe(L.read_borrow_rebate)
 rewards, rewards_err = safe(lambda: L.read_rewards(chain["btc_px"]))
 rebate_hist, rebate_hist_err = safe(lambda: L.read_rebate_history([c["opportunity"] for c in (rebate or {}).get("campaigns", [])]))
 LOOP = CONFIG["loop_sleeve"]
-loop_draws = {s: chain["debt_usdc"] * s * (LOOP["leverage"] - 1) for s in LOOP["shares"]}
-loop_in, loop_err = safe(lambda: L.read_loop_inputs([round(d) for d in loop_draws.values()]))
 
 snap = None
 if SNAPSHOT_PATH.exists():
@@ -316,8 +314,15 @@ head_7d = bool(HEAD and HEAD["key"] == "7d")
 head_carry = HEAD["carry"] if HEAD else None
 # Effectively no loan (after an exit only a few dollars of debt remain): say so rather than show a spread at 0% LTV.
 not_borrowing = chain["debt_usdc"] < 1000
+loop_head_note = f" at the {band['borrow_target']:.2f} target loan" if not_borrowing else ""
+# While it isn't borrowing, the loop, the borrow routes and the simulator are priced at the band's target loan.
+ref_ltv = cf / band["borrow_target"] if not_borrowing else ltv
+ref_debt = chain["collateral_usd"] * ref_ltv
+loop_draws = {s: ref_debt * s * (LOOP["leverage"] - 1) for s in LOOP["shares"]}
+loop_in, loop_err = safe(lambda: L.read_loop_inputs([round(d) for d in loop_draws.values()]))
+lines, lines_err = safe(lambda: L.read_borrow_lines({"usdg_core": ref_debt, "usdc_core": max(0.0, ref_debt - chain["debt_usdc"]), "usdc_prime": ref_debt}))
 # The simulator's top end: 1.60, or higher when the band or the live HF sits above it.
-SIM_MAX_HF = max(1.6, math.ceil((max(band["borrow_trigger"], hf_now or 0) + 0.1) * 10) / 10)
+SIM_MAX_HF = min(3.0, max(1.6, math.ceil((max(band["borrow_trigger"], hf_now or 0) + 0.1) * 10) / 10))
 
 # Loop sleeve projection. Today's only USDG line with room is too thin for the loop's own draw, so the
 # projection prices the loop at today's Core-hub USDG rate, which is what more Aave capacity would offer.
@@ -326,10 +331,10 @@ if spread is not None and loop_in:
     a, L_ = loop_in["syrup_7d"], LOOP["leverage"]
     b_need = chain["core_usdg"]["borrow_apy"]
     y_loop = a * L_ - b_need * (L_ - 1)
-    rows_ = [{"share": 0.0, "carry": carry}]
+    rows_ = [{"share": 0.0, "carry": after_fee(ref_ltv * spread)}]
     for s_ in LOOP["shares"]:
         mix = (1 - s_) * deploy_apy + s_ * y_loop
-        rows_.append({"share": s_, "carry": after_fee(ltv * (mix - borrow_net)), "today_rate": loop_in["borrow_after"].get(round(loop_draws[s_]))})
+        rows_.append({"share": s_, "carry": after_fee(ref_ltv * (mix - borrow_net)), "today_rate": loop_in["borrow_after"].get(round(loop_draws[s_]))})
     loop_proj = {"syrup": a, "borrow": b_need, "gd_now": loop_in["borrow_now"], "gd_liq": loop_in["liquidity"], "yield": y_loop, "rows": rows_,
                  "breakeven": a * L_ / (L_ - 1), "loop_hf": LOOP["collateral_factor"] * L_ / (L_ - 1)}
 
@@ -632,6 +637,7 @@ def share_events():
     if first_relever:
         ev.append((first_relever["t"], f"re-lever to the {first_relever['target'] or band['borrow_target']:.2f} target", "re-lever"))
     ev += [(t["t"], f"band raised, {t['amount']} repaid", "band raised") for t in live_txs if t["kind"] == "derisk" and band_changed_near(t["t"])]
+    ev += [(t["t"], f"loan unwound, {t['amount']} repaid", "loan unwound") for t in live_txs if t["kind"] == "unwind" and float(t['amount'].split()[0].replace(',', '')) > 1]
     ev += [(t["t"], f"rewards claimed, {t['amount']}", "rewards claimed") for t in live_txs if t["kind"] == "claim"]
     ev += [(t["t"], f"redemption of {t['amount']}", "redemption") for t in live_txs if t["kind"] == "redemption"]
     return sorted(ev)
@@ -806,6 +812,9 @@ def narrative():
                                     + f"; the agent repaid {esc(t['amount'])} (HF {hf_txt(t['hf_before'])} → {hf_txt(t['hf_after'])})."))
             else:
                 items.append((when, f"<b>De-risk.</b> HF fell below {bb['repay_trigger']:.2f}; the agent repaid {esc(t['amount'])} (HF {hf_txt(t['hf_after'])})."))
+        elif "unwind" in kinds:
+            t = max((t for t in c["txs"] if t["kind"] == "unwind"), key=lambda t: float(t['amount'].split()[0].replace(',', '')))
+            items.append((when, f"<b>Loan unwound.</b> With borrowing costing more than the vaults earned, KPK triggered the exit agent, which repaid {esc(t['amount'])} from the vaults in one transaction (HF {hf_txt(t['hf_before'])} → {hf_txt(t['hf_after'])})."))
         elif "claim" in kinds:
             t = next(t for t in c["txs"] if t["kind"] == "claim")
             items.append((when, f"<b>Rewards claimed.</b> {esc(t['amount'])} moved into NAV in one step."))
@@ -925,7 +934,7 @@ def capacity_line():
 
 # Simulator inputs.
 sim = {
-    "cf": cf, "liveHf": hf_now or band["borrow_target"], "spread": HEAD["spread"] if HEAD else 0, "fee": PERF_FEE, "px": px,
+    "cf": cf, "liveHf": band["borrow_target"] if not_borrowing or not hf_now else hf_now, "notBorrowing": not_borrowing, "spread": HEAD["spread"] if HEAD else 0, "fee": PERF_FEE, "px": px,
     "minHf": MIN_HF, "lowHf": 1.05, "maxHf": SIM_MAX_HF, "target": band["borrow_target"], "repay": band["repay_trigger"], "borrow": band["borrow_trigger"],
 }
 
@@ -946,8 +955,40 @@ if realised:
                      + (f'<div class="kv"><span>USD carry P&amp;L, same {REALISED_DAYS:.0f} days</span><span class="mono">≈ {usd(realised["usd_pnl"])}</span></div>' if realised["usd_pnl"] is not None else "")
                      + '<div class="stat-sub">The carry accrues in USDC while the unit is BTC, so a BTC rally marks it down in BTC terms even as the USD figure climbs.</div>')
 else:
-    realised_html = (f'<div class="stat-sub">Realised carry is shown once {REALISED_DAYS:.0f} days have passed since the re-lever on {esc(utc(first_relever["t"]).strftime("%-d %b")) if first_relever else "its first day"}: '
+    so_far = [p for p in points if p["t"] >= window_t0 and share_price(p)]
+    sofar_html = ""
+    if len(so_far) >= 2 and so_far[-1]["t"] - so_far[0]["t"] >= DAY:
+        r_ = share_price(so_far[-1]) / share_price(so_far[0]) - 1
+        days_ = (so_far[-1]["t"] - so_far[0]["t"]) / DAY
+        sofar_html = (f'<div class="kv"><span>So far, since the {esc(utc(window_t0).strftime("%-d %b"))} deposit</span><span class="mono">{r_ * 100:+.3f}% in {days_:.1f} days (≈ {((1 + r_) ** (365 / days_) - 1) * 100:+.1f}% a year)</span></div>'
+                      '<div class="stat-sub">From the share price in WBTC, claimed rewards included. A short window, so it moves a lot.</div>')
+    realised_html = sofar_html + (f'<div class="stat-sub">Realised carry is shown once {REALISED_DAYS:.0f} days have passed since the re-lever on {esc(utc(first_relever["t"]).strftime("%-d %b")) if first_relever else "its first day"}: '
                      'twice, from NAV and including unclaimed rewards, with the USD carry P&amp;L beside it.</div>')
+
+def routes_card():
+    """What each borrow line would pay today for the target loan, after the fund's own draw, against the vaults' yield."""
+    if not lines or not HEAD:
+        return ""
+    vault = HEAD["vault"]
+    basis_txt = "7-day average" if head_7d else "24-hour"
+    spec = [("usdg_core", "USDG, Aave V4 Core hub", "planned", 0.0), ("usdc_core", "USDC, Aave V4 Core hub", "current line", rebate_pct), ("usdc_prime", "USDC, Aave V4 Prime hub", "alternative", 0.0)]
+    rows = []
+    for key, name, tag, reb in spec:
+        ln = lines.get(key)
+        if not ln:
+            continue
+        if ln["after"] is None:
+            rows.append(f'<tr><td>{esc(name)} <span class="pill">{esc(tag)}</span></td><td class="num">{pct(ln["now"])}</td><td class="num" colspan="4">not enough free liquidity for this loan</td></tr>')
+            continue
+        net = ln["after"] * (1 + rp) - reb
+        sp = vault - net
+        rows.append(f'<tr><td>{esc(name)} <span class="pill">{esc(tag)}</span></td><td class="num">{pct(ln["now"])}</td><td class="num">{pct(ln["after"])}</td>'
+                    f'<td class="num">{("−" + pct(reb)) if reb else "none"}</td><td class="num">{sp:+.2f} pp</td><td class="num"><b>{after_fee(ref_ltv * sp):+.2f}%</b></td></tr>')
+    return (f'<div class="card" style="margin-top:16px"><div class="stat-label">Borrow routes at today&#x27;s rates</div>'
+            f'<div class="stat-sub" style="margin:6px 0 10px">For the {band["borrow_target"]:.2f} target loan: {ref_ltv * 100:.1f}% LTV, about {usd(ref_debt)} borrowed, deployed at the vaults&#x27; {basis_txt} yield of {pct(vault)}. Each rate includes the fund&#x27;s own draw.</div>'
+            f'<table class="data compact" style="width:100%"><thead><tr><th>Route</th><th class="num">Borrow now</th><th class="num">After the fund&#x27;s draw</th><th class="num">Merkl rebate</th><th class="num">Spread</th><th class="num">Carry on BTC</th></tr></thead><tbody>{"".join(rows)}</tbody></table>'
+            '<div class="stat-sub" style="margin-top:8px">USDG is the planned route and is not live yet: it is borrowed and swapped to USDC (about 0.01%), and needs new permissions, now in their 3-day timelock, plus a swap step in the agent. Carry is after the 10% performance fee, which applies to gains only. <em>Not a promise: rates move.</em></div></div>')
+
 
 def scope_cards():
     out = []
@@ -1080,8 +1121,9 @@ details.agent[open] > summary::after { content: "Show less"; }
 .rf-arrow { align-self: center; color: var(--kpk-ink-muted); font-size: 20px; }
 @media (max-width: 860px) { .riskflow { grid-template-columns: 1fr; } .rf-arrow { transform: rotate(90deg); justify-self: center; } }
 .agent-b { font-size: var(--kpk-text-body-small); margin: 8px 0 0; line-height: 1.55; }
-.proofs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-@media (max-width: 760px) { .proofs { grid-template-columns: 1fr; } }
+.proofs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1000px) { .proofs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .proofs { grid-template-columns: 1fr; } }
 .proof { display: flex; flex-direction: column; gap: 4px; background: var(--kpk-surface-card); border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-card); padding: 14px 16px; color: inherit; text-decoration: none; min-width: 0; }
 .proof:hover { border-color: var(--c-line); }
 .proof-tag { display: flex; justify-content: space-between; font-size: var(--kpk-text-fs-tag); color: var(--kpk-ink-muted); text-transform: uppercase; letter-spacing: 0.05em; }
@@ -1282,9 +1324,9 @@ JS = """
   seg.style.width = 'calc(' + ((fb - fa) * 100) + '% - ' + ((fb - fa) * 22) + 'px)';
   seg.innerHTML = '<span>band ' + S.repay.toFixed(2) + ' to ' + S.borrow.toFixed(2) + '</span>';
   box.appendChild(seg);
-  var sameAsTarget = Math.abs(S.liveHf - S.target) < 0.006;
+  var sameAsTarget = S.notBorrowing || Math.abs(S.liveHf - S.target) < 0.006;
   var marks = [
-    { hf: S.target, label: sameAsTarget ? 'target ' + S.target.toFixed(2) + ' = live' : 'target ' + S.target.toFixed(2), row: 1 },
+    { hf: S.target, label: sameAsTarget && !S.notBorrowing ? 'target ' + S.target.toFixed(2) + ' = live' : 'target ' + S.target.toFixed(2), row: 1 },
     { hf: S.minHf, label: 'minimum ' + S.minHf.toFixed(2), row: 1 }
   ];
   if (!sameAsTarget) marks.push({ hf: S.liveHf, label: 'live ' + S.liveHf.toFixed(3), row: 2 });
@@ -1395,7 +1437,9 @@ def risk_evidence():
             out.append((t, f"BTC {'−' if p1 < p0 else '+'}{abs(p1 / p0 - 1) * 100:.1f}%", f"in a day, HF {trig}: the agent {word}", hf_move(t)))
         else:
             out.append((t, f"HF {hf_txt(t['hf_before'])}", f"{trig}: the agent {word}", f"back to {hf_txt(t['hf_after'])}"))
-    u = [t for t in transactions if t["kind"] == "unwind"]
+    for t in [t for t in live_txs if t["kind"] == "unwind" and float(t['amount'].split()[0].replace(',', '')) > 1][-1:]:
+        out.append((t, f"{float(t['amount'].split()[0].replace(',', '')) / 1000:,.1f}k USDC", "repaid in one transaction by the exit agent when carry turned negative", hf_move(t)))
+    u = [t for t in test_txs if t["kind"] == "unwind"]
     ss = [s for s in (secs(t) for t in u) if s]
     if u and ss:
         full = [t for t in u if t["hf_after"] is None]
@@ -1542,7 +1586,7 @@ spread_buttons = "".join(
     f'<i>{esc(s["label"])}</i><b>{s["spread"]:+.2f} pp</b></button>' for s in spreads)
 
 def share_label(s):
-    return "0% (today)" if s == 0 else f"{s * 100:.0f}%"
+    return ("0% (no loop)" if not_borrowing else "0% (today)") if s == 0 else f"{s * 100:.0f}%"
 
 
 loop_html = ""
@@ -1554,7 +1598,7 @@ if loop_proj:
     caveat = (f" That needs more Aave room for the Maple spoke: the one USDG line with room today (Global Dollar hub, {musd(lp['gd_liq'])} free at {pct(lp['gd_now'])}) "
               f"would rise to {pct(first_draw['today_rate'])} for a {first_draw['share'] * 100:.0f}% loop at today's fund size, above the loop's {pct(lp['breakeven'])} break-even.") if first_draw else ""
     loop_html = (f'<div class="loop-proj"><div class="stat-label">What the loop would add <span class="pill">projection</span></div>'
-                 f'<table class="data compact"><thead><tr><th>Loop share of the borrowed stablecoins</th><th class="num">Carry on BTC</th></tr></thead><tbody>{rows_html}</tbody></table>'
+                 f'<table class="data compact"><thead><tr><th>Loop share of the borrowed stablecoins</th><th class="num">Carry on BTC{loop_head_note}</th></tr></thead><tbody>{rows_html}</tbody></table>'
                  f'<div class="stat-sub">At today\'s rates: syrupUSDG yields {pct(lp["syrup"])} (7-day, Maple). Borrowing USDG at {pct(lp["borrow"])}, today\'s Core-hub rate, at {LOOP["leverage"]}x, the loop earns {pct(lp["yield"], 1)} on its equity; the rest of the stablecoins stay in the liquid sleeve.{caveat} '
                  f'At {LOOP["leverage"]}x the loop\'s own health factor is {lp["loop_hf"]:.3f}: a {(1 - 1 / lp["loop_hf"]) * 100:.1f}% markdown of syrupUSDG would liquidate it, which is why it is capped and partly unwound when borrow costs rise.</div></div>')
 
@@ -1608,6 +1652,7 @@ page = f"""<!doctype html>
     <div class="side-stats">{hero_side}</div>
   </div>
   {math_strip}
+  {routes_card()}
   {f'<div class="note">{esc(nav_note)}</div>' if nav_note else ''}
 </section>
 

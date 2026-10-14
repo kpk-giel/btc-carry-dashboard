@@ -42,6 +42,8 @@ RESERVE_WBTC = 1
 RESERVE_USDC_CORE = 7
 CORE_USDC_ASSET = 5
 CORE_USDG_ASSET = 8
+PRIME = "0x943827DCA022D0F354a8a8c332dA1e5Eb9f9F931"
+PRIME_USDC_ASSET = 4
 
 SEL = {
     "getUserAccountData(address)": "0xbf92857c",
@@ -357,6 +359,34 @@ def read_loop_inputs(draws_usdg):
         for (d, _), r in zip(calls, out):
             after[d] = apr_to_apy_pct(_words(r)[0] / 1e27)
     return {"syrup_7d": syrup_7d, "syrup_30d": syrup_30d, "borrow_now": apr_to_apy_pct(a["drawn_rate_ray"] / 1e27), "liquidity": a["liquidity"] / 1e6, "borrow_after": after}
+
+
+
+def read_borrow_lines(draws):
+    """Borrow APY (percent, gross, before any Merkl rebate) now and after the fund's own draw on each
+    line it can borrow from the Bluechip spoke: USDG and USDC on the Core hub, USDC on the Prime hub.
+    `draws` maps a line to whole tokens; each hub's rate strategy prices the draw with supply held
+    constant."""
+    lines = [("usdg_core", CORE, CORE_USDG_ASSET), ("usdc_core", CORE, CORE_USDC_ASSET), ("usdc_prime", PRIME, PRIME_USDC_ASSET)]
+    reads = []
+    for _, hub, aid in lines:
+        reads += [(hub, _data("getAsset(uint256)", aid)), (hub, _data("getAssetOwed(uint256)", aid))]
+    res = eth_calls(reads)
+    out, calls = {}, []
+    for i, (key, hub, aid) in enumerate(lines):
+        a = _asset(_words(res[2 * i]))
+        drawn = _words(res[2 * i + 1])[0]
+        now_apy = apr_to_apy_pct(a["drawn_rate_ray"] / 1e27)
+        out[key] = {"now": now_apy, "liquidity": a["liquidity"] / 1e6, "after": now_apy}
+        raw = int(draws.get(key, 0)) * 10**6
+        if raw > a["liquidity"]:
+            out[key]["after"] = None
+        elif raw > 0:
+            calls.append((key, (a["ir_strategy"], _data("calculateInterestRate(uint256,uint256,uint256,uint256,uint256)", aid, a["liquidity"] - raw, drawn + raw, a["deficit"], a["swept"]))))
+    if calls:
+        for (key, _), r in zip(calls, eth_calls([c for _, c in calls])):
+            out[key]["after"] = apr_to_apy_pct(_words(r)[0] / 1e27)
+    return out
 
 
 def read_rebate_history(opportunities, days=31):
