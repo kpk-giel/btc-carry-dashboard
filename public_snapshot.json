@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "synced_at": "2026-10-13T12:08:06Z",
- "synced_block": 26183468,
+ "synced_at": "2026-10-14T11:59:29Z",
+ "synced_block": 26190593,
  "window_start": {
   "t": 1791563351,
   "block": 26156054,
@@ -12,11 +12,11 @@
   "block": 26029303
  },
  "position_at_sync": {
-  "t": 1791890087,
-  "block": 26183203,
+  "t": 1791976847,
+  "block": 26190403,
   "collateral_wbtc": 4.77644089,
-  "debt_usdc": 275841.93,
-  "hf": 1.21521
+  "debt_usdc": 8.04,
+  "hf": 41778.53451
  },
  "band": {
   "history": [
@@ -68,8 +68,15 @@
   "by_agent": [
    {
     "agent": "Health-factor manager",
-    "runs": 1099,
-    "completed": 1099,
+    "runs": 1387,
+    "completed": 1387,
+    "failed": 0,
+    "executed": 2
+   },
+   {
+    "agent": "Exit agent (emergency unwind)",
+    "runs": 2,
+    "completed": 2,
     "failed": 0,
     "executed": 2
    },
@@ -1098,11 +1105,219 @@
    },
    {
     "t": 1791892800,
-    "n": 1,
-    "ok": 1,
+    "n": 13,
+    "ok": 13,
     "fail": 0,
     "states": {
-     "inside the band, no action": 1
+     "inside the band, no action": 13
+    }
+   },
+   {
+    "t": 1791896400,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1791900000,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1791903600,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1791907200,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1791910800,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 2,
+     "above the borrow trigger, re-lever switched off": 10
+    }
+   },
+   {
+    "t": 1791914400,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791918000,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791921600,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791925200,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791928800,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791932400,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791936000,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791939600,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791943200,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791946800,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791950400,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791954000,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791957600,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791961200,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791964800,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791968400,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791972000,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791975600,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
     }
    }
   ],
@@ -1314,10 +1529,68 @@
     "hash": "0x7e2ba461ca12d6c70977520b101ba531344ff13f4e45b72970398cb0b7b1a9da",
     "hf_read": 1.2152,
     "secs": 10.3
+   },
+   {
+    "t": 1791911425,
+    "agent": "Exit agent (emergency unwind)",
+    "label": "acted",
+    "hash": "0x228c816ed1fb7061e189186af89fae78f2be21bf0c6683390151a80022bbd108",
+    "hf_read": null,
+    "secs": 10.5
+   },
+   {
+    "t": 1791911847,
+    "agent": "Exit agent (emergency unwind)",
+    "label": "acted",
+    "hash": "0x0cc3fbfa5b26529a27936e991be29df807b21aad171cbdc4f0d3e324c690eb0d",
+    "hf_read": null,
+    "secs": 10.5
    }
   ]
  },
  "transactions": [
+  {
+   "t": 1791913103,
+   "block": 26185114,
+   "hash": "0xf4b4bd148eabfd63d81c4d744188d7390df7dc940b359ce54fcbed4e0aec5f94",
+   "status": "ok",
+   "actor": "Manager Safe (2 of 5 signers)",
+   "kind": "claim",
+   "action": "Claimed 54.94 USDC in rewards.",
+   "amount": "54.94 USDC",
+   "hf_before": 41674.78091,
+   "hf_after": 41674.77935,
+   "target": null,
+   "px": 82970.85
+  },
+  {
+   "t": 1791911855,
+   "block": 26185011,
+   "hash": "0x0cc3fbfa5b26529a27936e991be29df807b21aad171cbdc4f0d3e324c690eb0d",
+   "status": "ok",
+   "actor": "Exit agent (emergency unwind)",
+   "kind": "unwind",
+   "action": "Unwind: withdrew 0.00 from KPK USDC Yield and 0.00 from KPK USDC Yield RWA, repaid 0.00 USDC on the Core hub.",
+   "amount": "0.00 USDC",
+   "hf_before": 41653.61614,
+   "hf_after": 41674.94125,
+   "target": null,
+   "px": 82970.85
+  },
+  {
+   "t": 1791911435,
+   "block": 26184976,
+   "hash": "0x228c816ed1fb7061e189186af89fae78f2be21bf0c6683390151a80022bbd108",
+   "status": "ok",
+   "actor": "Exit agent (emergency unwind)",
+   "kind": "unwind",
+   "action": "Unwind: withdrew 73,072.14 from KPK USDC Yield and 113,155.93 from KPK USDC Yield RWA, repaid 186,228.07 USDC on the Core hub.",
+   "amount": "186,228.07 USDC",
+   "hf_before": 1.80485,
+   "hf_after": 41804.61285,
+   "target": null,
+   "px": 83271.52
+  },
   {
    "t": 1791891143,
    "block": 26183291,
@@ -9127,6 +9400,372 @@
    "nav": 4.77990462,
    "sup": 4.77865456,
    "tag": "after"
+  },
+  {
+   "t": 1791893687,
+   "b": 26183503,
+   "hf": 1.80167,
+   "px": 83117.83,
+   "liq": 46133.87,
+   "coll": 4.77644089,
+   "debt": 186226.66,
+   "cf": 0.845,
+   "nav": 4.77989899,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791897311,
+   "b": 26183803,
+   "hf": 1.79987,
+   "px": 83035.68,
+   "liq": 46134.36,
+   "coll": 4.77644089,
+   "debt": 186228.65,
+   "cf": 0.845,
+   "nav": 4.77989024,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791900923,
+   "b": 26184103,
+   "hf": 1.81189,
+   "px": 83591.09,
+   "liq": 46134.8,
+   "coll": 4.77644089,
+   "debt": 186230.45,
+   "cf": 0.845,
+   "nav": 4.77988392,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791904523,
+   "b": 26184403,
+   "hf": 1.80829,
+   "px": 83428.46,
+   "liq": 46136.74,
+   "coll": 4.77644089,
+   "debt": 186232.29,
+   "cf": 0.845,
+   "nav": 4.77987699,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791908147,
+   "b": 26184703,
+   "hf": 1.80487,
+   "px": 83271.52,
+   "liq": 46137.18,
+   "coll": 4.77644089,
+   "debt": 186234.05,
+   "cf": 0.845,
+   "nav": 4.77987138,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791911423,
+   "b": 26184975,
+   "hf": 1.80485,
+   "px": 83271.52,
+   "liq": 46137.69,
+   "coll": 4.77644089,
+   "debt": 186236.1,
+   "cf": 0.845,
+   "nav": 4.77986025,
+   "sup": 4.77865456,
+   "tag": "before"
+  },
+  {
+   "t": 1791911435,
+   "b": 26184976,
+   "hf": 41804.61285,
+   "px": 83271.52,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.7798602,
+   "sup": 4.77865456,
+   "tag": "after"
+  },
+  {
+   "t": 1791911759,
+   "b": 26185003,
+   "hf": 41653.62696,
+   "px": 82970.85,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.77985987,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791911843,
+   "b": 26185010,
+   "hf": 41653.61614,
+   "px": 82970.85,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.77985987,
+   "sup": 4.77865456,
+   "tag": "before"
+  },
+  {
+   "t": 1791911855,
+   "b": 26185011,
+   "hf": 41674.94125,
+   "px": 82970.85,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.77985989,
+   "sup": 4.77865456,
+   "tag": "after"
+  },
+  {
+   "t": 1791913091,
+   "b": 26185113,
+   "hf": 41674.78091,
+   "px": 82970.85,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.77985989,
+   "sup": 4.77865456,
+   "tag": "before"
+  },
+  {
+   "t": 1791913103,
+   "b": 26185114,
+   "hf": 41674.77935,
+   "px": 82970.85,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.7805209,
+   "sup": 4.77865456,
+   "tag": "after"
+  },
+  {
+   "t": 1791915371,
+   "b": 26185303,
+   "hf": 41682.51978,
+   "px": 82986.8,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78052061,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791918995,
+   "b": 26185603,
+   "hf": 41677.90022,
+   "px": 82978.23,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78052079,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791922607,
+   "b": 26185903,
+   "hf": 41713.36852,
+   "px": 83049.41,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78052001,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791926207,
+   "b": 26186203,
+   "hf": 41775.87253,
+   "px": 83174.35,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78051949,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791929807,
+   "b": 26186503,
+   "hf": 41803.52439,
+   "px": 83229.9,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78051916,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791933443,
+   "b": 26186803,
+   "hf": 41746.82451,
+   "px": 83117.51,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78052013,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791937067,
+   "b": 26187103,
+   "hf": 41802.71971,
+   "px": 83229.28,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78051904,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791940691,
+   "b": 26187403,
+   "hf": 41725.89985,
+   "px": 83076.82,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78052019,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791944315,
+   "b": 26187703,
+   "hf": 41752.2712,
+   "px": 83129.82,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78052009,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791947939,
+   "b": 26188003,
+   "hf": 41978.51028,
+   "px": 83580.86,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78051722,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791951551,
+   "b": 26188303,
+   "hf": 41919.05082,
+   "px": 83463.15,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78051754,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791955175,
+   "b": 26188603,
+   "hf": 41823.8706,
+   "px": 83274.32,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78051808,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791958787,
+   "b": 26188903,
+   "hf": 41869.5006,
+   "px": 83365.85,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78051959,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791962411,
+   "b": 26189203,
+   "hf": 41813.65351,
+   "px": 83255.34,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78051818,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791966023,
+   "b": 26189503,
+   "hf": 42075.41313,
+   "px": 83777.2,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78051617,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791969623,
+   "b": 26189803,
+   "hf": 41822.50375,
+   "px": 83274.23,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78051915,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791973223,
+   "b": 26190103,
+   "hf": 41715.90946,
+   "px": 83062.65,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78052028,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791976847,
+   "b": 26190403,
+   "hf": 41778.53451,
+   "px": 83187.99,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78051941,
+   "sup": 4.77865456
   }
  ],
  "series": {
@@ -9366,6 +10005,24 @@
     "share_price_usd": 83170.64,
     "share_price_wbtc": 1.00026063,
     "btc_usd": 83148.97
+   },
+   {
+    "t": 1791958619,
+    "b": 26188889,
+    "nav_usd": 398168.98,
+    "nav_wbtc": 4.78051961,
+    "share_price_usd": 83322.4,
+    "share_price_wbtc": 1.00039029,
+    "btc_usd": 83289.9
+   },
+   {
+    "t": 1791979151,
+    "b": 26190593,
+    "nav_usd": 398422.65,
+    "nav_wbtc": 4.78051925,
+    "share_price_usd": 83375.49,
+    "share_price_wbtc": 1.00039021,
+    "btc_usd": 83342.97
    }
   ]
  },
@@ -9416,148 +10073,130 @@
    "t": 1790657987,
    "b": 26080889,
    "borrow_apy": 7.536,
-   "lend_apy": 6.721
+   "lend_apy": null
   },
   {
    "t": 1790744723,
    "b": 26088089,
    "borrow_apy": 5.199,
-   "lend_apy": 7.111
+   "lend_apy": null
   },
   {
    "t": 1790831459,
    "b": 26095289,
    "borrow_apy": 5.949,
-   "lend_apy": 7.349
+   "lend_apy": null
   },
   {
    "t": 1790918171,
    "b": 26102489,
    "borrow_apy": 5.056,
-   "lend_apy": 7.446
+   "lend_apy": null
   },
   {
    "t": 1791004955,
    "b": 26109689,
    "borrow_apy": 7.469,
-   "lend_apy": 7.437
+   "lend_apy": null
   },
   {
    "t": 1791091595,
    "b": 26116889,
    "borrow_apy": 5.097,
-   "lend_apy": 7.461
+   "lend_apy": null
   },
   {
    "t": 1791178235,
    "b": 26124089,
    "borrow_apy": 5.08,
-   "lend_apy": 7.439
+   "lend_apy": null
   },
   {
    "t": 1791265007,
    "b": 26131289,
    "borrow_apy": 5.186,
-   "lend_apy": 7.037
+   "lend_apy": null
   },
   {
    "t": 1791351755,
    "b": 26138489,
    "borrow_apy": 7.541,
-   "lend_apy": 6.643
+   "lend_apy": null
   },
   {
    "t": 1791438515,
    "b": 26145689,
    "borrow_apy": 9.49,
-   "lend_apy": 6.441
+   "lend_apy": null
   },
   {
    "t": 1791525275,
    "b": 26152889,
    "borrow_apy": 7.852,
-   "lend_apy": 6.318
+   "lend_apy": null
   },
   {
    "t": 1791611903,
    "b": 26160089,
    "borrow_apy": 5.085,
-   "lend_apy": 6.24
+   "lend_apy": null
   },
   {
    "t": 1791698567,
    "b": 26167289,
    "borrow_apy": 5.919,
-   "lend_apy": 6.194
+   "lend_apy": null
   },
   {
    "t": 1791785231,
    "b": 26174489,
    "borrow_apy": 5.075,
-   "lend_apy": 6.18
+   "lend_apy": null
   },
   {
    "t": 1791816035,
    "b": 26177050,
    "borrow_apy": 5.015,
-   "lend_apy": 6.195
+   "lend_apy": null
   },
   {
    "t": 1791871859,
    "b": 26181689,
    "borrow_apy": 12.613,
-   "lend_apy": 6.223
+   "lend_apy": null
   },
   {
    "t": 1791885419,
    "b": 26182815,
    "borrow_apy": 10.354,
-   "lend_apy": 6.224
+   "lend_apy": null
   },
   {
    "t": 1791891323,
    "b": 26183306,
    "borrow_apy": 9.583,
-   "lend_apy": 6.185
+   "lend_apy": null
   },
   {
    "t": 1791893267,
    "b": 26183468,
    "borrow_apy": 9.635,
-   "lend_apy": 6.186
+   "lend_apy": null
+  },
+  {
+   "t": 1791958619,
+   "b": 26188889,
+   "borrow_apy": 7.366,
+   "lend_apy": null
+  },
+  {
+   "t": 1791979151,
+   "b": 26190593,
+   "borrow_apy": 7.037,
+   "lend_apy": null
   }
  ],
  "core_usdc_rates": [
-  {
-   "t": 1789205759,
-   "b": 25960472,
-   "apy": 5.012
-  },
-  {
-   "t": 1789220171,
-   "b": 25961672,
-   "apy": 4.968
-  },
-  {
-   "t": 1789234619,
-   "b": 25962872,
-   "apy": 6.153
-  },
-  {
-   "t": 1789249079,
-   "b": 25964072,
-   "apy": 6.373
-  },
-  {
-   "t": 1789263527,
-   "b": 25965272,
-   "apy": 6.092
-  },
-  {
-   "t": 1789277975,
-   "b": 25966472,
-   "apy": 6.001
-  },
   {
    "t": 1789292387,
    "b": 25967672,
@@ -10457,22 +11096,52 @@
    "t": 1791881291,
    "b": 26182472,
    "apy": 8.155
+  },
+  {
+   "t": 1791895715,
+   "b": 26183672,
+   "apy": 9.806
+  },
+  {
+   "t": 1791910187,
+   "b": 26184872,
+   "apy": 15.146
+  },
+  {
+   "t": 1791924635,
+   "b": 26186072,
+   "apy": 5.387
+  },
+  {
+   "t": 1791939119,
+   "b": 26187272,
+   "apy": 5.191
+  },
+  {
+   "t": 1791953591,
+   "b": 26188472,
+   "apy": 7.366
+  },
+  {
+   "t": 1791968051,
+   "b": 26189672,
+   "apy": 6.44
   }
  ],
  "capacity": {
-  "t": 1791893286,
-  "block": 26183468,
+  "t": 1791979169,
+  "block": 26190593,
   "core_usdc_room_to_kink": 0,
-  "core_usdc_liquidity": 2034051,
-  "core_usdc_borrow_apy": 9.635,
+  "core_usdc_liquidity": 2399770,
+  "core_usdc_borrow_apy": 7.037,
   "core_usdc_rebate_apr": 2,
-  "core_usdc_net_borrow_apy": 7.635,
-  "core_usdc_after_1m_apy": 18.492,
-  "bluechip_usdc_room_under_cap": 1123520.3816769999,
-  "core_usdg_liquidity": 9302617,
-  "core_usdg_borrow_apy": 3.991,
-  "core_usdg_after_1m_apy": 4.05,
-  "core_usdg_after_3_5m_apy": 9.525,
-  "bluechip_usdg_room_under_cap": 2264471.205306
+  "core_usdc_net_borrow_apy": 5.037,
+  "core_usdc_after_1m_apy": 15.47,
+  "bluechip_usdc_room_under_cap": 1372639.6361029996,
+  "core_usdg_liquidity": 9142936,
+  "core_usdg_borrow_apy": 4.007,
+  "core_usdg_after_1m_apy": 4.066,
+  "core_usdg_after_3_5m_apy": 10.174,
+  "bluechip_usdg_room_under_cap": 2260379.055456
  }
 }
