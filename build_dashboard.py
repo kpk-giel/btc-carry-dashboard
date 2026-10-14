@@ -1290,7 +1290,7 @@ table.data td.mid { min-width: 130px; }
 .stat-note { font-size: var(--kpk-text-body-small); color: var(--kpk-ink-muted); max-width: 52ch; }
 .stat-note b { color: var(--kpk-ink); font-weight: 500; }
 .side-stats { display: flex; flex-direction: column; background: var(--kpk-surface-card); border: var(--kpk-rule-hard) solid var(--kpk-line); border-radius: var(--kpk-radius-card); padding: 4px 18px; }
-.mini { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 9px 0; }
+.mini { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 0; }
 .mini + .mini { border-top: var(--kpk-rule-soft) solid var(--kpk-line); }
 .m-label { font-size: var(--kpk-text-body-small); color: var(--kpk-ink-muted); font-weight: 500; }
 .m-label em { display: block; font-style: normal; font-weight: 400; font-size: var(--kpk-text-fs-tag); margin-top: 2px; }
@@ -1653,9 +1653,10 @@ rew_split = " · ".join(f"{esc(REW_SHORT.get(g['group'], g['group']))} {usd(g['c
 hero_side = "".join([
     mini("NAV", f"{n(chain['nav_wbtc'], 4)} WBTC", f"≈ {usd(chain['nav_usd'])}"),
     mini("Share price", f"{n(chain['share_price_wbtc'], 6)} WBTC", f"last settled {n(chain['last_settled_wbtc'], 6)}"),
-    mini("Health factor", vw(hf_txt(hf_now), hf_txt(avg_hf) if avg_hf else hf_txt(hf_now)), vw(f"today · band {band['repay_trigger']:.2f} · {band['borrow_target']:.2f} · {band['borrow_trigger']:.2f}" + ("" if band["relever"] else ", re-lever off"), "") + vw("", f"{avg_label}, from the average LTV{'' if not_borrowing else ' · today ' + hf_txt(hf_now)} · band {band['repay_trigger']:.2f} · {band['borrow_target']:.2f} · {band['borrow_trigger']:.2f}" + ("" if band["relever"] else ", re-lever off"))),
-    mini("LTV", vw(f"{ltv * 100:.1f}%", f"{hl_ltv * 100:.1f}%"), vw(f"today, liquidation at {usd(chain['liq_px'])}" if chain["liq_px"] else "today", f"{avg_label} · today {ltv * 100:.1f}%" + ("" if not_borrowing else f", liquidation at {usd(chain['liq_px'])}"))),
-    mini("Unclaimed rewards", usd(rewards["total_usd"], 2) if rewards else "n/a", (f"≈ {n(rewards['total_wbtc'], 5)} WBTC, not yet in NAV · {rew_split}") if rewards else "not read at this build"),
+    mini("Health factor · LTV", vw(f"{hf_txt(hf_now)} · {ltv * 100:.1f}%", f"{hf_txt(avg_hf) if avg_hf else hf_txt(hf_now)} · {hl_ltv * 100:.1f}%"),
+         vw(f"today · band {band['repay_trigger']:.2f} · {band['borrow_target']:.2f} · {band['borrow_trigger']:.2f}" + ("" if band["relever"] else ", re-lever off") + (f" · liquidation at {usd(chain['liq_px'])}" if chain["liq_px"] and not not_borrowing else ""),
+            f"{avg_label} · band {band['repay_trigger']:.2f} · {band['borrow_target']:.2f} · {band['borrow_trigger']:.2f}" + ("" if band["relever"] else ", re-lever off"))),
+    mini("Unclaimed rewards", usd(rewards["total_usd"], 2) if rewards else "n/a", (f"≈ {n(rewards['total_wbtc'], 5)} WBTC, not in NAV until claimed") if rewards else "not read at this build"),
 ])
 trail_bits = [f"{s['label']} {s['carry']:+.2f}%" for s in spreads if s["key"] != HEAD["key"]] if HEAD else []
 trail_line = (("At today's rates: " if head_7d else "On trailing rates: ") + " · ".join(b.replace("Live ", "") for b in trail_bits) + ". ") if trail_bits else ""
