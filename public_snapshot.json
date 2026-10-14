@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "synced_at": "2026-10-14T11:59:29Z",
- "synced_block": 26190593,
+ "synced_at": "2026-10-14T19:18:08Z",
+ "synced_block": 26192783,
  "window_start": {
   "t": 1791563351,
   "block": 26156054,
@@ -12,11 +12,11 @@
   "block": 26029303
  },
  "position_at_sync": {
-  "t": 1791976847,
-  "block": 26190403,
+  "t": 1792002107,
+  "block": 26192503,
   "collateral_wbtc": 4.77644089,
   "debt_usdc": 8.04,
-  "hf": 41778.53451
+  "hf": 40891.09609
  },
  "band": {
   "history": [
@@ -59,6 +59,14 @@
     "borrow_trigger": 1.9,
     "borrow_target": 1.8,
     "relever": false
+   },
+   {
+    "t": 1792005386,
+    "repay_trigger": 1.15,
+    "repay_target": 1.21,
+    "borrow_trigger": 1.25,
+    "borrow_target": 1.21,
+    "relever": true
    }
   ]
  },
@@ -68,10 +76,10 @@
   "by_agent": [
    {
     "agent": "Health-factor manager",
-    "runs": 1387,
-    "completed": 1387,
+    "runs": 1475,
+    "completed": 1475,
     "failed": 0,
-    "executed": 2
+    "executed": 3
    },
    {
     "agent": "Exit agent (emergency unwind)",
@@ -1319,6 +1327,79 @@
     "states": {
      "above the borrow trigger, re-lever switched off": 12
     }
+   },
+   {
+    "t": 1791979200,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791982800,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791986400,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791990000,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791993600,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1791997200,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 12
+    }
+   },
+   {
+    "t": 1792000800,
+    "n": 11,
+    "ok": 11,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 11
+    }
+   },
+   {
+    "t": 1792004400,
+    "n": 5,
+    "ok": 5,
+    "fail": 0,
+    "states": {
+     "above the borrow trigger, re-lever switched off": 4,
+     "above the borrow trigger: borrowed": 1
+    }
    }
   ],
   "executed": [
@@ -1545,10 +1626,32 @@
     "hash": "0x0cc3fbfa5b26529a27936e991be29df807b21aad171cbdc4f0d3e324c690eb0d",
     "hf_read": null,
     "secs": 10.5
+   },
+   {
+    "t": 1792005402,
+    "agent": "Health-factor manager",
+    "label": "above the borrow trigger: borrowed",
+    "hash": "0x4544c88e7cf72747cb3d740ba3089e2d5d09bbd2a34fb0c01ecd4c3cb3d00737",
+    "hf_read": 40951.66109,
+    "secs": 7.9
    }
   ]
  },
  "transactions": [
+  {
+   "t": 1792005407,
+   "block": 26192777,
+   "hash": "0x4544c88e7cf72747cb3d740ba3089e2d5d09bbd2a34fb0c01ecd4c3cb3d00737",
+   "status": "ok",
+   "actor": "Health-factor manager",
+   "kind": "relever",
+   "action": "Re-lever: borrowed 272,026.64 USDC on the Core hub, deposited 136,013.32 into KPK USDC Yield and 136,013.32 into KPK USDC Yield RWA.",
+   "amount": "272,026.64 USDC",
+   "hf_before": 40951.66109,
+   "hf_after": 1.21,
+   "target": 1.21,
+   "px": 81544.77
+  },
   {
    "t": 1791913103,
    "block": 26185114,
@@ -9766,6 +9869,116 @@
    "cf": 0.845,
    "nav": 4.78051941,
    "sup": 4.77865456
+  },
+  {
+   "t": 1791980471,
+   "b": 26190703,
+   "hf": 42010.16835,
+   "px": 83649.87,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78051639,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791984071,
+   "b": 26191003,
+   "hf": 41294.64853,
+   "px": 82225.79,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78052628,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791987695,
+   "b": 26191303,
+   "hf": 41082.11505,
+   "px": 81803.21,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78052954,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791991295,
+   "b": 26191603,
+   "hf": 41071.38479,
+   "px": 81781.33,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78052931,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791994895,
+   "b": 26191903,
+   "hf": 40903.22336,
+   "px": 81446.95,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.7805315,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1791998495,
+   "b": 26192203,
+   "hf": 41109.27725,
+   "px": 81857.72,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78052864,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1792002107,
+   "b": 26192503,
+   "hf": 40891.09609,
+   "px": 81423.74,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.78053162,
+   "sup": 4.77865456
+  },
+  {
+   "t": 1792005395,
+   "b": 26192776,
+   "hf": 40951.66109,
+   "px": 81544.77,
+   "liq": 1.99,
+   "coll": 4.77644089,
+   "debt": 8.04,
+   "cf": 0.845,
+   "nav": 4.780531,
+   "sup": 4.77865456,
+   "tag": "before"
+  },
+  {
+   "t": 1792005407,
+   "b": 26192777,
+   "hf": 1.21,
+   "px": 81544.77,
+   "liq": 67392.37,
+   "coll": 4.77644089,
+   "debt": 272034.68,
+   "cf": 0.845,
+   "nav": 4.78053099,
+   "sup": 4.77865456,
+   "tag": "after"
   }
  ],
  "series": {
@@ -10023,6 +10236,15 @@
     "share_price_usd": 83375.49,
     "share_price_wbtc": 1.00039021,
     "btc_usd": 83342.97
+   },
+   {
+    "t": 1792005479,
+    "b": 26192783,
+    "nav_usd": 390256.6,
+    "nav_wbtc": 4.78053107,
+    "share_price_usd": 81666.63,
+    "share_price_wbtc": 1.00039269,
+    "btc_usd": 81634.57
    }
   ]
  },
@@ -10073,115 +10295,115 @@
    "t": 1790657987,
    "b": 26080889,
    "borrow_apy": 7.536,
-   "lend_apy": null
+   "lend_apy": 6.721
   },
   {
    "t": 1790744723,
    "b": 26088089,
    "borrow_apy": 5.199,
-   "lend_apy": null
+   "lend_apy": 7.111
   },
   {
    "t": 1790831459,
    "b": 26095289,
    "borrow_apy": 5.949,
-   "lend_apy": null
+   "lend_apy": 7.349
   },
   {
    "t": 1790918171,
    "b": 26102489,
    "borrow_apy": 5.056,
-   "lend_apy": null
+   "lend_apy": 7.446
   },
   {
    "t": 1791004955,
    "b": 26109689,
    "borrow_apy": 7.469,
-   "lend_apy": null
+   "lend_apy": 7.437
   },
   {
    "t": 1791091595,
    "b": 26116889,
    "borrow_apy": 5.097,
-   "lend_apy": null
+   "lend_apy": 7.461
   },
   {
    "t": 1791178235,
    "b": 26124089,
    "borrow_apy": 5.08,
-   "lend_apy": null
+   "lend_apy": 7.439
   },
   {
    "t": 1791265007,
    "b": 26131289,
    "borrow_apy": 5.186,
-   "lend_apy": null
+   "lend_apy": 7.037
   },
   {
    "t": 1791351755,
    "b": 26138489,
    "borrow_apy": 7.541,
-   "lend_apy": null
+   "lend_apy": 6.643
   },
   {
    "t": 1791438515,
    "b": 26145689,
    "borrow_apy": 9.49,
-   "lend_apy": null
+   "lend_apy": 6.441
   },
   {
    "t": 1791525275,
    "b": 26152889,
    "borrow_apy": 7.852,
-   "lend_apy": null
+   "lend_apy": 6.318
   },
   {
    "t": 1791611903,
    "b": 26160089,
    "borrow_apy": 5.085,
-   "lend_apy": null
+   "lend_apy": 6.24
   },
   {
    "t": 1791698567,
    "b": 26167289,
    "borrow_apy": 5.919,
-   "lend_apy": null
+   "lend_apy": 6.194
   },
   {
    "t": 1791785231,
    "b": 26174489,
    "borrow_apy": 5.075,
-   "lend_apy": null
+   "lend_apy": 6.18
   },
   {
    "t": 1791816035,
    "b": 26177050,
    "borrow_apy": 5.015,
-   "lend_apy": null
+   "lend_apy": 6.195
   },
   {
    "t": 1791871859,
    "b": 26181689,
    "borrow_apy": 12.613,
-   "lend_apy": null
+   "lend_apy": 6.223
   },
   {
    "t": 1791885419,
    "b": 26182815,
    "borrow_apy": 10.354,
-   "lend_apy": null
+   "lend_apy": 6.224
   },
   {
    "t": 1791891323,
    "b": 26183306,
    "borrow_apy": 9.583,
-   "lend_apy": null
+   "lend_apy": 6.185
   },
   {
    "t": 1791893267,
    "b": 26183468,
    "borrow_apy": 9.635,
-   "lend_apy": null
+   "lend_apy": 6.186
   },
   {
    "t": 1791958619,
@@ -10194,19 +10416,15 @@
    "b": 26190593,
    "borrow_apy": 7.037,
    "lend_apy": null
+  },
+  {
+   "t": 1792005479,
+   "b": 26192783,
+   "borrow_apy": 5.135,
+   "lend_apy": 6.19
   }
  ],
  "core_usdc_rates": [
-  {
-   "t": 1789292387,
-   "b": 25967672,
-   "apy": 5.112
-  },
-  {
-   "t": 1789306823,
-   "b": 25968872,
-   "apy": 8.511
-  },
   {
    "t": 1789321235,
    "b": 25970072,
@@ -11126,22 +11344,32 @@
    "t": 1791968051,
    "b": 26189672,
    "apy": 6.44
+  },
+  {
+   "t": 1791982499,
+   "b": 26190872,
+   "apy": 7.245
+  },
+  {
+   "t": 1791996923,
+   "b": 26192072,
+   "apy": 5.123
   }
  ],
  "capacity": {
-  "t": 1791979169,
-  "block": 26190593,
+  "t": 1792005488,
+  "block": 26192783,
   "core_usdc_room_to_kink": 0,
-  "core_usdc_liquidity": 2399770,
-  "core_usdc_borrow_apy": 7.037,
+  "core_usdc_liquidity": 2641517,
+  "core_usdc_borrow_apy": 5.135,
   "core_usdc_rebate_apr": 2,
-  "core_usdc_net_borrow_apy": 5.037,
-  "core_usdc_after_1m_apy": 15.47,
-  "bluechip_usdc_room_under_cap": 1372639.6361029996,
-  "core_usdg_liquidity": 9142936,
-  "core_usdg_borrow_apy": 4.007,
-  "core_usdg_after_1m_apy": 4.066,
-  "core_usdg_after_3_5m_apy": 10.174,
-  "bluechip_usdg_room_under_cap": 2260379.055456
+  "core_usdc_net_borrow_apy": 3.135,
+  "core_usdc_after_1m_apy": 13.401,
+  "bluechip_usdc_room_under_cap": 1068336.8329100003,
+  "core_usdg_liquidity": 9213763,
+  "core_usdg_borrow_apy": 4.004,
+  "core_usdg_after_1m_apy": 4.062,
+  "core_usdg_after_3_5m_apy": 9.984,
+  "bluechip_usdg_room_under_cap": 2260214.266081
  }
 }
