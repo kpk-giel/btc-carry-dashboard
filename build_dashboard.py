@@ -1399,7 +1399,7 @@ def vw(live_html, avg_html, tag="span"):
     """The same slot in both views; the toggle shows one."""
     if not two_views:
         return avg_html
-    return f'<{tag} data-view="live">{live_html}</{tag}><{tag} data-view="7d" hidden>{avg_html}</{tag}>'
+    return f'<{tag} data-view="live" hidden>{live_html}</{tag}><{tag} data-view="7d">{avg_html}</{tag}>'
 
 
 math_strip = vw(strip_live, strip_avg, "div")
@@ -1598,8 +1598,8 @@ per_btc = "n/a" if per_btc_v is None else ("−" if per_btc_v < 0 else "") + usd
 _pbl = px * carry / 100 if carry is not None else None
 note_live = ("a year on the BTC held, after the 10% performance fee." if carry and carry > 0 else "a year on the BTC held; no performance fee applies to a loss.") if spread is not None else ""
 sub_live = f"≈ {'n/a' if _pbl is None else ('−' if _pbl < 0 else '') + usd(abs(_pbl))} a year per 1 BTC at today's price." if spread is not None else ""
-view_toggle = ('<span class="view-toggle" role="group" aria-label="Rates shown"><button type="button" data-set-view="live" aria-pressed="true">Live</button>'
-               '<button type="button" data-set-view="7d" aria-pressed="false">7-day average</button></span>')
+view_toggle = ('<span class="view-toggle" role="group" aria-label="Rates shown"><button type="button" data-set-view="7d" aria-pressed="true">7-day average</button>'
+               '<button type="button" data-set-view="live" aria-pressed="false">Live</button></span>')
 
 spread_buttons = "".join(
     f'<button type="button" class="spread-btn" data-spread="{s["spread"]:.6f}" data-vault="{s["vault"]:.4f}" data-net="{s["borrow_net"]:.4f}" aria-current="{"true" if s["key"] == "live" else "false"}">'
@@ -1851,7 +1851,7 @@ page = f"""<!doctype html>
   }}
   var saved = null;
   try {{ saved = localStorage.getItem('btcboard.view'); }} catch (e) {{}}
-  if (saved === '7d') show('7d');
+  if (saved === 'live') show('live');
   btns.forEach(function (b) {{ b.addEventListener('click', function () {{ show(b.getAttribute('data-set-view')); }}); }});
 }})();
 </script>
