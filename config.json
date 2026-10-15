@@ -4,8 +4,8 @@
   "performance_fee": 0.1,
   "status_note": {
     "_readme": "Shown under the headline carry. Clear 'text' to hide it.",
-    "as_of": "14 Oct 2026",
-    "text": "Back at the 1.21 target. On 13 Oct the Aave V4 Core hub's USDC borrow rate rose above what the vaults earn, so KPK unwound the loan; on 14 Oct, with that rate back below its kink, the fund borrowed again."
+    "as_of": "15 Oct 2026",
+    "text": "Leverage paused. The Aave V4 Core hub's USDC rate keeps spiking around its kink (to 11% on 15 Oct), so KPK cut the loan to a light position and switched re-lever off. Full leverage resumes on the best-priced venue once the spread is reliably positive."
   },
   "strategy_target_hf": {
     "_readme": "The health factor and band the strategy runs at in normal markets (before any de-risk). The borrow routes card, the risk wording and, while the fund isn't borrowing, the loop table and the simulator use them.",
