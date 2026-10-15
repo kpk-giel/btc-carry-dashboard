@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "synced_at": "2026-10-15T21:01:06Z",
- "synced_block": 26200470,
+ "synced_at": "2026-10-15T21:01:43Z",
+ "synced_block": 26200475,
  "window_start": {
   "t": 1791563351,
   "block": 26156054,
@@ -67,19 +67,35 @@
     "borrow_trigger": 1.25,
     "borrow_target": 1.21,
     "relever": true
+   },
+   {
+    "t": 1792081960,
+    "repay_trigger": 1.15,
+    "repay_target": 1.21,
+    "borrow_trigger": 1.25,
+    "borrow_target": 1.21,
+    "relever": false
+   },
+   {
+    "t": 1792082386,
+    "repay_trigger": 9.5,
+    "repay_target": 10,
+    "borrow_trigger": 10.5,
+    "borrow_target": 10,
+    "relever": false
    }
   ]
  },
  "runs": {
-  "available": false,
-  "note": "run history temporarily unavailable at the source",
+  "available": true,
+  "note": null,
   "by_agent": [
    {
     "agent": "Health-factor manager",
-    "runs": 1475,
-    "completed": 1475,
+    "runs": 1787,
+    "completed": 1787,
     "failed": 0,
-    "executed": 3
+    "executed": 4
    },
    {
     "agent": "Exit agent (emergency unwind)",
@@ -1393,12 +1409,248 @@
    },
    {
     "t": 1792004400,
-    "n": 5,
-    "ok": 5,
+    "n": 13,
+    "ok": 13,
     "fail": 0,
     "states": {
      "above the borrow trigger, re-lever switched off": 4,
-     "above the borrow trigger: borrowed": 1
+     "above the borrow trigger: borrowed": 1,
+     "inside the band, no action": 8
+    }
+   },
+   {
+    "t": 1792008000,
+    "n": 13,
+    "ok": 13,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 13
+    }
+   },
+   {
+    "t": 1792011600,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792015200,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792018800,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792022400,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792026000,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792029600,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792033200,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792036800,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792040400,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792044000,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792047600,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792051200,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792054800,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792058400,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792062000,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792065600,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792069200,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792072800,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792076400,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792080000,
+    "n": 14,
+    "ok": 14,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 13,
+     "below the repay trigger: repaid": 1
+    }
+   },
+   {
+    "t": 1792083600,
+    "n": 13,
+    "ok": 13,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 13
+    }
+   },
+   {
+    "t": 1792087200,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792090800,
+    "n": 11,
+    "ok": 11,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 11
+    }
+   },
+   {
+    "t": 1792094400,
+    "n": 12,
+    "ok": 12,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 12
+    }
+   },
+   {
+    "t": 1792098000,
+    "n": 1,
+    "ok": 1,
+    "fail": 0,
+    "states": {
+     "inside the band, no action": 1
     }
    }
   ],
@@ -1634,6 +1886,14 @@
     "hash": "0x4544c88e7cf72747cb3d740ba3089e2d5d09bbd2a34fb0c01ecd4c3cb3d00737",
     "hf_read": 40951.66109,
     "secs": 7.9
+   },
+   {
+    "t": 1792082387,
+    "agent": "Health-factor manager",
+    "label": "below the repay trigger: repaid",
+    "hash": "0xe4daa1a534ce4d0477e6183aff8c0e5b862c8c3f338835667b599f4c721b2ba4",
+    "hf_read": 1.21344,
+    "secs": 2.4
    }
   ]
  },
@@ -10615,6 +10875,15 @@
     "share_price_usd": 82272.95,
     "share_price_wbtc": 1.00039367,
     "btc_usd": 82240.57
+   },
+   {
+    "t": 1792098083,
+    "b": 26200475,
+    "nav_usd": 393153.99,
+    "nav_wbtc": 4.78053577,
+    "share_price_usd": 82272.95,
+    "share_price_wbtc": 1.00039367,
+    "btc_usd": 82240.57
    }
   ]
  },
@@ -10804,14 +11073,15 @@
    "b": 26200470,
    "borrow_apy": 5.124,
    "lend_apy": 6.201
+  },
+  {
+   "t": 1792098083,
+   "b": 26200475,
+   "borrow_apy": 5.124,
+   "lend_apy": 6.2
   }
  ],
  "core_usdc_rates": [
-  {
-   "t": 1789407887,
-   "b": 25977272,
-   "apy": 5.436
-  },
   {
    "t": 1789422395,
    "b": 25978472,
@@ -11736,22 +12006,27 @@
    "t": 1792083611,
    "b": 26199272,
    "apy": 7.959
+  },
+  {
+   "t": 1792098047,
+   "b": 26200472,
+   "apy": 5.124
   }
  ],
  "capacity": {
-  "t": 1792098065,
-  "block": 26200470,
+  "t": 1792098103,
+  "block": 26200475,
   "core_usdc_room_to_kink": 18695,
   "core_usdc_liquidity": 2659254,
   "core_usdc_borrow_apy": 5.124,
   "core_usdc_rebate_apr": 2,
   "core_usdc_net_borrow_apy": 3.124,
   "core_usdc_after_1m_apy": 13.238,
-  "bluechip_usdc_room_under_cap": 1405450.0620069997,
+  "bluechip_usdc_room_under_cap": 1405449.799923,
   "core_usdg_liquidity": 9701606,
   "core_usdg_borrow_apy": 3.978,
   "core_usdg_after_1m_apy": 4.036,
   "core_usdg_after_3_5m_apy": 8.715,
-  "bluechip_usdg_room_under_cap": 2028137.441505
+  "bluechip_usdg_room_under_cap": 2028137.3091759998
  }
 }
