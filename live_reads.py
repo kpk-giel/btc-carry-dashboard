@@ -2,8 +2,8 @@
 
 Every figure here is read from a public source at build time:
 
-- Ethereum mainnet through a public RPC (the Aave V4 spoke and hubs, the NAV
-  calculator, the shares contract and the two KPK USDC vaults);
+- Ethereum mainnet through a public RPC (the Aave V4 spoke and hubs, the Aave V3 Core
+  pool, the NAV calculator, the shares contract and the two KPK USDC vaults);
 - the Morpho API for the vaults' 24-hour average APYs;
 - the Merkl API for the Aave V4 borrow rebate and for the fund's unclaimed rewards.
 
@@ -46,6 +46,14 @@ PRIME = "0x943827DCA022D0F354a8a8c332dA1e5Eb9f9F931"
 PRIME_USDC_ASSET = 4
 AAVE_V3_POOL = "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2"
 SPARK_POOL = "0xC13e21B648A5Ee794902342038FF3aDAB66BE987"
+# Aave V3 Core: the fund's venue from the 19 Oct 2026 migration. Tokens from Pool.getReserveData (16 Oct).
+AAVE_V3_AWBTC = "0x5Ee5bf7ae06D1Be5997A1A72006FE6C607eC6DE8"
+AAVE_V3_AUSDC = "0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c"
+AAVE_V3_VDEBT_USDC = "0x72E95b8931767C79bA4EeE721354d6E99a61D004"
+AAVE_V3_ORACLE = "0x54586bE62E3c3580375aE3723C145253060Ca0C2"
+# WBTC's collateral factor on the V4 Bluechip spoke, as the fund's own account read it (16 Oct 2026).
+# The account reports it only while it holds collateral there; the routes card needs it after the move.
+V4_WBTC_CF = 0.845
 
 SEL = {
     "getUserAccountData(address)": "0xbf92857c",
@@ -64,6 +72,8 @@ SEL = {
     "convertToAssets(uint256)": "0x07a2d13a",
     "calculateInterestRate(uint256,uint256,uint256,uint256,uint256)": "0xf5fe86ee",
     "getReserveData(address)": "0x35ea6a75",
+    "getAssetPrice(address)": "0xb3596f07",
+    "getOptimalUsageRatio(address)": "0xaa33f063",
 }
 NO_DEBT = 2**256 - 1
 SECONDS_PER_YEAR = 365 * 24 * 3600
@@ -195,7 +205,17 @@ def _read_chain_once():
         (MAPLE_SPOKE, _data("getUserAccountData(address)", SAFE)),                   # 16
         (USDC, _data("balanceOf(address)", SAFE)),                                     # 17
         (WBTC, _data("balanceOf(address)", SAFE)),                                     # 18
-    ] + [(addr, _data("balanceOf(address)", SAFE)) for _, addr in VAULTS]              # 19, 20
+    ] + [(addr, _data("balanceOf(address)", SAFE)) for _, addr in VAULTS] + [         # 19, 20
+        (AAVE_V3_POOL, _data("getUserAccountData(address)", SAFE)),                  # 21
+        (AAVE_V3_AWBTC, _data("balanceOf(address)", SAFE)),                          # 22
+        (AAVE_V3_VDEBT_USDC, _data("balanceOf(address)", SAFE)),                     # 23
+        (AAVE_V3_POOL, _data("getReserveData(address)", USDC)),                      # 24
+        (AAVE_V3_POOL, _data("getReserveData(address)", WBTC)),                      # 25
+        (AAVE_V3_ORACLE, _data("getAssetPrice(address)", WBTC)),                     # 26
+        (AAVE_V3_AUSDC, _data("totalSupply()")),                                       # 27
+        (AAVE_V3_VDEBT_USDC, _data("totalSupply()")),                                  # 28
+        (USDC, _data("balanceOf(address)", AAVE_V3_AUSDC)),                            # 29
+    ]
     res = eth_calls(calls, tag)
     w = [_words(r) for r in res]
 
@@ -221,9 +241,12 @@ def _read_chain_once():
 
     second = [(usdc["ir_strategy"], _data("getInterestRateData(uint256)", CORE_USDC_ASSET))]
     second += [(addr, _data("convertToAssets(uint256)", w[19 + i][0])) for i, (_, addr) in enumerate(VAULTS)]
+    v3_irs = "0x" + hex(w[24][11])[2:].rjust(40, "0")
+    second += [(v3_irs, _data("getOptimalUsageRatio(address)", USDC))]
     res2 = eth_calls(second, tag)
     optimal = _words(res2[0])[0] / 10_000
-    vault_assets = [_words(r)[0] / 1e6 for r in res2[1:]]
+    vault_assets = [_words(r)[0] / 1e6 for r in res2[1:1 + len(VAULTS)]]
+    v3_optimal = _words(res2[-1])[0] / 1e27
 
     total = usdc["liquidity"] + usdc_drawn + usdc["swept"]
     at_kink = total * round(optimal * 10_000) // 10_000
@@ -233,9 +256,7 @@ def _read_chain_once():
         return max(0.0, cfg[1] - owed[0] / 1e6)
 
     maple = w[16]
-    return {
-        "block": blk,
-        "read_at": int(time.time()),
+    v4_pos = {
         "hf": hf,
         "cf": cf,
         "risk_premium_bps": acct[0],
@@ -246,6 +267,48 @@ def _read_chain_once():
         "btc_px": btc_px,
         "liq_px": debt_value / (supplied * cf) if supplied > 0 and cf > 0 and debt_value > 0 else None,
         "ltv": debt_value / coll_value if coll_value > 0 else None,
+    }
+    # Aave V3 Core: account values in 8-decimal USD; the liquidation threshold plays V4's collateral-factor role in HF.
+    a3 = w[21]
+    v3_coll = w[22][0] / 1e8
+    v3_debt = w[23][0] / 1e6
+    v3_lt = a3[3] / 10_000 if a3[0] > 0 else ((w[25][0] >> 16) & 0xFFFF) / 10_000
+    v3_coll_usd, v3_debt_usd = a3[0] / 1e8, a3[1] / 1e8
+    v3_pos = {
+        "hf": None if a3[5] == NO_DEBT else a3[5] / 1e18,
+        "cf": v3_lt,
+        "risk_premium_bps": 0,
+        "collateral_wbtc": v3_coll,
+        "debt_usdc": v3_debt,
+        "collateral_usd": v3_coll_usd,
+        "debt_usd": v3_debt_usd,
+        "btc_px": w[26][0] / 1e8,
+        "liq_px": v3_debt_usd / (v3_coll * v3_lt) if v3_coll > 0 and v3_lt > 0 and v3_debt_usd > 0 else None,
+        "ltv": v3_debt_usd / v3_coll_usd if v3_coll_usd > 0 else None,
+    }
+    # The venue is wherever the position is; None when neither holds one (the WBTC then sits in the
+    # Safe). With no position the figures are V3's: the price from its oracle, the factor its threshold.
+    on_v3, on_v4 = v3_coll > 0 or v3_debt > 0, supplied > 0 or debt > 0
+    venue = "aave_v3" if on_v3 and (not on_v4 or v3_coll >= supplied) else "aave_v4" if on_v4 else None
+    v3_supply, v3_drawn, v3_cash = w[27][0] / 1e6, w[28][0] / 1e6, w[29][0] / 1e6
+    v3_cap = ((w[24][0] >> 80) & ((1 << 36) - 1))
+    v3_usdc = {
+        "borrow_apy": apr_to_apy_pct(w[24][4] / 1e27),
+        "liquidity": v3_cash,
+        "drawn": v3_drawn,
+        "utilisation": v3_drawn / v3_supply if v3_supply else None,
+        "optimal_usage": v3_optimal,
+        "room_to_kink": max(0.0, v3_supply * v3_optimal - v3_drawn),
+        "room_under_cap": max(0.0, v3_cap - v3_drawn) if v3_cap else None,
+    }
+    return {
+        "block": blk,
+        "read_at": int(time.time()),
+        "venue": venue,
+        **(v4_pos if venue == "aave_v4" else v3_pos),
+        "v4_cf": cf if cf > 0 else V4_WBTC_CF,
+        "v3_lt": v3_lt,
+        "v3_usdc": v3_usdc,
         "nav_healthy": healthy_wbtc and healthy_usd,
         "nav_wbtc": nav_wbtc,
         "nav_usd": nav_usd,

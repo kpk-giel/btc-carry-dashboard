@@ -7,6 +7,79 @@
     "as_of": "15 Oct 2026",
     "text": "Leverage paused. The Aave V4 Core hub's USDC rate keeps spiking around its kink (to 11% on 15 Oct), so KPK cut the loan to a light position and switched re-lever off. Full leverage resumes on the best-priced venue once the spread is reliably positive."
   },
+  "venue_copy": {
+    "_readme": "Copy that depends on where the position is. The board reads the venue onchain and uses the block for it: aave_v4, aave_v3, or none (no loan open, the WBTC in the fund's Safe). A block's status_note replaces the one above; scaling_stages (by index) and scaling_backup update those entries; scope_cards updates the card with that value. status_note as_of 'auto' is the date of the move to Aave V3 Core; hide_when_relever drops the note once re-lever is on.",
+    "none": {
+      "status_note": {
+        "as_of": "16 Oct 2026",
+        "text": "Loan closed. The Aave V4 Core hub's USDC rate stayed near 10%, above what the vaults earn, so the automatic negative-carry exit repaid the loan and returned the WBTC to the fund's Safe. Borrowing resumes on Aave V3 Core, where the spread is positive today."
+      },
+      "scaling_stages": {
+        "0": {
+          "adds": "WBTC in the fund's Safe and the two KPK USDC vaults as the liquid sleeve; USDC was borrowed on the Aave V4 Core hub until 16 Oct, when the negative-carry exit closed the loan",
+          "needs": "The move to Aave V3 Core, where the spread is positive today"
+        }
+      },
+      "scope_cards": {
+        "Aave V4": {
+          "detail": "WBTC was collateral on the Bluechip spoke and USDC came from the Core hub until 16 Oct; the WBTC now waits in the fund's Safe.",
+          "status": "paused"
+        },
+        "Aave V3": {
+          "label": "Collateral and borrow",
+          "detail": "Aave V3 Core: WBTC as collateral and USDC borrowed against it. The fund's next venue.",
+          "status": "next"
+        },
+        "Merkl": {
+          "detail": "Pays the vault rewards, and paid the Aave V4 borrow rebate."
+        }
+      }
+    },
+    "aave_v3": {
+      "status_note": {
+        "as_of": "auto",
+        "hide_when_relever": true,
+        "text": "Moved to Aave V3 Core, where the spread is positive today. The loan starts as a small seed; KPK switches re-lever back on to return to the 1.21 target health factor."
+      },
+      "scaling_stages": {
+        "0": {
+          "adds": "WBTC collateral and USDC borrowing on Aave V3 Core, and the two KPK USDC vaults as the liquid sleeve",
+          "needs": "In place"
+        },
+        "1": {
+          "adds": "Spark as a second borrow venue, or USDG on the Aave V4 Core hub swapped to USDC; cbBTC as a second deposit asset; borrow sizing that reads rates and depth before drawing",
+          "needs": "Agent support for Spark; the agent update that routes borrowing across venues"
+        }
+      },
+      "scaling_backup": {
+        "text": "Spark (strong for cbBTC), USDG on Aave V4 and Morpho, so the fund can move or spread its borrowing when one venue runs short of depth or turns expensive."
+      },
+      "scope_cards": {
+        "Aave V4": {
+          "label": "Previous venue",
+          "detail": "WBTC collateral on the Bluechip spoke and USDC from the Core hub until 16 Oct; USDG there stays an option.",
+          "status": "previous"
+        },
+        "Aave V3": {
+          "label": "Collateral and borrow",
+          "detail": "Aave V3 Core: WBTC as collateral and USDC borrowed against it.",
+          "status": "live"
+        },
+        "Merkl": {
+          "detail": "Pays the vault rewards, and paid the Aave V4 borrow rebate."
+        },
+        "Spark": {
+          "detail": "SparkLend: USDC borrowed against WBTC or cbBTC, once the fund's agents support it."
+        }
+      }
+    }
+  },
+  "exit_causes": {
+    "_readme": "What set off each exit-agent unwind, by transaction hash prefix: kpk when KPK triggered it, spread for the automatic negative-carry exit. The chain does not record which.",
+    "0x228c816ed1": "kpk",
+    "0x0cc3fbfa5b": "kpk",
+    "0x24182884f8": "spread"
+  },
   "strategy_target_hf": {
     "_readme": "The health factor and band the strategy runs at in normal markets (before any de-risk). The borrow routes card, the risk wording and, while the fund isn't borrowing, the loop table and the simulator use them.",
     "value": 1.21,
